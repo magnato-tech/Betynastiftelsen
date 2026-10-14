@@ -456,7 +456,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               Grunnlagt på tillit, lokal forankring og verdighet
             </h2>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              Betyna er frivillig arbeid for skolegang i Den demokratiske republikken Kongo. Bidraget går uavkortet til det barnet trenger for å fullføre.
+              Betyna er frivillig arbeid for skolegang i Kongo-Brazzaville. Bidraget går uavkortet til det barnet trenger for å fullføre.
             </p>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
               Vi anser skolegang som en grunnleggende menneskerett og den mest effektive veien ut av generasjonell fattigdom. Ved å ha faste koordinatorer på bakken som kjenner familiene og skolene, unngår vi byråkrati og sikrer at hver krone gir reell læring.

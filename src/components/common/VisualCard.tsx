@@ -72,7 +72,7 @@ export const VisualCard: React.FC<VisualCardProps> = ({
         <div className="relative h-full flex flex-col justify-end p-6 md:p-10">
           <div className="inline-flex items-center gap-2 text-xs tracking-wider uppercase text-[#A3B18A] font-medium mb-2">
             <School className="w-4 h-4 text-[#A3B18A]" />
-            <span>Kinshasa · Goma · Bukavu — DR Kongo</span>
+            <span>Brazzaville · Pointe-Noire — Kongo-Brazzaville</span>
           </div>
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-stone-100 max-w-2xl leading-tight">
             Langsiktig utdanningsstøtte og verdighet fra barneskole til yrke
@@ -168,7 +168,7 @@ export const VisualCard: React.FC<VisualCardProps> = ({
             <GraduationCap className="w-6 h-6" />
           </div>
           <h4 className="text-lg font-serif font-bold text-stone-900">{title || 'Jean-Luc (24 år)'}</h4>
-          <p className="text-xs text-stone-600 mt-0.5 font-medium">{subtitle || 'Lærer i barneskolen, Kinshasa'}</p>
+          <p className="text-xs text-stone-600 mt-0.5 font-medium">{subtitle || 'Lærer i barneskolen, Brazzaville'}</p>
         </div>
       </div>
     );

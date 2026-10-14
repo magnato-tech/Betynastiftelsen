@@ -36,7 +36,7 @@
       "proof1": "Pengene går uavkortet",
       "proof2": "Null kommersielle mellomledd",
       "proof3": "Verdighet foran klikkagn",
-      "visualLocation": "Kinshasa · Goma · Bukavu — DR Kongo",
+      "visualLocation": "Brazzaville · Pointe-Noire — Kongo-Brazzaville",
       "visualTitle": "Langsiktig utdanningsstøtte og verdighet fra barneskole til yrke",
       "visualSubtitle": "Tette fadderbånd i Norge, tilstedeværende koordinatorer i Kongo og 100% etterrettelig rapportering."
     },
@@ -46,7 +46,7 @@
       "kpi1_sublabel": "Null administrasjonsgebyrer i Norge",
       "kpi2_value": "42",
       "kpi2_label": "Barn i faste utdanningsløp",
-      "kpi2_sublabel": "Kinshasa, Goma & Bukavu",
+      "kpi2_sublabel": "Brazzaville og Pointe-Noire",
       "kpi3_value": "2 ggr",
       "kpi3_label": "Årlig verifisert rapport",
       "kpi3_sublabel": "Fotodokumentert & oversatt",
@@ -61,7 +61,7 @@
       "step1_title": "Personlig tildeling",
       "step1_desc": "Når du melder deg, tildeler administrator i Norge et barn som trenger støtte mest. Av personvernhensyn legges aldri private barneprofiler åpent ut på nett.",
       "step2_title": "Lokal oppfølging i Kongo",
-      "step2_desc": "Vår koordinator i Kinshasa og Goma betaler skolepenger direkte til skolen, overleverer skolemateriell og besøker klasserommet.",
+      "step2_desc": "Vår koordinator i Brazzaville og Pointe-Noire betaler skolepenger direkte til skolen, overleverer skolemateriell og besøker klasserommet.",
       "step3_title": "Oppfølging og framgang",
       "step3_desc": "To ganger i året mottar du grundige, oversatte rapporter og karakterutskrifter. Du følger barnet helt til fullført utdanningsløp."
     },
@@ -112,7 +112,7 @@
     },
     "footer": {
       "aboutTitle": "Betyna",
-      "aboutDesc": "Frivillig arbeid for barn i Den demokratiske republikken Kongo. Fadderbidraget går uavkortet til skolegang og det barnet trenger for å fullføre den. Ikke en stiftelse.",
+      "aboutDesc": "Frivillig arbeid for barn i Kongo-Brazzaville. Fadderbidraget går uavkortet til skolegang og det barnet trenger for å fullføre den. Ikke en stiftelse.",
       "gdpr": "Ingen private barneprofiler på den åpne siden",
       "col2Title": "Kjernevirksomhet",
       "col2Item1": "Langsiktig fadderoppfølging",
@@ -166,17 +166,17 @@
       "adminTestimonials": "Éditeur de témoignages"
     },
     "hero": {
-      "kicker": "Betyna · Norvège et RDC",
-      "title": "Nous accompagnons des enfants en RDC tout au long de leur scolarité",
+      "kicker": "Betyna · Norvège et Congo-Brazzaville",
+      "title": "Nous accompagnons des enfants au Congo-Brazzaville tout au long de leur scolarité",
       "subtitle": "Un parrainage personnel et transparent. Pour 250 à 350 couronnes par mois, vous permettez à un enfant précis d'aller à l'école, d'avoir des livres, de la sécurité et un suivi jusqu'à la fin de sa formation secondaire ou professionnelle.",
       "primaryButton": "Devenir parrain aujourd'hui",
       "secondaryButton": "Comment ça marche",
       "proof1": "L'argent est versé intégralement",
       "proof2": "Aucun intermédiaire commercial",
       "proof3": "La dignité avant le sensationnalisme",
-      "visualLocation": "Kinshasa · Goma · Bukavu — RDC",
+      "visualLocation": "Brazzaville · Pointe-Noire — Congo-Brazzaville",
       "visualTitle": "Soutien éducatif durable et dignité, de l'école primaire au métier",
-      "visualSubtitle": "Liens étroits avec les parrains en Norvège, coordinateurs sur le terrain en RDC et rapports entièrement vérifiables."
+      "visualSubtitle": "Liens étroits avec les parrains en Norvège, coordinateurs sur le terrain au Congo-Brazzaville et rapports entièrement vérifiables."
     },
     "kpi": {
       "kpi1_value": "15",
@@ -195,11 +195,11 @@
     "steps": {
       "kicker": "Parrainage",
       "title": "Un partenariat engagé pour l'avenir de l'enfant",
-      "subtitle": "Chaque parrain est lié à un enfant. Un coordinateur en RDC assure le suivi ; les mises à jour sont publiées une fois approuvées.",
+      "subtitle": "Chaque parrain est lié à un enfant. Un coordinateur au Congo-Brazzaville assure le suivi ; les mises à jour sont publiées une fois approuvées.",
       "step1_title": "Attribution personnelle",
       "step1_desc": "Lors de votre inscription, un administrateur en Norvège attribue un enfant ayant le plus grand besoin. Par respect de la vie privée, aucun profil d'enfant n'est listé publiquement sur le site.",
-      "step2_title": "Suivi local en RDC",
-      "step2_desc": "Notre coordinateur à Kinshasa et Goma paie les frais de scolarité directement à l'établissement, fournit le matériel scolaire et visite la classe.",
+      "step2_title": "Suivi local au Congo-Brazzaville",
+      "step2_desc": "Notre coordinateur à Brazzaville et Pointe-Noire paie les frais de scolarité directement à l'établissement, fournit le matériel scolaire et visite la classe.",
       "step3_title": "Suivi et progrès",
       "step3_desc": "Deux fois par an vous recevez des rapports détaillés traduits et des relevés de notes, jusqu'à la fin du parcours scolaire de l'enfant."
     },
@@ -212,12 +212,12 @@
       "card2_title": "Dignité plutôt que clic",
       "card2_desc": "Nous n'affichons jamais d'images d'enfants souffrants pour collecter des fonds. Toute photographie se fait avec consentement documenté et dignité.",
       "card3_title": "Transparence totale",
-      "card3_desc": "Chaque couronne est rapprochée des reçus des écoles en RDC. Les frais administratifs en Norvège sont couverts à titre privé."
+      "card3_desc": "Chaque couronne est rapprochée des reçus des écoles au Congo-Brazzaville. Les frais administratifs en Norvège sont couverts à titre privé."
     },
     "testimonials": {
       "kicker": "Résultats documentés",
       "title": "Témoignages authentiques de parrains, élèves et bénéficiaires",
-      "subtitle": "Conformément à notre charte éthique, nous publions des récits vérifiés de parrains norvégiens, d'élèves en formation et de diplômés en RDC, avec consentement volontaire documenté. Aucune histoire n'est inventée.",
+      "subtitle": "Conformément à notre charte éthique, nous publions des récits vérifiés de parrains norvégiens, d'élèves en formation et de diplômés au Congo-Brazzaville, avec consentement volontaire documenté. Aucune histoire n'est inventée.",
       "badgeDonor": "Parrain en Norvège",
       "badgeChild": "Élève / formation pro",
       "badgeGraduate": "Diplômé",
@@ -250,7 +250,7 @@
     },
     "footer": {
       "aboutTitle": "Betyna",
-      "aboutDesc": "Travail bénévole pour des enfants en République démocratique du Congo. Les dons de parrainage vont intégralement à la scolarité et aux besoins de l'enfant pour terminer. Ce n'est pas une fondation.",
+      "aboutDesc": "Travail bénévole pour des enfants au Congo-Brazzaville. Les dons de parrainage vont intégralement à la scolarité et aux besoins de l'enfant pour terminer. Ce n'est pas une fondation.",
       "gdpr": "Aucun profil d'enfant privé sur le site public",
       "col2Title": "Activités principales",
       "col2Item1": "Suivi de parrainage à long terme",

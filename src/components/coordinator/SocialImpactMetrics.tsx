@@ -33,7 +33,7 @@ export interface SocialImpactMetricsProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
-type RegionFilter = 'all' | 'kinshasa' | 'goma' | 'bukavu';
+type RegionFilter = 'all' | 'brazzaville' | 'pointenoire' | 'dolisie';
 type ViewCategory = 'overview' | 'trends' | 'completion' | 'schools';
 
 interface AnnualImpactRecord {
@@ -168,8 +168,8 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
     const rawSchools = [
       {
         school: 'Éc. Ste-Thérèse',
-        city: 'Kinshasa',
-        region: 'kinshasa',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 34,
         completionRate: 96.8,
         attendanceRate: 95.4,
@@ -177,8 +177,8 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'Inst. Lumumba',
-        city: 'Kinshasa',
-        region: 'kinshasa',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 28,
         completionRate: 94.2,
         attendanceRate: 94.1,
@@ -186,8 +186,8 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'CS Espoir',
-        city: 'Kinshasa',
-        region: 'kinshasa',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 16,
         completionRate: 95.0,
         attendanceRate: 93.8,
@@ -195,17 +195,17 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'CS La Grâce',
-        city: 'Goma',
-        region: 'goma',
+        city: 'Pointe-Noire',
+        region: 'pointenoire',
         activeStudents: 22,
         completionRate: 93.6,
         attendanceRate: 94.6,
         verifiedReports: reports.filter((r) => r.barnNavn.includes('Samuel') || r.barnNavn.includes('Priscille')).length + 12,
       },
       {
-        school: 'Inst. Technique Goma',
-        city: 'Goma',
-        region: 'goma',
+        school: 'Inst. Technique Pointe-Noire',
+        city: 'Pointe-Noire',
+        region: 'pointenoire',
         activeStudents: 11,
         completionRate: 92.8,
         attendanceRate: 95.0,
@@ -213,8 +213,8 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'Lycée Marie Reine',
-        city: 'Bukavu',
-        region: 'bukavu',
+        city: 'Dolisie',
+        region: 'dolisie',
         activeStudents: 19,
         completionRate: 97.4,
         attendanceRate: 96.2,
@@ -230,7 +230,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
   const displayAnnualData = useMemo(() => {
     if (selectedRegion === 'all') return annualData;
     // Scale proportionally for regional visual insight
-    const multiplier = selectedRegion === 'kinshasa' ? 0.62 : selectedRegion === 'goma' ? 0.23 : 0.15;
+    const multiplier = selectedRegion === 'brazzaville' ? 0.62 : selectedRegion === 'pointenoire' ? 0.23 : 0.15;
     return annualData.map((d) => ({
       ...d,
       totalSupported: Math.round(d.totalSupported * multiplier),
@@ -256,7 +256,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       'Nouvelles Admissions',
       'Diplômés du Cycle',
       'Taux de Complétion (%)',
-      'Moyenne Nationale RDC (%)',
+      'Moyenne Nationale Congo-Brazzaville (%)',
       'Taux d’Assiduité (%)',
     ];
 
@@ -292,7 +292,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
           <div className="flex items-center gap-2 text-xs text-[#4D6B3E] font-semibold uppercase tracking-wider mb-1">
             <span>Rapports de Performance Terrain</span>
             <span aria-hidden="true">·</span>
-            <span>RDCongo</span>
+            <span>Congo-Brazzaville</span>
             <span aria-hidden="true">·</span>
             <span className="font-mono">2021–2026</span>
           </div>
@@ -331,37 +331,37 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
                 : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
             }`}
           >
-            Tous les centres RDC (100%)
+            Tous les centres Congo-Brazzaville (100%)
           </button>
           <button
-            onClick={() => setSelectedRegion('kinshasa')}
+            onClick={() => setSelectedRegion('brazzaville')}
             className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'kinshasa'
+              selectedRegion === 'brazzaville'
                 ? 'bg-stone-900 text-white shadow-2xs'
                 : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
             }`}
           >
-            Kinshasa (3 écoles)
+            Brazzaville (3 écoles)
           </button>
           <button
-            onClick={() => setSelectedRegion('goma')}
+            onClick={() => setSelectedRegion('pointenoire')}
             className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'goma'
+              selectedRegion === 'pointenoire'
                 ? 'bg-stone-900 text-white shadow-2xs'
                 : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
             }`}
           >
-            Goma (2 écoles)
+            Pointe-Noire (2 écoles)
           </button>
           <button
-            onClick={() => setSelectedRegion('bukavu')}
+            onClick={() => setSelectedRegion('dolisie')}
             className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'bukavu'
+              selectedRegion === 'dolisie'
                 ? 'bg-stone-900 text-white shadow-2xs'
                 : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
             }`}
           >
-            Bukavu (1 lycée)
+            Dolisie (1 lycée)
           </button>
         </div>
 
@@ -450,9 +450,9 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-stone-500 pt-1 border-t border-stone-100">
-            <span>Repère RDCongo :</span>
+            <span>Repère Congo-Brazzaville :</span>
             <span className="font-mono text-stone-700 font-semibold">68.4%</span>
-            <span>(Unicef RDC)</span>
+            <span>(Unicef Congo-Brazzaville)</span>
           </div>
         </div>
 
@@ -603,7 +603,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
                   Réussite & Certification
                 </span>
                 <h3 className="text-lg font-serif font-bold text-stone-900 mt-0.5">
-                  Taux de complétion scolaire vs Moyenne RDC
+                  Taux de complétion scolaire vs Moyenne Congo-Brazzaville
                 </h3>
                 <p className="text-xs text-stone-500 font-sans">
                   Pourcentage d'élèves soutenus parvenant au terme du cycle primaire et secondaire.
@@ -642,7 +642,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
                     }}
                     formatter={(val: any, name: any) => [
                       `${val}%`,
-                      name === 'completionRate' ? 'Taux Betyna Stiftelsen' : 'Repère national RDCongo',
+                      name === 'completionRate' ? 'Taux Betyna Stiftelsen' : 'Repère national Congo-Brazzaville',
                     ]}
                     labelFormatter={(label) => `Promotion ${label}`}
                   />
@@ -652,7 +652,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
                     iconType="rect"
                     wrapperStyle={{ fontSize: '11px', paddingBottom: '8px' }}
                     formatter={(value) =>
-                      value === 'completionRate' ? 'Taux Betyna Stiftelsen' : 'Moyenne nationale RDC'
+                      value === 'completionRate' ? 'Taux Betyna Stiftelsen' : 'Moyenne nationale Congo-Brazzaville'
                     }
                   />
                   <ReferenceLine
@@ -683,7 +683,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
             </div>
 
             <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
-              <span>Source de benchmark : UNESCO / UNICEF RDC Education Monitor</span>
+              <span>Source de benchmark : UNESCO / UNICEF Congo-Brazzaville Education Monitor</span>
               <span className="font-semibold text-emerald-800">96.1% de complétion en 2026</span>
             </div>
           </div>
@@ -866,7 +866,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
           <div className="flex items-center gap-2 text-xs text-stone-500">
             <span>{schoolPerformanceData.length} établissements actifs</span>
             <span aria-hidden="true">·</span>
-            <span>RDCongo</span>
+            <span>Congo-Brazzaville</span>
           </div>
         </div>
 

@@ -70,7 +70,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   const [msTitleNo, setMsTitleNo] = useState('');
   const [msDescNo, setMsDescNo] = useState('');
   const [msMerknad, setMsMerknad] = useState('');
-  const [msKoordinator, setMsKoordinator] = useState('Koordinator Dieudonné (Kinshasa)');
+  const [msKoordinator, setMsKoordinator] = useState('Koordinator Dieudonné (Brazzaville)');
   const [milestoneToast, setMilestoneToast] = useState<string | null>(null);
 
   // New Report Form state
@@ -85,7 +85,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   const [newFirstName, setNewFirstName] = useState('');
   const [newBirthYear, setNewBirthYear] = useState<number>(2017);
   const [newGender, setNewGender] = useState<'gutt' | 'jente'>('gutt');
-  const [newSchoolName, setNewSchoolName] = useState('École Primaire Sainte-Thérèse, Kinshasa');
+  const [newSchoolName, setNewSchoolName] = useState('École Primaire Sainte-Thérèse, Brazzaville');
   const [newGrade, setNewGrade] = useState('3ème primaire');
   const [newContext, setNewContext] = useState('');
   const [newNeeds, setNewNeeds] = useState('');
@@ -108,7 +108,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     setMsTitleNo('');
     setMsDescNo('');
     setMsMerknad('');
-    setMsKoordinator('Koordinator Dieudonné (Kinshasa)');
+    setMsKoordinator('Koordinator Dieudonné (Brazzaville)');
     setIsMilestoneModalOpen(true);
   };
 
@@ -122,7 +122,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     setMsTitleNo(m.tittelNorsk);
     setMsDescNo(m.beskrivelseNorsk);
     setMsMerknad(m.merknad || '');
-    setMsKoordinator(m.koordinatorNavn || 'Koordinator Dieudonné (Kinshasa)');
+    setMsKoordinator(m.koordinatorNavn || 'Koordinator Dieudonné (Brazzaville)');
     setIsMilestoneModalOpen(true);
   };
 
@@ -148,7 +148,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
         tittelNorsk: titleNo,
         beskrivelseNorsk: descNo,
         merknad: msMerknad.trim() || undefined,
-        koordinatorNavn: msKoordinator.trim() || 'Koordinator Dieudonné (Kinshasa)',
+        koordinatorNavn: msKoordinator.trim() || 'Koordinator Dieudonné (Brazzaville)',
       });
       setMilestoneToast(`Jalon d'étape modifié avec succès pour ${childName}.`);
     } else {
@@ -162,7 +162,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
         tittelNorsk: titleNo,
         beskrivelseNorsk: descNo,
         merknad: msMerknad.trim() || undefined,
-        koordinatorNavn: msKoordinator.trim() || 'Koordinator Dieudonné (Kinshasa)',
+        koordinatorNavn: msKoordinator.trim() || 'Koordinator Dieudonné (Brazzaville)',
       });
       setMilestoneToast(`Nouveau jalon enregistré pour ${childName} ! Reflété sur le tableau de bord du parrain.`);
     }
@@ -291,9 +291,9 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
       <div className="bg-stone-900 text-stone-100 rounded-2xl p-6 md:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-stone-800">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-[#A3B18A] font-semibold uppercase tracking-wider">
-            <span>Espace Terrain — RDCongo</span>
+            <span>Espace Terrain — Congo-Brazzaville</span>
             <span aria-hidden="true">·</span>
-            <span>Kinshasa · Goma · Bukavu</span>
+            <span>Brazzaville · Pointe-Noire · Dolisie</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-serif font-bold text-white">
             Portail de Coordination & Suivi des Enfants
@@ -494,7 +494,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-semibold text-stone-900">Indicateurs d'impact consolidés (RDCongo)</span>
+                <span className="font-semibold text-stone-900">Indicateurs d'impact consolidés (Congo-Brazzaville)</span>
                 <span className="text-stone-600 ml-2">
                   112 élèves soutenus · 96.1% de complétion primaire · Assiduité moyenne vérifiée
                 </span>
@@ -603,7 +603,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#4D6B3E]">
                 <span>Suivi Individuel & Chronologie</span>
                 <span aria-hidden="true">·</span>
-                <span>Terrain RDCongo</span>
+                <span>Terrain Congo-Brazzaville</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
                 Jalons d'étape & Historique des Enfants

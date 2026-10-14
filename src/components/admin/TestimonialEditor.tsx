@@ -64,7 +64,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       name: 'Jente som trenger symaskin (FullSizeR.jpg)',
       url: 'FullSizeR.jpg',
       category: 'child',
-      desc: 'Innsendt feltbilde av ung kvinne/jente i Kinshasa klar for yrkesopplæring',
+      desc: 'Innsendt feltbilde av ung kvinne/jente i Brazzaville klar for yrkesopplæring',
     },
     {
       id: 'img1194',
@@ -102,7 +102,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       category: 'child' as TestimonialCategory,
       name: 'Kavira (16 år)',
       role: 'Jente i yrkesopplæring (søm & design)',
-      location: 'Masina, Kinshasa',
+      location: 'Masina, Brazzaville',
       age: 16,
       text: 'Jeg drømmer om å lære søm og mønsterklipp slik at jeg kan sy skoleuniformer og åpne et lite verksted. Å få opplæring og en egen mekanisk symaskin gir meg verdighet og en trygg framtid.',
       edu: 'Tekstilhåndverk og opplæring på mekanisk symaskin',
@@ -124,7 +124,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       category: 'child' as TestimonialCategory,
       name: 'Dorcas (11 år)',
       role: 'Elev i 5. klasse',
-      location: 'Institut Lumumba, Kinshasa',
+      location: 'Institut Lumumba, Brazzaville',
       age: 11,
       text: 'Takket være fadderstøtten har jeg fått egne lærebøker og en solid skoleuniform. Før måtte vi dele én bok på fire elever. Nå kan jeg gjøre leksene mine hver ettermiddag og drømmer om å bli biolog.',
       edu: 'Grunnskole 5. trinn (naturfag og fransk grammatikk)',
@@ -135,9 +135,9 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       category: 'graduate' as TestimonialCategory,
       name: 'Jean-Luc (24 år)',
       role: 'Tidligere fadderbarn, nå barneskolelærer',
-      location: 'Kinshasa, DR Kongo',
+      location: 'Brazzaville, Kongo-Brazzaville',
       age: 24,
-      text: 'Jean-Luc mottok fadderstøtte fra han var 9 år gammel. Støtten sikret uavbrutt skolegang gjennom krevende år. I dag underviser han selv en klasse på 35 elever i Kinshasa og er økonomisk uavhengig.',
+      text: 'Jean-Luc mottok fadderstøtte fra han var 9 år gammel. Støtten sikret uavbrutt skolegang gjennom krevende år. I dag underviser han selv en klasse på 35 elever i Brazzaville og er økonomisk uavhengig.',
       edu: 'Fullført grunnskole, videregående lærerskole og pedagogisk praksis',
       imageUrl: '',
     },
@@ -188,7 +188,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     resetForm();
     setFormCategory(type);
     if (type === 'child') {
-      setFormLocation('Kinshasa, DR Kongo');
+      setFormLocation('Brazzaville, Kongo-Brazzaville');
     }
     setIsModalOpen(true);
   };
@@ -746,7 +746,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   </label>
                   <input
                     type="text"
-                    placeholder="f.eks. Oslo, Norge eller Masina, Kinshasa"
+                    placeholder="f.eks. Oslo, Norge eller Masina, Brazzaville"
                     value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
                     className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
