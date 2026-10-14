@@ -3,13 +3,20 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
+      alias: [
+        { find: '@', replacement: path.resolve(__dirname, '.') },
+        {
+          find: '@betyna/seed',
+          replacement: path.resolve(
+            __dirname,
+            mode === 'production' ? 'src/data/publicData.ts' : 'src/data/initialData.ts',
+          ),
+        },
+      ],
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

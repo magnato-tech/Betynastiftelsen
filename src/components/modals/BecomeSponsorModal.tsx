@@ -56,13 +56,28 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
           <X className="w-5 h-5" />
         </button>
 
-        {step === 'form' ? (
+        {import.meta.env.PROD ? (
+          <div className="space-y-4 pr-6">
+            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Bli fadder</span>
+            <h3 className="text-2xl font-serif font-bold text-[#3C3C3C]">Avtalen gjøres direkte</h3>
+            <p className="text-sm text-stone-700 leading-relaxed">
+              Skjemaet på denne siden lagrer ikke påmeldingen. Fadderbeløpet er 3 500 kroner i året, eller 250 eller 350 kroner i måneden, og går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg text-sm transition-colors cursor-pointer"
+            >
+              Lukk
+            </button>
+          </div>
+        ) : step === 'form' ? (
           <div>
             <div className="mb-6">
               <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Bli fast fadder</span>
               <h3 className="text-2xl font-serif font-bold text-[#3C3C3C] mt-1">Støtt et barn gjennom utdanningsløpet</h3>
               <p className="text-xs text-stone-600 mt-2 leading-relaxed font-sans">
-                Ditt bidrag sikrer skolepenger, lærebøker, uniform og personlig oppfølging av koordinator i Kongo. Administrator tildeler et barn som trenger støtte mest, og du får en personlig fadderportal.
+                Bidraget går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen. Administrator tildeler et barn, og du får en personlig fadderportal.
               </p>
             </div>
 

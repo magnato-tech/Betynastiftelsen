@@ -44,6 +44,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     approveReport,
     rejectReport,
     assignSponsorToChild,
+    addSponsor,
     endSponsorship,
     answerInquiry,
     forwardInquiryToCoordinator,
@@ -66,6 +67,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Child Allocation State
   const [selectedChildForAssign, setSelectedChildForAssign] = useState<string>('');
   const [selectedSponsorForAssign, setSelectedSponsorForAssign] = useState<string>('');
+  const [sponsorNavn, setSponsorNavn] = useState('');
+  const [sponsorEpost, setSponsorEpost] = useState('');
+  const [sponsorTelefon, setSponsorTelefon] = useState('');
+  const [sponsorPoststed, setSponsorPoststed] = useState('');
+  const [sponsorBelop, setSponsorBelop] = useState<250 | 350>(250);
+  const [sponsorMetode, setSponsorMetode] = useState<'vipps' | 'bank'>('vipps');
+  const [sponsorSavedName, setSponsorSavedName] = useState<string | null>(null);
 
   // Active review report
   const selectedReport = reports.find((r) => r.id === selectedReportId);
@@ -111,11 +119,38 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setSelectedSponsorForAssign('');
   };
 
+  const handleAddSponsor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sponsorNavn.trim() || !sponsorEpost.trim()) return;
+    const newId = addSponsor({
+      navn: sponsorNavn.trim(),
+      epost: sponsorEpost.trim(),
+      telefon: sponsorTelefon.trim(),
+      poststed: sponsorPoststed.trim(),
+      maanedsbelop: sponsorBelop,
+      betalingsmetode: sponsorMetode,
+    });
+    setSponsorSavedName(sponsorNavn.trim());
+    setSelectedSponsorForAssign(newId);
+    setSponsorNavn('');
+    setSponsorEpost('');
+    setSponsorTelefon('');
+    setSponsorPoststed('');
+    setSponsorBelop(250);
+    setSponsorMetode('vipps');
+  };
+
   // Helper metrics
   const pendingReports = reports.filter((r) => r.status === 'innsendt');
   const pendingInquiries = inquiries.filter((inq) => inq.status !== 'besvart' && inq.status !== 'lukket');
   const unassignedChildren = childrenList.filter((c) => !c.tildeltFadderId && c.status === 'aktiv');
   const unassignedSponsors = sponsors.filter((s) => !s.tildeltBarnId);
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
+  const monthAgoKey = `${monthAgo.getFullYear()}-${String(monthAgo.getMonth() + 1).padStart(2, '0')}-${String(monthAgo.getDate()).padStart(2, '0')}`;
+  const newSponsorsLastMonth = sponsors
+    .filter((s) => s.startDato >= monthAgoKey)
+    .sort((a, b) => b.startDato.localeCompare(a.startDato));
 
   const totalMonthlyPledged = sponsors
     .filter((s) => s.betalingsstatus === 'aktiv')
@@ -462,6 +497,123 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* 4. TAB: BARN & FADDERE (TILDELING) */}
       {activeSection === 'tildeling' && (
         <div className="space-y-8">
+          <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
+            <div>
+              <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Ny fadder</span>
+              <h2 className="text-xl font-serif font-bold text-stone-900 mt-1">Legg til fadder</h2>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Registrer personen her. Barnet kobles etterpå, og velges ikke automatisk.
+              </p>
+            </div>
+
+            {sponsorSavedName && (
+              <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                {sponsorSavedName} er lagt til. Velg et barn under og opprett fadderkoblingen.
+              </p>
+            )}
+
+            <form onSubmit={handleAddSponsor} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Navn</label>
+                <input
+                  value={sponsorNavn}
+                  onChange={(e) => setSponsorNavn(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">E-post</label>
+                <input
+                  type="email"
+                  value={sponsorEpost}
+                  onChange={(e) => setSponsorEpost(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Telefon</label>
+                <input
+                  value={sponsorTelefon}
+                  onChange={(e) => setSponsorTelefon(e.target.value)}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Poststed</label>
+                <input
+                  value={sponsorPoststed}
+                  onChange={(e) => setSponsorPoststed(e.target.value)}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Månedsbeløp</label>
+                <select
+                  value={sponsorBelop}
+                  onChange={(e) => setSponsorBelop(Number(e.target.value) as 250 | 350)}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                >
+                  <option value={250}>250 kr</option>
+                  <option value={350}>350 kr</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Betaling</label>
+                <select
+                  value={sponsorMetode}
+                  onChange={(e) => setSponsorMetode(e.target.value as 'vipps' | 'bank')}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+                >
+                  <option value="vipps">Vipps</option>
+                  <option value="bank">Bank</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-2"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Legg til fadder
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
+            <div>
+              <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Siste 30 dager</span>
+              <h2 className="text-xl font-serif font-bold text-stone-900 mt-1">Nye faddere siste måned</h2>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Registrert fra {monthAgo.toLocaleDateString('nb-NO')} og frem til i dag.
+              </p>
+            </div>
+
+            {newSponsorsLastMonth.length === 0 ? (
+              <p className="text-xs text-stone-500">Ingen nye faddere de siste 30 dagene.</p>
+            ) : (
+              <ul className="divide-y divide-stone-100 border border-stone-200 rounded-lg">
+                {newSponsorsLastMonth.map((sp) => {
+                  const child = childrenList.find((c) => c.id === sp.tildeltBarnId);
+                  return (
+                    <li key={sp.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+                      <div>
+                        <p className="font-semibold text-stone-900">{sp.navn}</p>
+                        <p className="text-stone-500">{sp.poststed || 'Poststed ikke oppgitt'} · {sp.epost}</p>
+                      </div>
+                      <div className="text-stone-700 sm:text-right">
+                        <p>{sp.startDato.split('-').reverse().join('.')} · {sp.maanedsbelop} kr/mnd</p>
+                        <p className="text-stone-500">{child ? `Koblet til ${child.fornavn}` : 'Venter på barn'}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
           {/* Allocation Tool */}
           <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
             <div>

@@ -27,7 +27,7 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_CMS_CONTENT,
   INITIAL_MILESTONES,
-} from '../data/initialData';
+} from '@betyna/seed';
 
 interface AppContextType {
   role: UserRole;
@@ -88,8 +88,17 @@ interface AppContextType {
     maanedsbelop: number;
     betalingsmetode: 'vipps' | 'avtalegiro' | 'bank';
   }) => string;
+  addSponsor: (data: {
+    navn: string;
+    epost: string;
+    telefon: string;
+    poststed: string;
+    maanedsbelop: 250 | 350;
+    betalingsmetode: 'vipps' | 'bank';
+  }) => string;
 
   donateToCampaign: (campaignId: string, amount: number, donorName: string, method: 'vipps' | 'bank') => void;
+  updateCampaign: (id: string, updates: Partial<Campaign>) => void;
   reconcilePayment: (paymentId: string) => void;
 
   // Notifications
@@ -722,6 +731,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newSponsorId;
   };
 
+  const addSponsor = (data: {
+    navn: string;
+    epost: string;
+    telefon: string;
+    poststed: string;
+    maanedsbelop: 250 | 350;
+    betalingsmetode: 'vipps' | 'bank';
+  }) => {
+    const newSponsorId = 'sponsor-' + Date.now();
+    const newSponsor: Sponsor = {
+      id: newSponsorId,
+      navn: data.navn,
+      epost: data.epost,
+      telefon: data.telefon,
+      poststed: data.poststed,
+      maanedsbelop: data.maanedsbelop,
+      betalingsmetode: data.betalingsmetode,
+      betalingsstatus: 'aktiv',
+      startDato: new Date().toISOString().slice(0, 10),
+      tildeltBarnId: '',
+    };
+    setSponsors((prev) => [...prev, newSponsor]);
+    addAuditLog(
+      'La til fadder',
+      `${data.navn} ble registrert av administrator (${data.maanedsbelop} kr/mnd via ${data.betalingsmetode}). Ingen barn er tildelt ennå.`
+    );
+    return newSponsorId;
+  };
+
   const donateToCampaign = (campaignId: string, amount: number, donorName: string, method: 'vipps' | 'bank') => {
     setCampaigns((prev) =>
       prev.map((camp) => {
@@ -754,6 +792,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPayments((prev) => [newPayment, ...prev]);
 
     addAuditLog('Mottok aksjonsbidrag', `${donorName || 'Giver'} ga ${amount} kr til "${camp?.tittel}".`);
+  };
+
+  const updateCampaign = (id: string, updates: Partial<Campaign>) => {
+    setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    addAuditLog('Oppdaterte aksjon', `Aksjonen "${id}" ble oppdatert fra CMS.`);
   };
 
   const reconcilePayment = (paymentId: string) => {
@@ -884,7 +927,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         forwardInquiryToCoordinator,
         coordinatorReplyToInquiry,
         registerNewSponsorInterest,
+        addSponsor,
         donateToCampaign,
+        updateCampaign,
         reconcilePayment,
         addAuditLog,
         resetAllData,

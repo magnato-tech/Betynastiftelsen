@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}
           className="text-xl font-bold tracking-tight text-[#3C3C3C] whitespace-nowrap shrink-0 font-serif text-left hover:text-[#4D6B3E] transition-colors cursor-pointer"
         >
-          Betyna Stiftelsen
+          Betyna
         </button>
 
         {/* Zone 2: 4–5 clean single-line text navigation links */}
@@ -49,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {t('nav.stories', 'Historier')}
               </button>
+              {import.meta.env.DEV && (
               <button
                 onClick={() => setActiveSection('aksjoner')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -57,13 +58,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {t('nav.campaigns', 'Aksjoner')}
               </button>
+              )}
               <button
                 onClick={() => setActiveSection('om-oss')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   activeSection === 'om-oss' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                {t('nav.about', 'Om stiftelsen')}
+                {t('nav.about', 'Om Betyna')}
               </button>
               <button
                 onClick={() => setActiveSection('apenhet')}
@@ -71,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'apenhet' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                {t('nav.transparency', 'Åpenhet & regnskap')}
+                {t('nav.transparency', 'Åpenhet')}
               </button>
             </>
           )}
@@ -232,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <LanguageSwitcher />
 
-          <NotificationCenter onNavigateSection={setActiveSection} />
+          {role !== 'public' && <NotificationCenter onNavigateSection={setActiveSection} />}
 
           {role === 'public' ? (
             <button

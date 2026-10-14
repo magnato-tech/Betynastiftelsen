@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { VisualCard } from '../common/VisualCard';
 import { Campaign } from '../../types';
 import {
   GraduationCap,
@@ -39,6 +38,19 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const heroSubtitle = language === 'en' ? t('hero.subtitle', cmsContent.hero.subtitle) : cmsContent.hero.subtitle;
   const heroPrimaryBtn = language === 'en' ? t('hero.primaryButton', cmsContent.hero.primaryButtonText) : cmsContent.hero.primaryButtonText;
   const heroSecondaryBtn = language === 'en' ? t('hero.secondaryButton', cmsContent.hero.secondaryButtonText) : cmsContent.hero.secondaryButtonText;
+  const heroImageUrl = cmsContent.hero.backgroundImageUrl?.trim() || 'IMG_1194.jpg';
+  const heroImageSrc =
+    heroImageUrl.startsWith('http://') || heroImageUrl.startsWith('https://') || heroImageUrl.startsWith('data:') || heroImageUrl.startsWith('/')
+      ? heroImageUrl
+      : `/${heroImageUrl}`;
+
+  React.useEffect(() => {
+    if (activeSection === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    document.getElementById(activeSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeSection]);
 
   return (
     <div className="space-y-20 pb-16">
@@ -76,7 +88,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="flex flex-wrap items-center gap-6 pt-4 text-xs text-stone-600 border-t border-[#DFD9CB]">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>{t('hero.proof1', '100% dokumentert rapportering')}</span>
+                <span>{t('hero.proof1', 'Pengene går uavkortet')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700" />
@@ -90,12 +102,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
 
           <div className="lg:col-span-6">
-            <VisualCard
-              type="hero"
-              aspectRatio="16/9"
-              customImageUrl={cmsContent.hero.backgroundImageUrl}
-              scrimOpacity={cmsContent.hero.scrimOpacity}
-            />
+            <figure className="overflow-hidden rounded-2xl border border-[#DFD9CB] bg-stone-200 shadow-sm">
+              <img
+                src={heroImageSrc}
+                alt="Betyna sammen med barn i Kongo"
+                className="w-full aspect-[3/4] object-cover object-[center_30%]"
+              />
+            </figure>
           </div>
         </div>
       </section>
@@ -132,7 +145,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             {t('steps.title', 'Et forpliktende partnerskap for barnets framtid')}
           </h2>
           <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            {t('steps.subtitle', 'I motsetning til anonyme masse-innsamlinger, kobler Betyna stiftelsen hver fadder til et bestemt barn. Koordinator i Kongo følger opp barnet personlig, og du får godkjente oppdateringer direkte i fadderportalen.')}
+            {t('steps.subtitle', 'Hver fadder knyttes til et bestemt barn. Koordinator i Kongo følger opp, og oppdateringer legges ut når de er godkjent.')}
           </p>
         </div>
 
@@ -170,7 +183,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         {(() => {
           const defaultCta = {
             title: language === 'en' ? t('cta.title') : 'Ønsker du å vite mer om fadderansvaret?',
-            subtitle: language === 'en' ? t('cta.subtitle') : 'Fadderbeløpet er normalt 250 eller 350 kr/mnd og dekker skolepenger, uniform, bøker og skolemateriell.',
+            subtitle: language === 'en' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
             buttonText: language === 'en' ? t('cta.primaryButton') : 'Meld interesse som fadder',
             backgroundImageUrl: '',
             scrimOpacity: 75,
@@ -230,10 +243,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             {t('testimonials.title', 'Ekte vitnesbyrd fra faddere, elever og voksne mottakere')}
           </h2>
           <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            {t('testimonials.subtitle', 'I tråd med våre etiske retningslinjer publiserer vi ekte historier fra faddere i Norge, elever i opplæring og fullførte kandidater i Kongo med dokumentert, frivillig samtykke. Ingen historier diktes opp.')}
+            15 barn har fått skolegang i 10–15 år, med utdanning i ulike fag. Enkeltnavn og historier legges ut først når samtykke er dokumentert.
           </p>
         </div>
 
+        {import.meta.env.DEV && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {stories
             .filter((s) => s.godkjentAvAdmin !== false && s.fremhevetPaaForside !== false)
@@ -319,9 +333,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               );
             })}
         </div>
+        )}
       </section>
 
       {/* 5. EKSTRAORDINÆRE AKSJONER */}
+      {import.meta.env.DEV && (
       <section id="aksjoner" className="max-w-7xl mx-auto px-6 scroll-mt-24">
         <div className="max-w-2xl mb-12">
           <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Konkrete behov</span>
@@ -371,11 +387,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                         }
                         alt={camp.tittel}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        className="w-full h-full object-cover object-[center_20%]"
                       />
-                      <div className="absolute top-2.5 left-2.5 px-2.5 py-1 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-medium rounded-md shadow-xs">
-                        Feltbilde: Elev i yrkesopplæring (søm & symaskin)
-                      </div>
                     </div>
                   )}
 
@@ -432,17 +445,18 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           })}
         </div>
       </section>
+      )}
 
-      {/* 6. OM STIFTELSEN OG ETISK KOMPASS */}
+      {/* 6. OM BETYNA */}
       <section id="om-oss" className="max-w-7xl mx-auto px-6 scroll-mt-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5 space-y-4">
-            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Om stiftelsen</span>
+            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Om Betyna</span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
               Grunnlagt på tillit, lokal forankring og verdighet
             </h2>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              Betyna stiftelsen ble etablert for å bygge en direkte, transparent og etisk bro mellom støttespillere i Norge og utdanningsbehov i Den demokratiske republikken Kongo.
+              Betyna er frivillig arbeid for skolegang i Den demokratiske republikken Kongo. Bidraget går uavkortet til det barnet trenger for å fullføre.
             </p>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
               Vi anser skolegang som en grunnleggende menneskerett og den mest effektive veien ut av generasjonell fattigdom. Ved å ha faste koordinatorer på bakken som kjenner familiene og skolene, unngår vi byråkrati og sikrer at hver krone gir reell læring.
@@ -492,7 +506,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               Full åpenhet om hver krone
             </h2>
             <p className="text-sm text-stone-700 mt-2 leading-relaxed">
-              Betyna stiftelsen opererer med et strengt skille mellom månedlige fadderbidrag og ekstraordinære prosjektmidler. Vi lagrer aldri bankkortopplysninger på egne servere og benytter kun verifiserte betalingsløsninger.
+              Ti faddere à 3 500 kroner i året gir 35 000 kroner. Hele beløpet går til skolegangen. Ingen lønn tas ut.
             </p>
           </div>
 
@@ -500,19 +514,19 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-stone-900">Fadderbidrag (250–350 kr/mnd)</h3>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                Går uavkortet til skolepenger for tildelt elev, skoleuniform, godkjente lærebøker, skrivesaker og daglig skolemåltid der det er nødvendig.
+                Går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
               </p>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-stone-900">Ekstraordinære aksjoner</h3>
+              <h3 className="text-sm font-semibold text-stone-900">Det barnet trenger</h3>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                Holdes på eget underregnskap. Midler utbetales først når spesifisert leverandør er bekreftet og kvitteringer foreligger.
+                Skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
               </p>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-stone-900">Revisjon og rapportering</h3>
+              <h3 className="text-sm font-semibold text-stone-900">Ingen trekk til drift</h3>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                Årsregnskap revideres etter gjeldende stiftelseslovgivning og gjøres tilgjengelig for alle faddere og offentligheten.
+                Betyna er ikke en stiftelse. Bidraget brukes ikke til revisor, regnskap eller lønn, så hele beløpet kan gå til skolegangen.
               </p>
             </div>
           </div>

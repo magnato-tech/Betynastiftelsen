@@ -1,12 +1,12 @@
 {
   "no": {
     "nav": {
-      "wordmark": "Betyna Stiftelsen",
+      "wordmark": "Betyna",
       "sponsorship": "Fadderordningen",
       "stories": "Historier",
       "campaigns": "Aksjoner",
-      "about": "Om stiftelsen",
-      "transparency": "Åpenhet & regnskap",
+      "about": "Om Betyna",
+      "transparency": "Åpenhet",
       "becomeSponsor": "Bli fadder",
       "viewPublic": "Se offentlig side",
       "sponsorChild": "Ditt fadderbarn",
@@ -28,12 +28,12 @@
       "adminTestimonials": "Testimonial-editor"
     },
     "hero": {
-      "kicker": "Betyna Stiftelsen · Norge & Kongo",
+      "kicker": "Betyna · Norge & Kongo",
       "title": "Vi følger barn i Kongo gjennom hele utdanningsløpet",
       "subtitle": "En personlig og tillitsvekkende fadderordning. For 250–350 kroner i måneden sikrer du at et konkret barn får skoleplass, bøker, trygghet og oppfølging helt frem til fullført yrke eller videregående.",
       "primaryButton": "Bli fadder i dag",
       "secondaryButton": "Slik fungerer ordningen",
-      "proof1": "100% dokumentert rapportering",
+      "proof1": "Pengene går uavkortet",
       "proof2": "Null kommersielle mellomledd",
       "proof3": "Verdighet foran klikkagn",
       "visualLocation": "Kinshasa · Goma · Bukavu — DR Kongo",
@@ -57,12 +57,12 @@
     "steps": {
       "kicker": "Fadderordningen",
       "title": "Et forpliktende partnerskap for barnets framtid",
-      "subtitle": "I motsetning til anonyme masse-innsamlinger, kobler Betyna stiftelsen hver fadder til et bestemt barn. Koordinator i Kongo følger opp barnet personlig, og du får godkjente oppdateringer direkte i fadderportalen.",
+      "subtitle": "Hver fadder knyttes til et bestemt barn. Koordinator i Kongo følger opp, og oppdateringer legges ut når de er godkjent.",
       "step1_title": "Personlig tildeling",
       "step1_desc": "Når du melder deg, tildeler administrator i Norge et barn som trenger støtte mest. Av personvernhensyn legges aldri private barneprofiler åpent ut på nett.",
       "step2_title": "Lokal oppfølging i Kongo",
       "step2_desc": "Vår koordinator i Kinshasa og Goma betaler skolepenger direkte til skolen, overleverer skolemateriell og besøker klasserommet.",
-      "step3_title": "Årlig revisjon og framgang",
+      "step3_title": "Oppfølging og framgang",
       "step3_desc": "To ganger i året mottar du grundige, oversatte rapporter og karakterutskrifter. Du følger barnet helt til fullført utdanningsløp."
     },
     "principles": {
@@ -73,7 +73,7 @@
       "card1_desc": "Vi forlater ikke et barn etter ett år. Målet er alltid fullført skolegang eller et yrkesfaglig fagbrev som gir varig levebrød.",
       "card2_title": "Verdighet fremfor klikkagn",
       "card2_desc": "Vi viser aldri bilder av gråtende eller lidende barn for å samle inn penger. All fotografering skjer med skriftlig samtykke og respekt.",
-      "card3_title": "Full åpenhet & revisjon",
+      "card3_title": "Full åpenhet",
       "card3_desc": "Hver eneste krone avstemmes mot kvitteringer fra skolen i Kongo. Våre administrative kostnader i Norge dekkes privat."
     },
     "testimonials": {
@@ -111,9 +111,9 @@
       "secondaryButton": "Les om åpenhet og etikk"
     },
     "footer": {
-      "aboutTitle": "Betyna Stiftelsen",
-      "aboutDesc": "En ideell stiftelse som bygger varige muligheter gjennom utdanningsløp for barn i Den demokratiske republikken Kongo. Hver krone dokumenteres og følges tett.",
-      "gdpr": "Full personvernoverholdelse (GDPR)",
+      "aboutTitle": "Betyna",
+      "aboutDesc": "Frivillig arbeid for barn i Den demokratiske republikken Kongo. Fadderbidraget går uavkortet til skolegang og det barnet trenger for å fullføre den. Ikke en stiftelse.",
+      "gdpr": "Ingen private barneprofiler på den åpne siden",
       "col2Title": "Kjernevirksomhet",
       "col2Item1": "Langsiktig fadderoppfølging",
       "col2Item2": "Barneskoler og yrkesutdanning",
@@ -121,10 +121,10 @@
       "col2Item4": "Ekstraordinære aksjoner",
       "col2Item5": "Strenge etiske retningslinjer",
       "col3Title": "Etikk & Åpenhet",
-      "col3Desc": "Vi eksponerer aldri sårbare barns fulle identitet eller private historier offentlig. Kun tildelt fadder mottar godkjente rapporter. Alle vitnesbyrd på nettsiden er fra voksne mottakere med skriftlig samtykke.",
+      "col3Desc": "Vi legger ikke ut barns private historier på den åpne siden. Enkeltnavn og bilder kommer først når samtykke er dokumentert.",
       "col4Title": "Kontakt oss",
-      "location": "Oslo, Norge · Kinshasa, DR Kongo",
-      "copyright": "Betyna Stiftelsen. Organisasjonsnummer under registrering i Enhetsregisteret.",
+      "location": "Norge · Kongo",
+      "copyright": "Betyna. Frivillig arbeid. Ikke en stiftelse.",
       "privacy": "Personvernerklæring",
       "terms": "Vilkår for fadderskap",
       "access": "Innsynsrett"
@@ -139,12 +139,12 @@
   },
   "en": {
     "nav": {
-      "wordmark": "The Betyna Foundation",
+      "wordmark": "Betyna",
       "sponsorship": "Child Sponsorship",
       "stories": "Stories",
       "campaigns": "Campaigns",
       "about": "About Us",
-      "transparency": "Transparency & Accounts",
+      "transparency": "Transparency",
       "becomeSponsor": "Become a Sponsor",
       "viewPublic": "View Public Site",
       "sponsorChild": "Your Sponsored Child",
@@ -166,12 +166,12 @@
       "adminTestimonials": "Testimonial Editor"
     },
     "hero": {
-      "kicker": "The Betyna Foundation · Norway & DR Congo",
+      "kicker": "Betyna · Norway & DR Congo",
       "title": "Guiding children in DR Congo through their entire education",
       "subtitle": "A personal and transparent sponsorship program. For 250–350 NOK per month, you ensure a specific child receives schooling, textbooks, safety, and follow-up until graduating secondary or vocational school.",
       "primaryButton": "Become a sponsor today",
       "secondaryButton": "How the program works",
-      "proof1": "100% documented field reports",
+      "proof1": "The money is passed on in full",
       "proof2": "Zero commercial middlemen",
       "proof3": "Dignity before clickbait",
       "visualLocation": "Kinshasa · Goma · Bukavu — DR Congo",
@@ -179,23 +179,23 @@
       "visualSubtitle": "Close sponsor bonds in Norway, present field coordinators in DR Congo, and 100% accountable reporting."
     },
     "kpi": {
-      "kpi1_value": "100%",
-      "kpi1_label": "Directly to the children",
-      "kpi1_sublabel": "Zero administrative fees in Norway",
-      "kpi2_value": "42",
-      "kpi2_label": "Children in active education",
-      "kpi2_sublabel": "Kinshasa, Goma & Bukavu",
-      "kpi3_value": "2x",
-      "kpi3_label": "Annual verified reports",
-      "kpi3_sublabel": "Photo-documented & translated",
+      "kpi1_value": "15",
+      "kpi1_label": "Children have received schooling",
+      "kpi1_sublabel": "Over 10–15 years",
+      "kpi2_value": "10",
+      "kpi2_label": "Sponsors",
+      "kpi2_sublabel": "3,500 NOK a year each",
+      "kpi3_value": "35,000 NOK",
+      "kpi3_label": "A year for schooling",
+      "kpi3_sublabel": "Passed on in full",
       "kpi4_value": "0 NOK",
-      "kpi4_label": "Commercial middlemen",
-      "kpi4_sublabel": "Direct to schooling & materials"
+      "kpi4_label": "Salary",
+      "kpi4_sublabel": "Voluntary work"
     },
     "steps": {
       "kicker": "Child Sponsorship",
       "title": "A dedicated partnership for the child's future",
-      "subtitle": "Unlike anonymous mass campaigns, the Betyna Foundation connects each sponsor to an individual child. Our field coordinator in DR Congo mentors the child personally, and you receive verified updates directly in the sponsor portal.",
+      "subtitle": "Each sponsor is linked to one child. A coordinator in Congo follows up, and updates are published when they are approved.",
       "step1_title": "Personal Allocation",
       "step1_desc": "When you register, an administrator in Norway assigns a child with the highest need. For privacy, child profiles are never publicly listed on the web.",
       "step2_title": "Local Field Guidance in DR Congo",
@@ -249,9 +249,9 @@
       "secondaryButton": "Read about transparency and ethics"
     },
     "footer": {
-      "aboutTitle": "The Betyna Foundation",
-      "aboutDesc": "A non-profit foundation creating lasting opportunities through educational pathways for children in the Democratic Republic of Congo. Every krone is documented and closely monitored.",
-      "gdpr": "Full GDPR Privacy Compliance",
+      "aboutTitle": "Betyna",
+      "aboutDesc": "Voluntary work for children in the Democratic Republic of Congo. Sponsor money is passed on in full to schooling and what a child needs to finish. Not a foundation.",
+      "gdpr": "No private child profiles on the public site",
       "col2Title": "Core Activities",
       "col2Item1": "Long-term sponsor mentorship",
       "col2Item2": "Primary schools & vocational training",
@@ -259,10 +259,10 @@
       "col2Item4": "Targeted fundraising campaigns",
       "col2Item5": "Strict ethical standards",
       "col3Title": "Ethics & Transparency",
-      "col3Desc": "We never expose vulnerable children's full identities or private histories publicly. Only the assigned sponsor receives verified reports. All testimonials on this site are from adults with written consent.",
+      "col3Desc": "Private stories about the children are not published on the open site. Names and photos are added only when consent is documented.",
       "col4Title": "Contact Us",
-      "location": "Oslo, Norway · Kinshasa, DR Congo",
-      "copyright": "The Betyna Foundation. Organization number under registration in the Norwegian Entity Registry.",
+      "location": "Norway · Congo",
+      "copyright": "Betyna. Voluntary work. Not a foundation.",
       "privacy": "Privacy Policy",
       "terms": "Sponsorship Terms",
       "access": "Right of Inspection"

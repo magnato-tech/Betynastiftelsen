@@ -1,6 +1,6 @@
 {
-  "name": "Betyna Stiftelsen — Bistands- og Fadderplattform",
-  "description": "En trygg og verdig bistandsplattform som følger barn i Kongo gjennom utdanningsløpet, håndterer godkjenning av rapporter, fadderoppfølging og transparente aksjoner.",
+  "name": "Betyna",
+  "description": "Frivillig arbeid for skolegang i Kongo. Fadderbidraget går uavkortet til det barnet trenger for å fullføre.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

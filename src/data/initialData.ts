@@ -672,7 +672,7 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
 
 export const INITIAL_CMS_CONTENT: CmsContent = {
   hero: {
-    kicker: 'Betyna Stiftelsen · Norge & Kongo',
+    kicker: 'Betyna · Norge & Kongo',
     title: 'Vi følger barn i Kongo gjennom hele utdanningsløpet',
     subtitle: 'En personlig og tillitsvekkende fadderordning. For 250–350 kroner i måneden sikrer du at et konkret barn får skoleplass, bøker, trygghet og oppfølging helt frem til fullført yrke eller videregående.',
     primaryButtonText: 'Bli fadder i dag',
@@ -720,39 +720,39 @@ export const INITIAL_CMS_CONTENT: CmsContent = {
     {
       id: 'principle-4',
       title: 'Lokal forankring i Kongo',
-      description: 'Våre koordinatorer i Kinshasa, Goma og Bukavu er erfarne pedagoger og samfunnsarbeidere som bor og arbeider i nærmiljøet.',
+      description: 'Koordinatorene følger barna der de går på skole, og sender fakta som godkjennes før noe legges ut.',
       iconName: 'Users',
     },
   ],
   kpiStats: [
     {
       id: 'kpi-1',
-      value: '10',
-      label: 'Elever under oppfølging',
-      sublabel: 'I Kinshasa, Goma & Bukavu',
+      value: '15',
+      label: 'Barn har fått skolegang',
+      sublabel: 'Over 10–15 år',
     },
     {
       id: 'kpi-2',
-      value: '4',
-      label: 'Faddere i Norge',
-      sublabel: 'Fast månedlig oppfølging',
+      value: '10',
+      label: 'Faddere',
+      sublabel: '3 500 kr i året hver',
     },
     {
       id: 'kpi-3',
-      value: '96.4%',
-      label: 'Gjennomsnittlig oppmøte',
-      sublabel: 'Bekreftet av lærere',
+      value: '35 000 kr',
+      label: 'I året til skolegangen',
+      sublabel: 'Går uavkortet',
     },
     {
       id: 'kpi-4',
       value: '0 kr',
-      label: 'Lederlønninger i Norge',
-      sublabel: 'Drevet på ideell basis',
+      label: 'Lønn',
+      sublabel: 'Frivillig arbeid',
     },
   ],
   ctaBanner: {
     title: 'Ønsker du å vite mer om fadderansvaret?',
-    subtitle: 'Fadderbeløpet er normalt 250 eller 350 kr/mnd og dekker skolepenger, uniform, bøker og skolemateriell.',
+    subtitle: 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
     buttonText: 'Meld interesse som fadder',
     backgroundImageUrl: '',
     backgroundPreset: 'pattern',

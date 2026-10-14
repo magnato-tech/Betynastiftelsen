@@ -31,7 +31,7 @@ interface CmsEditorProps {
   onViewPublicSite: () => void;
 }
 
-type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta';
+type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov';
 
 export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
   const {
@@ -43,6 +43,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
     addStory,
     updateStory,
     deleteStory,
+    campaigns,
+    updateCampaign,
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<CmsSubTab>('hero');
@@ -153,7 +155,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
   // 5. CTA BANNER UPDATE HANDLERS
   const currentCtaBanner: CmsCtaBanner = cmsContent.ctaBanner || {
     title: 'Ønsker du å vite mer om fadderansvaret?',
-    subtitle: 'Fadderbeløpet er normalt 250 eller 350 kr/mnd og dekker skolepenger, uniform, bøker og skolemateriell.',
+    subtitle: 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
     buttonText: 'Meld interesse som fadder',
     backgroundImageUrl: '',
     backgroundPreset: 'pattern',
@@ -390,6 +392,17 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
         >
           <Megaphone className="w-3.5 h-3.5" />
           <span>Fadderoppfordring (CTA)</span>
+        </button>
+        <button
+          onClick={() => setActiveSubTab('behov')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+            activeSubTab === 'behov'
+              ? 'bg-[#4D6B3E] text-white shadow-xs'
+              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Konkrete behov</span>
         </button>
       </div>
 
@@ -935,6 +948,33 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeSubTab === 'behov' && (
+        <div className="space-y-6">
+          <p className="text-sm text-stone-600 leading-relaxed max-w-2xl">
+            Hvert kort under Konkrete behov på forsiden kan ha sitt eget bilde. Last opp fra maskinen, eller lim inn en bildeadresse. Bildet vises med én gang.
+          </p>
+          {campaigns.map((camp) => (
+            <div key={camp.id} className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
+              <div>
+                <h3 className="text-base font-serif font-bold text-stone-900">{camp.tittel}</h3>
+                <p className="text-xs text-stone-500 mt-1">{camp.enhetBeskrivelse}</p>
+              </div>
+              <ImagePickerField
+                label="Bilde på behovskortet"
+                sublabel="Last opp et bilde fra maskinen, velg et ferdig motiv, eller lim inn en adresse."
+                currentUrl={camp.bildeUrl}
+                currentPreset={camp.bildeUrl ? 'custom' : 'pattern'}
+                showScrimSlider={false}
+                onChange={(updates) => {
+                  updateCampaign(camp.id, { bildeUrl: updates.backgroundImageUrl || '' });
+                  showNotification(`Bildet for «${camp.tittel}» er oppdatert.`);
+                }}
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>
