@@ -13,6 +13,7 @@ import { DevPortals } from './dev/DevPortals';
 import { BecomeSponsorModal } from './components/modals/BecomeSponsorModal';
 import { DonateCampaignModal } from './components/modals/DonateCampaignModal';
 import { Campaign } from './types';
+import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 
 const MainLayout: React.FC = () => {
   const { role } = useApp();
@@ -23,7 +24,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
       {/* 1. Persistent Role Switcher Ribbon for immediate testing */}
-      {import.meta.env.DEV && <RoleSwitcherBanner />}
+      {prototypeRoleSwitcherEnabled && <RoleSwitcherBanner />}
 
       {/* 2. Top Bar complying with strict 1-row 3-zone contract */}
       <Navbar
@@ -43,7 +44,7 @@ const MainLayout: React.FC = () => {
           />
         )}
 
-        {import.meta.env.DEV && role !== 'public' && (
+        {prototypeRoleSwitcherEnabled && role !== 'public' && (
           <DevPortals
             role={role}
             activeSection={activeSection}
