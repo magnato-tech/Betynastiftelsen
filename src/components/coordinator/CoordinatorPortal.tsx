@@ -293,7 +293,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
           <div className="flex items-center gap-2 text-xs text-[#A3B18A] font-semibold uppercase tracking-wider">
             <span>Espace Terrain — Congo-Brazzaville</span>
             <span aria-hidden="true">·</span>
-            <span>Brazzaville · Pointe-Noire · Dolisie</span>
+            <span>Brazzaville</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-serif font-bold text-white">
             Portail de Coordination & Suivi des Enfants

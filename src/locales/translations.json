@@ -29,15 +29,15 @@
     },
     "hero": {
       "kicker": "Betyna · Norge & Kongo",
-      "title": "Vi følger barn i Kongo gjennom hele utdanningsløpet",
-      "subtitle": "En personlig og tillitsvekkende fadderordning. For 250–350 kroner i måneden sikrer du at et konkret barn får skoleplass, bøker, trygghet og oppfølging helt frem til fullført yrke eller videregående.",
+      "title": "Vi følger barnet til fagbrev, utdanning og en reell jobb",
+      "subtitle": "Betyna er unik fordi vi ikke stopper ved skolegang alene. For 250–350 kroner i måneden følger vi barnet helt til det har fullført et fagbrev eller en utdanning og faktisk kan forsørge sin familie.",
       "primaryButton": "Bli fadder i dag",
       "secondaryButton": "Slik fungerer ordningen",
       "proof1": "Pengene går uavkortet",
       "proof2": "Null kommersielle mellomledd",
       "proof3": "Verdighet foran klikkagn",
-      "visualLocation": "Brazzaville · Pointe-Noire — Kongo-Brazzaville",
-      "visualTitle": "Langsiktig utdanningsstøtte og verdighet fra barneskole til yrke",
+      "visualLocation": "Brazzaville — Kongo-Brazzaville",
+      "visualTitle": "Fra skole til fagbrev, utdanning og jobb som forsørger",
       "visualSubtitle": "Tette fadderbånd i Norge, tilstedeværende koordinatorer i Kongo og 100% etterrettelig rapportering."
     },
     "kpi": {
@@ -46,7 +46,7 @@
       "kpi1_sublabel": "Null administrasjonsgebyrer i Norge",
       "kpi2_value": "42",
       "kpi2_label": "Barn i faste utdanningsløp",
-      "kpi2_sublabel": "Brazzaville og Pointe-Noire",
+      "kpi2_sublabel": "Skoletilbud i Brazzaville",
       "kpi3_value": "2 ggr",
       "kpi3_label": "Årlig verifisert rapport",
       "kpi3_sublabel": "Fotodokumentert & oversatt",
@@ -54,23 +54,29 @@
       "kpi4_label": "Kommersielle mellomledd",
       "kpi4_sublabel": "Rett til skole og læremidler"
     },
+    "sponsorship": {
+      "realityTitle": "Privatskole — og du betyr en forskjell",
+      "realityParagraph1": "De fleste barn i Kongo går på privatskole som koster penger. Er du med som fadder, er ett barn helt avhengig av deg — ikke av en stor, anonym giverpool.",
+      "realityParagraph2": "Vi er små, og vi er ærlige om realiteten: da en giver en gang måtte slutte og ingen andre kunne ta over, måtte vi fortelle at barnet var kastet ut av skolen. Det høres brutalt ut. Det er også hele forskjellen: som fadder betyr du virkelig noe for ett barn.",
+      "realityParagraph3": "For det ene barnet kan det bety alt. For den som utdanner seg til jordmor, sykepleier eller lege, kan det bety et langt liv i tjeneste for andre."
+    },
     "steps": {
       "kicker": "Fadderordningen",
-      "title": "Et forpliktende partnerskap for barnets framtid",
-      "subtitle": "Hver fadder knyttes til et bestemt barn. Koordinator i Kongo følger opp, og oppdateringer legges ut når de er godkjent.",
-      "step1_title": "Personlig tildeling",
-      "step1_desc": "Når du melder deg, tildeler administrator i Norge et barn som trenger støtte mest. Av personvernhensyn legges aldri private barneprofiler åpent ut på nett.",
+      "title": "Én fadder — ett barn som er avhengig av deg",
+      "subtitle": "Betyna er lite og personlig. Du blir ikke «én i mengden» — du holder skoleplassen oppe for ett navn, ett liv og en familie.",
+      "step1_title": "Én fadder, ett barn",
+      "step1_desc": "De fleste går på privatskole som koster penger. Når du blir fadder, knyttes du til ett barn som er avhengig av at bidraget kommer — måned for måned.",
       "step2_title": "Lokal oppfølging i Kongo",
-      "step2_desc": "Vår koordinator i Brazzaville og Pointe-Noire betaler skolepenger direkte til skolen, overleverer skolemateriell og besøker klasserommet.",
-      "step3_title": "Oppfølging og framgang",
-      "step3_desc": "To ganger i året mottar du grundige, oversatte rapporter og karakterutskrifter. Du følger barnet helt til fullført utdanningsløp."
+      "step2_desc": "Vår koordinator i Brazzaville betaler skolepenger direkte til skolen, overleverer skolemateriell og besøker klasserommet.",
+      "step3_title": "Hele løpet — til jobb",
+      "step3_desc": "Det hjelper lite med mange år på skolen uten å komme videre. Vi følger til fagbrev eller utdanning er fullført og barnet kan få jobb og bli den stabile forsørgeren familien trenger."
     },
     "principles": {
       "kicker": "Kjernerammer og etikk",
       "title": "Stiftelsens fundament: Verdighet, åpenhet og langsiktighet",
       "subtitle": "Vi driver ikke bistandsturisme eller overflatiske kampanjer. Vår modell bygger på forpliktende, langsiktige relasjoner med dyp respekt for barna og familiene deres.",
       "card1_title": "Langsiktig forpliktelse",
-      "card1_desc": "Vi forlater ikke et barn etter ett år. Målet er alltid fullført skolegang eller et yrkesfaglig fagbrev som gir varig levebrød.",
+      "card1_desc": "Vi forlater ikke et barn etter ett år — eller etter bare grunnskolen. Målet er fagbrev eller utdanning som gir en reell jobb, slik at barnet kan forsørge sin familie.",
       "card2_title": "Verdighet fremfor klikkagn",
       "card2_desc": "Vi viser aldri bilder av gråtende eller lidende barn for å samle inn penger. All fotografering skjer med skriftlig samtykke og respekt.",
       "card3_title": "Full åpenhet",
@@ -105,17 +111,17 @@
     },
     "cta": {
       "kicker": "Bli med i dag",
-      "title": "Vil du gi et barn i Kongo trygghet og skolegang?",
-      "subtitle": "For 250–350 kr i måneden endrer du et livsløp. Fyll ut skjemaet, så tildeler vi et barn og sender deg velkomstpakke med presentasjon.",
+      "title": "Vil du bety en forskjell for ett barn?",
+      "subtitle": "For 250–350 kr i måneden holder du ofte skoleplassen oppe på privatskole — for ett barn som er avhengig av deg, helt til utdanning og jobb.",
       "primaryButton": "Meld deg som fadder nå",
       "secondaryButton": "Les om åpenhet og etikk"
     },
     "footer": {
       "aboutTitle": "Betyna",
-      "aboutDesc": "Frivillig arbeid for barn i Kongo-Brazzaville. Fadderbidraget går uavkortet til skolegang og det barnet trenger for å fullføre den. Ikke en stiftelse.",
+      "aboutDesc": "Frivillig arbeid i Kongo-Brazzaville. Vi følger barnet til fagbrev eller utdanning er fullført og det kan forsørge sin familie — ikke bare til skolegangen er over. Ikke en stiftelse.",
       "gdpr": "Ingen private barneprofiler på den åpne siden",
       "col2Title": "Kjernevirksomhet",
-      "col2Item1": "Langsiktig fadderoppfølging",
+      "col2Item1": "Følger til fagbrev, utdanning og jobb",
       "col2Item2": "Barneskoler og yrkesutdanning",
       "col2Item3": "Dokumenterte skoleframskritt",
       "col2Item4": "Ekstraordinære aksjoner",
@@ -167,15 +173,15 @@
     },
     "hero": {
       "kicker": "Betyna · Norvège et Congo-Brazzaville",
-      "title": "Nous accompagnons des enfants au Congo-Brazzaville tout au long de leur scolarité",
-      "subtitle": "Un parrainage personnel et transparent. Pour 250 à 350 couronnes par mois, vous permettez à un enfant précis d'aller à l'école, d'avoir des livres, de la sécurité et un suivi jusqu'à la fin de sa formation secondaire ou professionnelle.",
+      "title": "Nous accompagnons l'enfant jusqu'au diplôme professionnel, aux études et à un vrai emploi",
+      "subtitle": "Betyna est unique : nous ne nous arrêtons pas à la scolarité seule. Pour 250 à 350 couronnes par mois, nous suivons l'enfant jusqu'à ce qu'il ait un certificat professionnel ou des études terminées et puisse réellement subvenir aux besoins de sa famille.",
       "primaryButton": "Devenir parrain aujourd'hui",
       "secondaryButton": "Comment ça marche",
       "proof1": "L'argent est versé intégralement",
       "proof2": "Aucun intermédiaire commercial",
       "proof3": "La dignité avant le sensationnalisme",
-      "visualLocation": "Brazzaville · Pointe-Noire — Congo-Brazzaville",
-      "visualTitle": "Soutien éducatif durable et dignité, de l'école primaire au métier",
+      "visualLocation": "Brazzaville — Congo-Brazzaville",
+      "visualTitle": "De l'école au diplôme professionnel, aux études et à un emploi pour subvenir aux besoins de la famille",
       "visualSubtitle": "Liens étroits avec les parrains en Norvège, coordinateurs sur le terrain au Congo-Brazzaville et rapports entièrement vérifiables."
     },
     "kpi": {
@@ -192,23 +198,29 @@
       "kpi4_label": "Salaire",
       "kpi4_sublabel": "Travail bénévole"
     },
+    "sponsorship": {
+      "realityTitle": "École privée — et vous faites une vraie différence",
+      "realityParagraph1": "La plupart des enfants au Congo vont dans une école privée payante. En tant que parrain, un enfant dépend entièrement de vous — pas d'un grand fonds anonyme.",
+      "realityParagraph2": "Nous sommes petits et disons la vérité : quand un donateur a dû arrêter et que personne n'a pu reprendre, nous avons dû dire que l'enfant avait été renvoyé de l'école. C'est brutal. C'est aussi toute la différence : en tant que parrain, vous comptez vraiment pour un enfant.",
+      "realityParagraph3": "Pour cet enfant, cela peut tout changer. Pour celui ou celle qui devient sage-femme, infirmier ou médecin, cela peut signifier une vie entière au service des autres."
+    },
     "steps": {
       "kicker": "Parrainage",
-      "title": "Un partenariat engagé pour l'avenir de l'enfant",
-      "subtitle": "Chaque parrain est lié à un enfant. Un coordinateur au Congo-Brazzaville assure le suivi ; les mises à jour sont publiées une fois approuvées.",
-      "step1_title": "Attribution personnelle",
-      "step1_desc": "Lors de votre inscription, un administrateur en Norvège attribue un enfant ayant le plus grand besoin. Par respect de la vie privée, aucun profil d'enfant n'est listé publiquement sur le site.",
+      "title": "Un parrain — un enfant qui dépend de vous",
+      "subtitle": "Betyna est petit et personnel. Vous n'êtes pas « un parmi tant » — vous maintenez la place à l'école pour un nom, une vie, une famille.",
+      "step1_title": "Un parrain, un enfant",
+      "step1_desc": "La plupart vont dans une école privée payante. En devenant parrain, vous êtes lié à un enfant qui dépend de votre soutien — mois après mois.",
       "step2_title": "Suivi local au Congo-Brazzaville",
-      "step2_desc": "Notre coordinateur à Brazzaville et Pointe-Noire paie les frais de scolarité directement à l'établissement, fournit le matériel scolaire et visite la classe.",
-      "step3_title": "Suivi et progrès",
-      "step3_desc": "Deux fois par an vous recevez des rapports détaillés traduits et des relevés de notes, jusqu'à la fin du parcours scolaire de l'enfant."
+      "step2_desc": "Notre coordinateur à Brazzaville paie les frais de scolarité directement à l'établissement, fournit le matériel scolaire et visite la classe.",
+      "step3_title": "Tout le parcours — jusqu'à l'emploi",
+      "step3_desc": "Douze ans d'école sans issue ne suffisent pas. Nous accompagnons jusqu'à la fin du diplôme professionnel ou des études et un emploi réel, pour que l'enfant devienne le soutien stable que sa famille attend."
     },
     "principles": {
       "kicker": "Cadre et éthique",
       "title": "Fondements : dignité, transparence et durée",
       "subtitle": "Nous ne faisons pas du tourisme humanitaire ni de campagnes superficielles. Notre modèle repose sur des relations engagées et durables, dans le respect profond des enfants et de leurs familles.",
       "card1_title": "Engagement à long terme",
-      "card1_desc": "Nous ne quittons pas un enfant après un an. L'objectif est toujours une scolarité terminée ou un certificat professionnel donnant des moyens de subsistance durables.",
+      "card1_desc": "Nous ne quittons pas un enfant après un an — ni après le primaire seul. L'objectif est un diplôme professionnel ou des études qui mènent à un vrai emploi, pour subvenir aux besoins de la famille.",
       "card2_title": "Dignité plutôt que clic",
       "card2_desc": "Nous n'affichons jamais d'images d'enfants souffrants pour collecter des fonds. Toute photographie se fait avec consentement documenté et dignité.",
       "card3_title": "Transparence totale",
@@ -244,13 +256,13 @@
     "cta": {
       "kicker": "Rejoignez-nous",
       "title": "Souhaitez-vous en savoir plus sur le rôle de parrain ?",
-      "subtitle": "Le montant du parrainage est de 250 ou 350 couronnes par mois et est versé intégralement pour ce que l'enfant a besoin pour terminer sa scolarité.",
+      "subtitle": "Le montant du parrainage est de 250 ou 350 couronnes par mois et est versé intégralement jusqu'à la fin du diplôme professionnel ou des études — jusqu'à ce que l'enfant puisse subvenir aux besoins de sa famille.",
       "primaryButton": "Manifester mon intérêt comme parrain",
       "secondaryButton": "Lire sur la transparence et l'éthique"
     },
     "footer": {
       "aboutTitle": "Betyna",
-      "aboutDesc": "Travail bénévole pour des enfants au Congo-Brazzaville. Les dons de parrainage vont intégralement à la scolarité et aux besoins de l'enfant pour terminer. Ce n'est pas une fondation.",
+      "aboutDesc": "Travail bénévole au Congo-Brazzaville. Nous suivons l'enfant jusqu'à un diplôme professionnel ou des études terminées et un emploi pour subvenir à sa famille — pas seulement jusqu'à la fin de l'école. Ce n'est pas une fondation.",
       "gdpr": "Aucun profil d'enfant privé sur le site public",
       "col2Title": "Activités principales",
       "col2Item1": "Suivi de parrainage à long terme",

@@ -14,8 +14,9 @@ export const INITIAL_MILESTONES: ChildMilestone[] = [];
 export const INITIAL_CMS_CONTENT: CmsContent = {
   hero: {
     kicker: 'Betyna · Norge & Kongo',
-    title: 'Vi følger barn i Kongo gjennom hele utdanningsløpet',
-    subtitle: 'En personlig fadderordning. For 250 eller 350 kroner i måneden, 3 500 kroner i året, går beløpet uavkortet til det barnet trenger for å fullføre skolegangen.',
+    title: 'Vi følger barnet til fagbrev, utdanning og en reell jobb',
+    subtitle:
+      'Betyna er unik fordi vi ikke stopper ved skolegang alene. For 250 eller 350 kroner i måneden følger vi barnet helt til det har fullført et fagbrev eller en utdanning og faktisk kan forsørge sin familie.',
     primaryButtonText: 'Bli fadder i dag',
     secondaryButtonText: 'Slik fungerer ordningen',
     backgroundImageUrl: 'IMG_1194.jpg',
@@ -25,8 +26,9 @@ export const INITIAL_CMS_CONTENT: CmsContent = {
   steps: [
     {
       number: 1,
-      title: 'Personlig tildeling',
-      description: 'Når du blir fadder, knyttes du til ett barn. Private barneprofiler legges ikke ut på den åpne siden.',
+      title: 'Én fadder, ett barn',
+      description:
+        'De fleste går på privatskole som koster penger. Når du blir fadder, knyttes du til ett barn som er avhengig av at bidraget kommer — måned for måned.',
     },
     {
       number: 2,
@@ -35,8 +37,9 @@ export const INITIAL_CMS_CONTENT: CmsContent = {
     },
     {
       number: 3,
-      title: 'Frem til skolegangen er fullført',
-      description: 'Målet er at barnet fullfører skolegangen. Bidraget dekker det som trengs underveis.',
+      title: 'Hele løpet — til jobb',
+      description:
+        'Det hjelper lite med mange år på skolen uten å komme videre. Vi følger til fagbrev eller utdanning er fullført og barnet kan få jobb og bli den stabile forsørgeren familien trenger.',
     },
   ],
   aboutCards: [
@@ -60,8 +63,9 @@ export const INITIAL_CMS_CONTENT: CmsContent = {
     },
     {
       id: 'principle-4',
-      title: 'Oppfølging i Kongo',
-      description: 'Koordinatorene følger barna der de går på skole, og sender fakta som godkjennes før noe legges ut.',
+      title: 'Hele løpet teller',
+      description:
+        'Familien trenger ikke bare skoleplass — de trenger et barn som fullfører og kan forsørge andre. Vi avslutter ikke før utdanningen gir en reell vei til arbeid.',
       iconName: 'Users',
     },
   ],
@@ -92,8 +96,9 @@ export const INITIAL_CMS_CONTENT: CmsContent = {
     },
   ],
   ctaBanner: {
-    title: 'Vil du bli fadder?',
-    subtitle: 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
+    title: 'Vil du bety en forskjell for ett barn?',
+    subtitle:
+      '250 eller 350 kr i måneden holder ofte skoleplassen oppe på privatskole — for ett barn som er avhengig av deg, helt til fagbrev, utdanning og jobb.',
     buttonText: 'Les hvordan avtalen gjøres',
     backgroundImageUrl: '',
     backgroundPreset: 'pattern',

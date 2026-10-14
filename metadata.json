@@ -1,6 +1,6 @@
 {
   "name": "Betyna",
-  "description": "Frivillig arbeid for skolegang i Kongo. Fadderbidraget går uavkortet til det barnet trenger for å fullføre.",
+  "description": "Følger barnet til fagbrev, utdanning og jobb — slik det kan forsørge sin familie. Frivillig arbeid i Kongo-Brazzaville.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

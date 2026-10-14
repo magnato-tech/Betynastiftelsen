@@ -52,7 +52,10 @@ Mål
 Geografi og språk
 * Innsamlingsarbeidet og administrasjonen foregår i Norge.
 * Bistandsarbeidet og registreringen av barn foregår i Kongo.
+* Unik modell: følge barnet til fullført fagbrev eller utdanning og reell jobb, slik at det kan forsørge familien — ikke stoppe ved skolegang alene.
+* Fadderordning: de fleste barn går p privatskole som koster penger. Ett barn er avhengig av sin fadder; ved brudd uten ny fadder kan barnet miste skoleplass. Betyna er lite og personlig, ikke massegiveri.
 * Geografisk: Republikken Kongo (Kongo-Brazzaville), ikke Den demokratiske republikken Kongo.
+* Arbeidet foregår i Brazzaville; ikke andre byer eller landsbygda.
 * Offentlig nettside, fadderportal og administratorflate skal være på norsk.
 * Koordinatorportalen skal være på fransk, hele skjermen.
 * Rapporter og senere spørsmål oversettes mellom fransk og norsk. Fadderen ser bare den norske teksten.
@@ -386,4 +389,10 @@ Den rettede offentlige siden er committet og pushet til magnato-tech/Betynastift
 15. oktober 2026, språkvelger
 Språkvelgeren på offentlig nettside er norsk og fransk (ikke engelsk). Franske strenger ligger i oversettelsesfilen. Tidligere engelskvalg i nettleseren migreres til fransk.
 15. oktober 2026, geografi
-Arbeidet skjer i Kongo-Brazzaville (Republikken Kongo), ikke i Den demokratiske republikken Kongo. Tekst, oversettelser og prototype-data er justert (Brazzaville, Pointe-Noire, Dolisie).
+Arbeidet skjer i Kongo-Brazzaville (Republikken Kongo), ikke i Den demokratiske republikken Kongo. Tekst, oversettelser og prototype-data er justert (kun Brazzaville — skoletilbudet er best i hovedstaden, ikke på landsbygda).
+15. oktober 2026, Brazzaville
+Alt feltarbeid og skoletilbud er i Brazzaville. Pointe-Noire, Dolisie og landsby er fjernet fra tekst og prototype.
+15. oktober 2026, hele løpet
+Betyna følger barnet til fagbrev/utdanning og jobb som forsørger. Budskap på nettside og i CMS oppdatert; skolegang alene er ikke målet.
+15. oktober 2026, fadderavhengighet
+Avklart budskap om privatskole, personlig fadderansvar og ærlighet om konsekvens ved opphør uten ny fadder. Offentlig fadderseksjon utvidet.

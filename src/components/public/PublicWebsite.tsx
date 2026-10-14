@@ -142,10 +142,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             {t('steps.kicker', 'Fadderordningen')}
           </span>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
-            {t('steps.title', 'Et forpliktende partnerskap for barnets framtid')}
+            {t('steps.title', 'Én fadder — ett barn som er avhengig av deg')}
           </h2>
           <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            {t('steps.subtitle', 'Hver fadder knyttes til et bestemt barn. Koordinator i Kongo følger opp, og oppdateringer legges ut når de er godkjent.')}
+            {t(
+              'steps.subtitle',
+              'Betyna er lite og personlig. Du blir ikke «én i mengden» — du holder skoleplassen oppe for ett navn, ett liv og en familie.'
+            )}
           </p>
         </div>
 
@@ -179,11 +182,35 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           })}
         </div>
 
+        <div className="mt-10 bg-[#F6F4ED] border border-[#DFD9CB] rounded-xl p-6 md:p-8 space-y-4">
+          <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-900">
+            {t('sponsorship.realityTitle', 'Privatskole — og du betyr en forskjell')}
+          </h3>
+          <p className="text-sm text-stone-700 leading-relaxed font-sans">
+            {t(
+              'sponsorship.realityParagraph1',
+              'De fleste barn i Kongo går på privatskole som koster penger. Er du med som fadder, er ett barn helt avhengig av deg — ikke av en stor, anonym giverpool.'
+            )}
+          </p>
+          <p className="text-sm text-stone-700 leading-relaxed font-sans">
+            {t(
+              'sponsorship.realityParagraph2',
+              'Vi er små, og vi er ærlige om realiteten: da en giver en gang måtte slutte og ingen andre kunne ta over, måtte vi fortelle at barnet var kastet ut av skolen. Det høres brutalt ut. Det er også hele forskjellen: som fadder betyr du virkelig noe for ett barn.'
+            )}
+          </p>
+          <p className="text-sm text-stone-700 leading-relaxed font-sans">
+            {t(
+              'sponsorship.realityParagraph3',
+              'For det ene barnet kan det bety alt. For den som utdanner seg til jordmor, sykepleier eller lege, kan det bety et langt liv i tjeneste for andre.'
+            )}
+          </p>
+        </div>
+
         {/* CMS-Configurable CTA Banner */}
         {(() => {
           const defaultCta = {
             title: language === 'fr' ? t('cta.title') : 'Ønsker du å vite mer om fadderansvaret?',
-            subtitle: language === 'fr' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
+            subtitle: language === 'fr' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre fagbrev eller utdanning — helt til det kan forsørge sin familie.',
             buttonText: language === 'fr' ? t('cta.primaryButton') : 'Meld interesse som fadder',
             backgroundImageUrl: '',
             scrimOpacity: 75,
@@ -243,7 +270,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             {t('testimonials.title', 'Ekte vitnesbyrd fra faddere, elever og voksne mottakere')}
           </h2>
           <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            15 barn har fått skolegang i 10–15 år, med utdanning i ulike fag. Enkeltnavn og historier legges ut først når samtykke er dokumentert.
+            15 barn har fulgt hele løpet i 10–15 år — til fagbrev, utdanning og jobb. Enkeltnavn og historier legges ut først når samtykke er dokumentert.
           </p>
         </div>
 
@@ -453,13 +480,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <div className="lg:col-span-5 space-y-4">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Om Betyna</span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
-              Grunnlagt på tillit, lokal forankring og verdighet
+              Hele løpet — ikke bare skoleår
             </h2>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              Betyna er frivillig arbeid for skolegang i Kongo-Brazzaville. Bidraget går uavkortet til det barnet trenger for å fullføre.
+              Betyna er frivillig arbeid i Brazzaville. Vi er unike fordi vi følger barnet til det har fullført et fagbrev eller en utdanning og faktisk kan få en jobb.
             </p>
             <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              Vi anser skolegang som en grunnleggende menneskerett og den mest effektive veien ut av generasjonell fattigdom. Ved å ha faste koordinatorer på bakken som kjenner familiene og skolene, unngår vi byråkrati og sikrer at hver krone gir reell læring.
+              Det hjelper lite å bruke mange år på skolen uten å komme videre. Familien trenger en stabil forsørger — derfor avslutter vi ikke før utdanningen gir en reell vei til arbeid og barnet kan bære sitt ansvar for andre.
             </p>
           </div>
 
@@ -506,7 +533,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               Full åpenhet om hver krone
             </h2>
             <p className="text-sm text-stone-700 mt-2 leading-relaxed">
-              Ti faddere à 3 500 kroner i året gir 35 000 kroner. Hele beløpet går til skolegangen. Ingen lønn tas ut.
+              Ti faddere à 3 500 kroner i året gir 35 000 kroner. Hele beløpet går til utdanningen — hele løpet til fagbrev, studier eller jobb. Ingen lønn tas ut.
             </p>
           </div>
 
@@ -514,13 +541,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-stone-900">Fadderbidrag (250–350 kr/mnd)</h3>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                Går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
+                Går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre fagbrev eller utdanning.
               </p>
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-stone-900">Det barnet trenger</h3>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                Skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
+                Skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs hele veien til barnet kan forsørge sin familie.
               </p>
             </div>
             <div className="space-y-2">

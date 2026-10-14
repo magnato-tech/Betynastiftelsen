@@ -33,7 +33,7 @@ export interface SocialImpactMetricsProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
-type RegionFilter = 'all' | 'brazzaville' | 'pointenoire' | 'dolisie';
+type RegionFilter = 'all';
 type ViewCategory = 'overview' | 'trends' | 'completion' | 'schools';
 
 interface AnnualImpactRecord {
@@ -195,17 +195,17 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'CS La Grâce',
-        city: 'Pointe-Noire',
-        region: 'pointenoire',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 22,
         completionRate: 93.6,
         attendanceRate: 94.6,
         verifiedReports: reports.filter((r) => r.barnNavn.includes('Samuel') || r.barnNavn.includes('Priscille')).length + 12,
       },
       {
-        school: 'Inst. Technique Pointe-Noire',
-        city: 'Pointe-Noire',
-        region: 'pointenoire',
+        school: 'Inst. Technique Poto-Poto',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 11,
         completionRate: 92.8,
         attendanceRate: 95.0,
@@ -213,8 +213,8 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
       },
       {
         school: 'Lycée Marie Reine',
-        city: 'Dolisie',
-        region: 'dolisie',
+        city: 'Brazzaville',
+        region: 'brazzaville',
         activeStudents: 19,
         completionRate: 97.4,
         attendanceRate: 96.2,
@@ -230,7 +230,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
   const displayAnnualData = useMemo(() => {
     if (selectedRegion === 'all') return annualData;
     // Scale proportionally for regional visual insight
-    const multiplier = selectedRegion === 'brazzaville' ? 0.62 : selectedRegion === 'pointenoire' ? 0.23 : 0.15;
+    const multiplier = 1;
     return annualData.map((d) => ({
       ...d,
       totalSupported: Math.round(d.totalSupported * multiplier),
@@ -300,7 +300,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
             Indicateurs d'Impact Social & Scolarisation
           </h2>
           <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl font-sans leading-relaxed">
-            Mesure vérifiée de la rétention scolaire, de l'évolution des effectifs accompagnés et des taux de certification comparés aux repères régionaux en République Démocratique du Congo.
+            Mesure vérifiée de la rétention scolaire à Brazzaville, de l'évolution des effectifs accompagnés et des taux de certification comparés aux repères nationaux au Congo-Brazzaville.
           </p>
         </div>
 
@@ -323,46 +323,9 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
             <Building2 className="w-3.5 h-3.5" />
             <span>Zone :</span>
           </span>
-          <button
-            onClick={() => setSelectedRegion('all')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'all'
-                ? 'bg-stone-900 text-white shadow-2xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Tous les centres Congo-Brazzaville (100%)
-          </button>
-          <button
-            onClick={() => setSelectedRegion('brazzaville')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'brazzaville'
-                ? 'bg-stone-900 text-white shadow-2xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Brazzaville (3 écoles)
-          </button>
-          <button
-            onClick={() => setSelectedRegion('pointenoire')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'pointenoire'
-                ? 'bg-stone-900 text-white shadow-2xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Pointe-Noire (2 écoles)
-          </button>
-          <button
-            onClick={() => setSelectedRegion('dolisie')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedRegion === 'dolisie'
-                ? 'bg-stone-900 text-white shadow-2xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Dolisie (1 lycée)
-          </button>
+          <span className="px-3 py-1.5 rounded-md font-medium bg-stone-900 text-white shadow-2xs whitespace-nowrap">
+            Brazzaville — partenaires scolaires (6 écoles)
+          </span>
         </div>
 
         {/* View Category tabs */}

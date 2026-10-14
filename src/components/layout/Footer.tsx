@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-3">
             <h3 className="text-lg font-serif font-bold text-stone-100">{t('footer.aboutTitle', 'Betyna')}</h3>
             <p className="text-xs text-stone-400 leading-relaxed font-sans">
-              {t('footer.aboutDesc', 'Frivillig arbeid for barn i Kongo-Brazzaville. Fadderbidraget går uavkortet til skolegang og det barnet trenger for å fullføre den. Ikke en stiftelse.')}
+              {t('footer.aboutDesc', 'Frivillig arbeid i Kongo-Brazzaville. Vi følger barnet til fagbrev eller utdanning er fullført og det kan forsørge sin familie — ikke bare til skolegangen er over. Ikke en stiftelse.')}
             </p>
             <div className="flex items-center gap-2 text-xs text-stone-400 pt-1">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
