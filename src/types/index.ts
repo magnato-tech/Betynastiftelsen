@@ -1,5 +1,5 @@
 export type UserRole = 'public' | 'sponsor' | 'coordinator' | 'admin';
-export type AppLanguage = 'no' | 'en' | 'fr';
+export type AppLanguage = 'no' | 'fr';
 
 export type ChildStatus = 'aktiv' | 'avsluttet' | 'arkivert';
 

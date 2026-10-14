@@ -128,7 +128,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const [language, setLanguageState] = useState<AppLanguage>(() => loadState('language', 'no'));
+  const normalizeLanguage = (raw: unknown): AppLanguage => {
+    if (raw === 'fr' || raw === 'no') return raw;
+    if (raw === 'en') return 'fr';
+    return 'no';
+  };
+
+  const [language, setLanguageState] = useState<AppLanguage>(() =>
+    normalizeLanguage(loadState('language', 'no'))
+  );
 
   const [childrenList, setChildrenList] = useState<Child[]>(() => loadState('children', INITIAL_CHILDREN));
   const [sponsors, setSponsors] = useState<Sponsor[]>(() => loadState('sponsors', INITIAL_SPONSORS));
@@ -221,7 +229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLanguageState('fr');
     } else if (language === 'fr') {
       const savedLang = loadState<AppLanguage>('language', 'no');
-      setLanguageState(savedLang === 'en' ? 'en' : 'no');
+      setLanguageState(normalizeLanguage(savedLang));
     }
   };
 
@@ -233,7 +241,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const t = (key: string, fallback?: string): string => {
-    const langKey = language === 'en' ? 'en' : 'no';
+    const langKey = language === 'fr' ? 'fr' : 'no';
     const parts = key.split('.');
     let current: any = (translationsData as any)[langKey];
     for (const part of parts) {

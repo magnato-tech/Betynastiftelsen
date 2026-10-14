@@ -33,11 +33,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');
 
-  const heroKicker = language === 'en' ? t('hero.kicker', cmsContent.hero.kicker) : cmsContent.hero.kicker;
-  const heroTitle = language === 'en' ? t('hero.title', cmsContent.hero.title) : cmsContent.hero.title;
-  const heroSubtitle = language === 'en' ? t('hero.subtitle', cmsContent.hero.subtitle) : cmsContent.hero.subtitle;
-  const heroPrimaryBtn = language === 'en' ? t('hero.primaryButton', cmsContent.hero.primaryButtonText) : cmsContent.hero.primaryButtonText;
-  const heroSecondaryBtn = language === 'en' ? t('hero.secondaryButton', cmsContent.hero.secondaryButtonText) : cmsContent.hero.secondaryButtonText;
+  const heroKicker = language === 'fr' ? t('hero.kicker', cmsContent.hero.kicker) : cmsContent.hero.kicker;
+  const heroTitle = language === 'fr' ? t('hero.title', cmsContent.hero.title) : cmsContent.hero.title;
+  const heroSubtitle = language === 'fr' ? t('hero.subtitle', cmsContent.hero.subtitle) : cmsContent.hero.subtitle;
+  const heroPrimaryBtn = language === 'fr' ? t('hero.primaryButton', cmsContent.hero.primaryButtonText) : cmsContent.hero.primaryButtonText;
+  const heroSecondaryBtn = language === 'fr' ? t('hero.secondaryButton', cmsContent.hero.secondaryButtonText) : cmsContent.hero.secondaryButtonText;
   const heroImageUrl = cmsContent.hero.backgroundImageUrl?.trim() || 'IMG_1194.jpg';
   const heroImageSrc =
     heroImageUrl.startsWith('http://') || heroImageUrl.startsWith('https://') || heroImageUrl.startsWith('data:') || heroImageUrl.startsWith('/')
@@ -118,9 +118,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {cmsContent.kpiStats.map((kpi, idx) => {
-              const label = language === 'en' ? t(`kpi.kpi${idx + 1}_label`, kpi.label) : kpi.label;
-              const sublabel = language === 'en' ? t(`kpi.kpi${idx + 1}_sublabel`, kpi.sublabel) : kpi.sublabel;
-              const value = language === 'en' ? t(`kpi.kpi${idx + 1}_value`, kpi.value) : kpi.value;
+              const label = language === 'fr' ? t(`kpi.kpi${idx + 1}_label`, kpi.label) : kpi.label;
+              const sublabel = language === 'fr' ? t(`kpi.kpi${idx + 1}_sublabel`, kpi.sublabel) : kpi.sublabel;
+              const value = language === 'fr' ? t(`kpi.kpi${idx + 1}_value`, kpi.value) : kpi.value;
               return (
                 <div key={kpi.id} className="space-y-1">
                   <div className="text-3xl font-serif font-bold text-stone-900 font-mono tabular-nums">
@@ -151,8 +151,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {cmsContent.steps.map((step) => {
-            const stepTitle = language === 'en' ? t(`steps.step${step.number}_title`, step.title) : step.title;
-            const stepDesc = language === 'en' ? t(`steps.step${step.number}_desc`, step.description) : step.description;
+            const stepTitle = language === 'fr' ? t(`steps.step${step.number}_title`, step.title) : step.title;
+            const stepDesc = language === 'fr' ? t(`steps.step${step.number}_desc`, step.description) : step.description;
             return (
               <div key={step.number} className="bg-white p-7 rounded-xl border border-[#DFD9CB] shadow-xs space-y-4 flex flex-col justify-between">
                 <div className="space-y-4">
@@ -182,9 +182,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         {/* CMS-Configurable CTA Banner */}
         {(() => {
           const defaultCta = {
-            title: language === 'en' ? t('cta.title') : 'Ønsker du å vite mer om fadderansvaret?',
-            subtitle: language === 'en' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
-            buttonText: language === 'en' ? t('cta.primaryButton') : 'Meld interesse som fadder',
+            title: language === 'fr' ? t('cta.title') : 'Ønsker du å vite mer om fadderansvaret?',
+            subtitle: language === 'fr' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre skolegangen.',
+            buttonText: language === 'fr' ? t('cta.primaryButton') : 'Meld interesse som fadder',
             backgroundImageUrl: '',
             scrimOpacity: 75,
           };
@@ -192,9 +192,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           const cta = rawCta
             ? {
                 ...rawCta,
-                title: language === 'en' ? t('cta.title', rawCta.title) : rawCta.title,
-                subtitle: language === 'en' ? t('cta.subtitle', rawCta.subtitle) : rawCta.subtitle,
-                buttonText: language === 'en' ? t('cta.primaryButton', rawCta.buttonText) : rawCta.buttonText,
+                title: language === 'fr' ? t('cta.title', rawCta.title) : rawCta.title,
+                subtitle: language === 'fr' ? t('cta.subtitle', rawCta.subtitle) : rawCta.subtitle,
+                buttonText: language === 'fr' ? t('cta.primaryButton', rawCta.buttonText) : rawCta.buttonText,
               }
             : defaultCta;
 
