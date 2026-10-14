@@ -1,0 +1,6 @@
+{
+  "summary": "Plan for en modulær og brukervennlig CMS-løsning integrert i Betyna-stiftelsens administrasjonsportal. Løsningen gjør det mulig for administrator å redigere sentrale deler av den offentlige nettsiden (hovedbanner med bakgrunnsbilde, de 3 trinnene i fadderordningen, vitnesbyrd/historier, stiftelsens kjerneverdier og nøkkeltall), med støtte for bilde-URL, filopplasting, sanntids forhåndsvisning og umiddelbar lagring.",
+  "updatedAt": "2026-10-13T20:20:47.758535498Z",
+  "requestFeedback": true,
+  "userFacing": true
+}
