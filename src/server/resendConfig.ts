@@ -1,1 +1,1 @@
-export { resendConfigStatus } from '../../api/_lib/mail';
+export { resendConfigStatus } from './sendEmail';

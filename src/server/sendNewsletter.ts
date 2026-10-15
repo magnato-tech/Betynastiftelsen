@@ -1,2 +1,3 @@
-export { dispatchNewsletter, parseEmailPayload, type EmailEnv as NewsletterEnv } from '../../api/_lib/mail';
+export { dispatchNewsletter, type EmailEnv as NewsletterEnv } from './sendEmail';
+export { parseEmailPayload } from '../email/payload';
 export { parseNewsletterPayload, wrapNewsletterHtml } from '../newsletter/payload';
