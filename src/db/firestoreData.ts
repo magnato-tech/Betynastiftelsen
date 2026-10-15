@@ -3,7 +3,9 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   setDoc,
+  where,
   writeBatch,
   type Firestore,
 } from 'firebase/firestore';
@@ -57,6 +59,34 @@ export async function fetchSeedLock(db: Firestore): Promise<SeedLock | null> {
   if (!snap.exists()) return null;
   const data = snap.data() as SeedLock;
   return data.completed ? data : null;
+}
+
+/**
+ * Offentlig lag: det alle besøkende kan lese uten innlogging (jf. firestore.rules).
+ * Vitnesbyrd må spørres med filter, ellers avviser reglene hele spørringen.
+ */
+export async function loadPublicFromFirestore(
+  db: Firestore
+): Promise<Partial<Pick<AppDataSnapshot, 'cms' | 'campaigns' | 'testimonials'>>> {
+  const [cmsSnap, campaignSnap, testimonialSnap] = await Promise.all([
+    getDoc(doc(db, FIRESTORE_COLLECTIONS.cms, CMS_PUBLIC_DOC_ID)),
+    getDocs(collection(db, FIRESTORE_COLLECTIONS.campaigns)),
+    getDocs(
+      query(
+        collection(db, FIRESTORE_COLLECTIONS.testimonials),
+        where('godkjentAvAdmin', '==', true)
+      )
+    ),
+  ]);
+  return {
+    cms: cmsSnap.exists() ? (cmsSnap.data() as AppDataSnapshot['cms']) : undefined,
+    campaigns: campaignSnap.docs.map(
+      (d) => ({ id: d.id, ...d.data() }) as AppDataSnapshot['campaigns'][number]
+    ),
+    testimonials: testimonialSnap.docs.map(
+      (d) => ({ id: d.id, ...d.data() }) as AppDataSnapshot['testimonials'][number]
+    ),
+  };
 }
 
 export async function loadAllFromFirestore(db: Firestore): Promise<Partial<AppDataSnapshot> | null> {
@@ -168,6 +198,30 @@ export async function importBrowserSnapshotToFirestore(
   written += 1;
 
   return { written, skippedLock: false };
+}
+
+/**
+ * Engangshandling for admin: bytter det besøkende ser (forside-CMS, aksjoner, vitnesbyrd)
+ * med lanseringsinnholdet i koden. Dokumenter med samme id overskrives helt.
+ * Andre dokumenter (opprettet av admin) lar vi stå.
+ */
+export async function replacePublicContentInFirestore(
+  db: Firestore,
+  content: Pick<AppDataSnapshot, 'cms' | 'campaigns' | 'testimonials'>
+): Promise<{ written: number }> {
+  await setDoc(doc(db, FIRESTORE_COLLECTIONS.cms, CMS_PUBLIC_DOC_ID), content.cms);
+  let written = 1;
+  const batch = writeBatch(db);
+  for (const item of content.campaigns) {
+    batch.set(doc(db, FIRESTORE_COLLECTIONS.campaigns, item.id), item);
+    written += 1;
+  }
+  for (const item of content.testimonials) {
+    batch.set(doc(db, FIRESTORE_COLLECTIONS.testimonials, item.id), item);
+    written += 1;
+  }
+  await batch.commit();
+  return { written };
 }
 
 export async function persistCollection<T extends { id: string }>(

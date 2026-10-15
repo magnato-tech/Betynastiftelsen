@@ -162,6 +162,7 @@ interface AppContextType {
   signInFirestoreGoogle: () => Promise<void>;
   signInFirestoreGoogleRedirect: () => Promise<void>;
   importBrowserToFirestore: () => Promise<void>;
+  replacePublicContentInFirestore: () => Promise<void>;
 }
 
 const STORAGE_KEY_PREFIX = 'betyna_v1_';
@@ -1551,6 +1552,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signInFirestoreGoogleRedirect: firestore.signInWithGoogleRedirect,
         importBrowserToFirestore: async () => {
           await firestore.importBrowserToFirestore();
+        },
+        replacePublicContentInFirestore: async () => {
+          await firestore.replacePublicContent();
         },
       }}
     >

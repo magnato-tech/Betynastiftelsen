@@ -19,11 +19,13 @@ import { readBrowserStateSnapshot } from './browserStateSnapshot';
 import {
   importBrowserSnapshotToFirestore,
   loadAllFromFirestore,
+  loadPublicFromFirestore,
   persistCms,
   persistCollection,
   persistEmailAutoSend,
-  fetchSeedLock,
+  replacePublicContentInFirestore,
 } from './firestoreData';
+import { liveLaunchContent } from './liveLaunchContent';
 import { FIRESTORE_COLLECTIONS, type FirestoreUser } from './firestoreProfile';
 import type { AppDataSnapshot } from './firestoreData';
 import { ensureFirestoreUserOnLogin } from './firestoreUser';
@@ -34,6 +36,8 @@ export type FirestoreHydration = {
 
 export function useFirestoreAppSync() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const fullLoadedRef = useRef(false);
   const [backendActive, setBackendActive] = useState(false);
   const [hydration, setHydration] = useState<FirestoreHydration | null>(null);
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'ready' | 'off'>(
@@ -49,6 +53,7 @@ export function useFirestoreAppSync() {
     if (!auth) return () => {};
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
+      setAuthReady(true);
       if (user) setAuthError(null);
     });
     void completeFirebaseAuthRedirect(auth).catch((err) =>
@@ -82,6 +87,7 @@ export function useFirestoreAppSync() {
     };
   }, [firebaseUser?.uid, firebaseUser?.email, firebaseUser?.displayName]);
 
+  /** Lag 1: offentlig innhold leses av alle, uten innlogging. */
   useEffect(() => {
     if (!db || !firestoreEnabled) {
       setLoadState('off');
@@ -90,18 +96,10 @@ export function useFirestoreAppSync() {
     let cancelled = false;
     (async () => {
       try {
-        const lock = await fetchSeedLock(db);
-        if (!lock) {
-          if (!cancelled) setLoadState('ready');
-          return;
-        }
-        const data = await loadAllFromFirestore(db);
-        if (!cancelled && data) {
-          setHydration(data);
-          setBackendActive(true);
-        }
+        const publicData = await loadPublicFromFirestore(db);
+        if (!cancelled && !fullLoadedRef.current) setHydration(publicData);
       } catch {
-        /* nettverk / regler */
+        /* nettverk / regler: siden bruker det som allerede ligger i appen */
       }
       if (!cancelled) setLoadState('ready');
     })();
@@ -109,6 +107,32 @@ export function useFirestoreAppSync() {
       cancelled = true;
     };
   }, []);
+
+  /** Lag 2: alt innhold, bare for innlogget administrator (reglene avgjør). */
+  useEffect(() => {
+    if (!db || !firestoreEnabled || !authReady) return;
+    if (!firebaseUser) {
+      fullLoadedRef.current = false;
+      setBackendActive(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await loadAllFromFirestore(db);
+        if (!cancelled && data) {
+          fullLoadedRef.current = true;
+          setHydration(data);
+          setBackendActive(true);
+        }
+      } catch {
+        /* innlogget uten admin-rett: får bare det offentlige laget */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, firebaseUser?.uid]);
 
   const prepareGoogleSignIn = useCallback(async () => {
     if (!auth) throw new Error('Firestore er ikke konfigurert');
@@ -164,9 +188,28 @@ export function useFirestoreAppSync() {
       return result;
     }
     setImportMessage(`Lagret ${result.written} dokumenter fra denne nettleseren.`);
+    fullLoadedRef.current = true;
     setBackendActive(true);
     const data = await loadAllFromFirestore(db);
     if (data) setHydration(data);
+    return result;
+  }, []);
+
+  const replacePublicContent = useCallback(async () => {
+    if (!db || !auth?.currentUser) {
+      throw new Error('Logg inn med Google først');
+    }
+    const result = await replacePublicContentInFirestore(db, {
+      cms: liveLaunchContent.cms,
+      campaigns: liveLaunchContent.campaigns,
+      testimonials: liveLaunchContent.testimonials,
+    });
+    const data = await loadAllFromFirestore(db);
+    if (data) {
+      fullLoadedRef.current = true;
+      setHydration(data);
+    }
+    setImportMessage(`Offentlig innhold er byttet til nyeste tekst (${result.written} dokumenter).`);
     return result;
   }, []);
 
@@ -219,6 +262,7 @@ export function useFirestoreAppSync() {
     signInWithGoogle,
     signInWithGoogleRedirect,
     importBrowserToFirestore,
+    replacePublicContent,
     registerSnapshotProvider,
     schedulePersist,
     setImportMessage,
