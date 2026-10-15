@@ -897,7 +897,7 @@ export const SocialImpactMetrics: React.FC<SocialImpactMetricsProps> = ({ onNavi
             Paiement direct à la direction scolaire
           </h4>
           <p className="text-xs text-stone-600 leading-relaxed font-sans">
-            Les fonds ne transitent jamais en espèces par les familles. Les coordinations d'Oslo et locales règlent trimestriellement les écolages, les fournitures et les frais d'examen, éliminant les expulsions temporaires d'élèves.
+            Les fonds ne transitent jamais en espèces par les familles. Les coordinations de Kristiansand et locales règlent trimestriellement les écolages, les fournitures et les frais d'examen, éliminant les expulsions temporaires d'élèves.
           </p>
         </div>
 

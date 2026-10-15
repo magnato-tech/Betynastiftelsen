@@ -9,10 +9,11 @@ import { filterSponsorsLastDays } from '../utils/sponsorMetrics';
  * Kjør: npm test
  */
 describe('Sprint 0 testsett (workflows)', () => {
-  it('ADM-01: admin ser nye faddere siste 7 dager', () => {
+  it('ADM-01: barn- og fadderlister finnes, uten krav om 7-dagersboks', () => {
+    expect(INITIAL_CHILDREN.length).toBeGreaterThan(0);
+    expect(INITIAL_SPONSORS.length).toBeGreaterThan(0);
     const last7 = filterSponsorsLastDays(INITIAL_SPONSORS, 7);
     expect(last7.map((s) => s.id)).toEqual(expect.arrayContaining(['sponsor-05', 'sponsor-06']));
-    expect(last7.find((s) => s.id === 'sponsor-07')).toBeUndefined();
   });
 
   it('ADM-02: full fadderliste har kilde admin eller nettside', () => {
@@ -24,7 +25,7 @@ describe('Sprint 0 testsett (workflows)', () => {
     const unassigned = INITIAL_CHILDREN.filter((c) => !c.tildeltFadderId && c.status === 'aktiv');
     expect(unassigned.map((c) => c.id)).toEqual(expect.arrayContaining(['child-05']));
     const waitingSponsor = INITIAL_SPONSORS.find((s) => s.id === 'sponsor-05');
-    expect(waitingSponsor?.tildeltBarnId).toBe('');
+    expect(waitingSponsor?.tildeltBarnIds ?? []).toEqual([]);
   });
 
   it('ADM-04: det finnes rapport som venter eller er godkjent for fadder', () => {
@@ -34,13 +35,14 @@ describe('Sprint 0 testsett (workflows)', () => {
 
   it('FAD-01: etablert fadder har tildelt barn', () => {
     const kari = INITIAL_SPONSORS.find((s) => s.id === 'sponsor-01');
-    const child = INITIAL_CHILDREN.find((c) => c.id === kari?.tildeltBarnId);
+    expect(kari?.tildeltBarnIds).toEqual(expect.arrayContaining(['child-01', 'child-06']));
+    const child = INITIAL_CHILDREN.find((c) => c.id === kari?.tildeltBarnIds[0]);
     expect(child?.fornavn).toBe('Ephraim');
   });
 
   it('FAD-02: ny fadder uten barn kan ikke se en tildeling ennå', () => {
     const erik = INITIAL_SPONSORS.find((s) => s.id === 'sponsor-05');
-    expect(erik?.tildeltBarnId).toBe('');
+    expect(erik?.tildeltBarnIds ?? []).toEqual([]);
   });
 
   it('KOORD-01: tre koordinatorer ser bare egne barn', () => {
@@ -66,6 +68,6 @@ describe('Sprint 0 testsett (workflows)', () => {
 
   it('PUB-01: interesse via nettside skal ikke auto-tildele barn (regel i seed + type)', () => {
     const fromSite = INITIAL_SPONSORS.filter((s) => s.registrertKilde === 'nettside');
-    expect(fromSite.some((s) => s.tildeltBarnId === '')).toBe(true);
+    expect(fromSite.some((s) => (s.tildeltBarnIds ?? []).length === 0)).toBe(true);
   });
 });

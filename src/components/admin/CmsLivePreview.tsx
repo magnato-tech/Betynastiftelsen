@@ -40,7 +40,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose
         : 'w-[390px] max-w-full rounded-3xl border-8 border-stone-300 shadow-2xl';
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#F6F4ED] xl:static xl:inset-auto xl:z-auto xl:h-[calc(100vh-8rem)] xl:sticky xl:top-24">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#F6F4ED] xl:static xl:inset-auto xl:z-auto xl:h-[calc(100vh-5.5rem)] xl:sticky xl:top-[4.5rem]">
       <div className="px-3 py-2 bg-white border-b border-stone-200 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -97,7 +97,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose
             ref={iframeRef}
             title="Forhåndsvisning av nettsiden"
             src={src}
-            className="w-full border-0 bg-white h-[min(82vh,900px)] xl:h-[calc(100vh-12rem)]"
+            className="w-full border-0 bg-white h-[min(82vh,900px)] xl:h-[calc(100vh-8.5rem)]"
           />
         </div>
       </div>

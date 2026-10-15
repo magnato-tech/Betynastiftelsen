@@ -86,7 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'barn' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Mitt fadderbarn
+                Dine fadderbarn
               </button>
               <button
                 onClick={() => setActiveSection('tidslinje')}
@@ -173,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'questions' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                {t('nav.coordQuestions', 'Spørsmål fra Oslo')}
+                {t('nav.coordQuestions', 'Spørsmål fra Kristiansand')}
               </button>
             </React.Fragment>
           )}

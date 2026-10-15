@@ -163,7 +163,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
             <span className="text-[10px] text-stone-400 font-medium">
               {role === 'sponsor' && (isFr ? 'Espace Parrain' : 'Fadder')}
               {role === 'coordinator' && (isFr ? 'Espace Terrain' : 'Koordinator')}
-              {role === 'admin' && 'Oslo Admin'}
+              {role === 'admin' && 'Kristiansand Admin'}
               {role === 'public' && (isFr ? 'Public' : 'Offentlig')}
             </span>
           </div>

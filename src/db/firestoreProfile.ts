@@ -48,7 +48,7 @@ export const FIRESTORE_INDEXES: {
   { collection: 'children', fields: ['koordinatorId', 'status'] },
   { collection: 'children', fields: ['tildeltFadderId'] },
   { collection: 'sponsors', fields: ['startDato'] },
-  { collection: 'sponsors', fields: ['tildeltBarnId'] },
+  { collection: 'sponsors', fields: ['tildeltBarnIds'] },
   { collection: 'facts', fields: ['status', 'dato'] },
   { collection: 'facts', fields: ['koordinatorId', 'dato'] },
   { collection: 'facts', fields: ['barnId'] },

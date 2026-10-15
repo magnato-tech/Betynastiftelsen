@@ -10,7 +10,7 @@ Prototype med Visningsmodus er ikke ferdig produkt. Sprintene lukker gap mot aks
 - Offentlig side NO/FR, profil, fadderordning, åpenhet, bli fadder uten auto-tildeling
 - Fadderportal med barn, rapporter, betaling, spørsmål, tidslinje
 - Admin: godkjenningskø rapport, barn & faddere (7/30 dager), CMS, økonomi-prototype
-- Tre koordinatorer med egne barn, rapport + foto til Oslo
+- Tre koordinatorer med egne barn, rapport + foto til Kristiansand
 - Sim-brukere og test-workflows (`docs/WORKFLOWS.md`)
 
 ## Sprint 1 — Første tegning: innholdskø (kap. 5 og 11)
@@ -67,4 +67,4 @@ Resend er besluttet for nyhetsbrev, henvendelser og systemmeldinger. Admin-skjer
 
 ## Senere (ikke nå)
 
-Ekte Vipps, bankavstemming, full automatikk for alle systemmaler, AI-oversettelse, flere barn per fadder, eksport.
+Ekte Vipps, bankavstemming, full automatikk for alle systemmaler, AI-oversettelse, eksport.

@@ -50,7 +50,7 @@ export const RoleSwitcherBanner: React.FC = () => {
       id: 'sponsor',
       label: 'Fadderportal (Norge)',
       icon: <Heart className="w-4 h-4" />,
-      desc: 'Innlogget fadder som kun ser sitt tildelte barn, godkjente rapporter og betalinger.',
+      desc: 'Innlogget fadder som ser sine tildelte barn, godkjente rapporter og betalinger.',
     },
     {
       id: 'coordinator',
@@ -60,7 +60,7 @@ export const RoleSwitcherBanner: React.FC = () => {
     },
     {
       id: 'admin',
-      label: 'Administrasjon (Oslo)',
+      label: 'Administrasjon (Kristiansand)',
       icon: <Shield className="w-4 h-4" />,
       desc: 'Overordnet kontroll: godkjenning av rapporter, tospråklig revisjon, tildeling og økonomi.',
     },

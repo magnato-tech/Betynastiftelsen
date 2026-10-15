@@ -15,13 +15,13 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
     <div className="max-w-5xl space-y-10">
       <div className="space-y-2">
         <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
-          Betyna — administrasjon · Oslo
+          Betyna — administrasjon · Kristiansand
         </span>
         <h2 className="text-xl md:text-2xl font-serif font-bold text-stone-900">
           Kontrollpanel og godkjenningssenter
         </h2>
         <p className="text-sm text-stone-600 max-w-2xl leading-relaxed">
-          Styrende prinsipp: Koordinator registrerer opplysninger i Kongo. Administrator i Norge kontrollerer,
+          Styrende prinsipp: Koordinator registrerer opplysninger i Kongo. Administrator i Kristiansand kontrollerer,
           oversetter og godkjenner før innhold når fadderne.
         </p>
       </div>

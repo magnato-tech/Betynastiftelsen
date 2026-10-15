@@ -265,7 +265,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
   return (
     <div className="space-y-8 font-sans">
       {/* 1. Header with Breadcrumb and Global CMS Actions */}
-      <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-[#4D6B3E] uppercase tracking-widest">
             <Layout className="w-3.5 h-3.5" />
@@ -320,7 +320,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
       )}
 
-      {/* Active Brand Palette Bar */}
+      {/* Active Brand Palette Bar — skjules når live-vinduet er åpent, for å gi plass */}
+      {!previewOpen && (
       <div className="bg-[#F6F4ED] border border-[#DFD9CB] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#4D6B3E] shrink-0" />
@@ -350,11 +351,14 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           </div>
         </div>
       </div>
+      )}
 
-      <div className={`flex flex-col lg:flex-row gap-6 items-start ${previewOpen ? 'xl:flex-row' : ''}`}>
+      <div
+        className={`flex flex-col lg:flex-row gap-3 items-start ${previewOpen ? 'xl:items-stretch xl:min-h-[calc(100vh-8rem)]' : ''}`}
+      >
         <nav
           aria-label="CMS-seksjoner"
-          className="w-full lg:w-56 shrink-0 lg:sticky lg:top-24 bg-white rounded-xl border border-stone-200 shadow-xs p-2"
+          className={`w-full shrink-0 lg:sticky lg:top-20 bg-white rounded-xl border border-stone-200 shadow-xs p-2 ${previewOpen ? 'lg:w-44' : 'lg:w-52'}`}
         >
           <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-stone-400">
             Seksjoner
@@ -394,13 +398,13 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           </ul>
         </nav>
 
-        <div className={`min-w-0 flex-1 w-full space-y-8 ${previewOpen ? 'xl:max-w-xl 2xl:max-w-2xl' : ''}`}>
+        <div className="min-w-0 flex-1 w-full space-y-6">
       {/* =========================================================================
           TAB 1: HOVEDBANNER (HERO BANNER)
          ========================================================================= */}
       {activeSubTab === 'hero' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5">
+        <div className={`grid grid-cols-1 gap-6 ${previewOpen ? '' : 'lg:grid-cols-12 lg:gap-8'}`}>
+          <div className={`${previewOpen ? '' : 'lg:col-span-7'} bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5`}>
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div>
                 <h3 className="text-base font-serif font-bold text-stone-900">Tekster og handlinger for hovedbanner</h3>
@@ -486,7 +490,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             </div>
           </div>
 
-          {/* Right: Live Preview of Hero Card */}
+          {/* Mini-forhåndsvisning av banneret når live-vinduet er lukket */}
+          {!previewOpen && (
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
@@ -544,6 +549,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -574,7 +580,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 gap-4 ${previewOpen ? '' : 'md:grid-cols-3'}`}>
             {cmsContent.steps.map((step, idx) => (
               <div
                 key={step.number}
@@ -820,8 +826,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           TAB 6: FADDEROPPFORDRING / CTA-BANNER
          ========================================================================= */}
       {activeSubTab === 'cta' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5">
+        <div className={`grid grid-cols-1 gap-6 ${previewOpen ? '' : 'lg:grid-cols-12 lg:gap-8'}`}>
+          <div className={`${previewOpen ? '' : 'lg:col-span-7'} bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5`}>
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div>
                 <h3 className="text-base font-serif font-bold text-stone-900">Fadderoppfordring (CTA-banner)</h3>
@@ -885,7 +891,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             </div>
           </div>
 
-          {/* Right: Live Preview of CTA Banner */}
+          {!previewOpen && (
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
@@ -937,6 +943,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -1047,7 +1054,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       )}
         </div>
         {previewOpen && (
-          <div className="w-full xl:w-[min(48%,640px)] 2xl:w-[min(50%,760px)] shrink-0">
+          <div className="w-full xl:flex-[1.25] xl:min-w-[40%] shrink-0 min-w-0">
             <CmsLivePreview section={activeSubTab} onClose={() => setPreviewOpen(false)} />
           </div>
         )}

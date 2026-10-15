@@ -12,7 +12,7 @@ const base = (id: string, startDato: string): Sponsor => ({
   betalingsmetode: 'vipps',
   betalingsstatus: 'aktiv',
   startDato,
-  tildeltBarnId: '',
+  tildeltBarnIds: [],
 });
 
 describe('sponsorMetrics', () => {

@@ -6,7 +6,7 @@ Seed bygges i `src/data/simulationSponsors.ts` med **relative startdatoer** (`is
 
 | ID | Navn | Barn | Merknad |
 |----|------|------|---------|
-| sponsor-01 | Kari & Lars Johansen | Ephraim (child-01) | Etablert historikk, rapporter |
+| sponsor-01 | Kari & Lars Johansen | Ephraim (child-01), Grace (child-06) | Etablert historikk, flere barn |
 | sponsor-02 | Ingrid Berg | Dorcas (child-02) | |
 | sponsor-03 | Morten Dahl | Samuel (child-03) | |
 | sponsor-04 | Anne-Grethe Solheim | Miriam (child-04) | |
@@ -34,8 +34,8 @@ Se også `docs/COORDINATOR_WORKFLOW.md`.
 
 ## Admin
 
-- Ingen egen innlogging; rolle **Administrasjon (Oslo)** i Visningsmodus.
+- Ingen egen innlogging; rolle **Administrasjon (Kristiansand)** i Visningsmodus.
 
 ## Produktregel (avklart)
 
-Interesse via **Bli fadder** oppretter fadder **uten** automatisk barnetildeling. Admin kobler i **Barn & Faddere → Tildelingsverktøy**.
+Interesse via **Bli fadder** oppretter fadder **uten** automatisk barnetildeling. Admin kan koble **flere barn** til samme fadder i **Barn & Faddere**. Hvert barn har likevel bare én fadder.

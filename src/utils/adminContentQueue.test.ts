@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_FACTS, INITIAL_REPORTS } from '../data/initialData';
-import { buildAdminContentQueue, seedStoryFromFacts } from './adminContentQueue';
+import {
+  buildAdminContentQueue,
+  buildAdminContentRegister,
+  seedStoryFromFacts,
+  sortAdminContentItems,
+} from './adminContentQueue';
 
 describe('Admin innholdskø', () => {
   it('ADM-05: eldst først, historie og rapport i samme kø', () => {
@@ -23,5 +28,15 @@ describe('Admin innholdskø', () => {
     expect(text).toContain('Ephraim');
     expect(text).toContain('Trives i klassen.');
     expect(text).not.toContain('malaria');
+  });
+
+  it('samme tabell har ventende og publiserte rapporter med status', () => {
+    const register = buildAdminContentRegister(INITIAL_FACTS, INITIAL_REPORTS);
+    expect(register.some((i) => i.status === 'venter' && i.kind === 'rapport')).toBe(true);
+    expect(register.some((i) => i.status === 'publisert' && i.kind === 'rapport')).toBe(true);
+    const newestFirst = sortAdminContentItems(register, 'dato', 'desc');
+    for (let i = 1; i < newestFirst.length; i++) {
+      expect(newestFirst[i - 1].dato >= newestFirst[i].dato).toBe(true);
+    }
   });
 });

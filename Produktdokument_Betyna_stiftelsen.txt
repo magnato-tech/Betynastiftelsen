@@ -83,7 +83,7 @@ D. Offentlig nettside
 
 4. Brukerroller og tilgang
 Rolle	Kan gj?re	Skal ikke kunne
-Administrator i Norge	Skrive og publisere innhold til faddersiden, rette og legge til fakta, registrere samtykke til bilde, og senere tildele barn og registrere betaling.	La fadderen se upublisert innhold. Sikkerhet og logging avklares f?r ekte data tas i bruk.
+Administrator i Kristiansand	Skrive og publisere innhold til faddersiden, rette og legge til fakta, registrere samtykke til bilde, og senere tildele barn og registrere betaling.	La fadderen se upublisert innhold. Sikkerhet og logging avklares f?r ekte data tas i bruk.
 Koordinator i Kongo	Opprette barn, sende fakta, fransk rapport, ett bilde og ?yeblikk for sine egne barn, og senere svare p? sp?rsm?l p? fransk.	Se andre koordinatorers barn, publisere, se den norske faddersiden, eller administrere betaling.
 Fadder	Se sitt tildelte barn, godkjent historie, rapporter, ?yeblikk, egen betaling og stille sp?rsm?l.	Se andre barns data, etternavn, intern kode, notater, fransk original, eller kommunisere direkte med barnet.
 Offentlig bes?kende	Se offentlig informasjon, lese godkjente historier fra voksne tidligere mottakere, melde interesse og bidra til aksjoner.	Se private barneprofiler, navn, bilder eller historier om barn.
@@ -131,7 +131,7 @@ Koordinatorens personlige barneprofil, besluttet 15. oktober 2026
 * Naar koordinator klikker et barn i elevlisten (tabellrad), apnes barnets personlige profil (ikke et dodt kort).
 * Profilen viser identitet (fornavn, intern kode, skole, klasse, fadderstatus), katalogbilder merket med barnet, rapporter opprettet for barnet (status, dato, tittel), og milepaeler med tidslinje.
 * Milepaeler og tidslinje ligger paa profilen. Fanen Milepaeler hos koordinator er en velger inn til profilen, ikke en andre tidslinje.
-* Koordinatorhjemmet beholder elevlisten, alle rapporter samlet, sporsmal, fakta, ny rapport, ny elev, effekt og innsending av fadderportrett til Oslo.
+* Koordinatorhjemmet beholder elevlisten, alle rapporter samlet, sporsmal, fakta, ny rapport, ny elev, effekt og innsending av fadderportrett til Kristiansand.
 * Bildenkatalog: hvert bilde har barnIds[] (barnets id, intern kode eller fornavn). Ett bilde kan vises paa flere profiler. Er flere barn merket, vises bildet paa alle. Er tag et fornavn, vises bildet paa alle profiler med det navnet.
 * Fadderportrett (ett bilde per barn til faddersiden) er uendret. Katalogen er koordinatorens arkiv. Skolebilder i prototype, ikke klasse- eller bokinnsamling.
 
@@ -159,7 +159,7 @@ Sp?rsm?l
 
 N?r siden ?pnes og n?r den avsluttes
 * Fadderen f?r siden n?r fornavn, skole, klassetrinn og historien er godkjent.
-* Start med ett barn per fadder. Flere barn kan komme senere.
+* En fadder i Norge kan stotte flere barn. Hvert barn har likevel bare en fadder. Fadderen bytter mellom barna pa faddersiden.
 * N?r barnets utdanning er avsluttet, blir siden en rolig avslutning. Historikken blir liggende for fadderen. Det er ingen automatisk kobling til et annet barn.
 
 7. ?konomi og betaling
@@ -301,8 +301,8 @@ Fortsatt ?pent
 * Bank: om innbetalinger senere skal avstemmes automatisk.
 * Oevrige systemvarsler: automatikk for godkjent rapport, betaling og velkomst. Ekte engangslenke i sprint 5.
 * Offentlig side: detaljert innhold, kontakt og aksjoner er ikke tegnet.
-* Sp?rsm?lsk?, tildeling og betalingsflate: retning er satt, skjermene er ikke tegnet.
-* Flere barn per fadder: kan komme senere, ikke i f?rste tegning.
+* Sp?rsm?lsk? og betalingsflate: retning er satt, skjermene er ikke tegnet ferdig. Tildelingssiden er tegnet (to tabeller og en liten koblingsboks).
+* Flere barn per fadder: avklart 15. oktober 2026. En fadder kan ha flere barn; hvert barn har en fadder.
 * Teknologistack for produksjon.
 * Juridisk kontroll: stiftelsens oppsett, personvern, databehandleravtaler, lagring og eventuell grensekryssende databehandling.
 
@@ -417,7 +417,7 @@ Avklart at Betyna forel?pig ikke er stiftelse for ? unng? revisor-kostnad som vi
 15. oktober 2026, test og simulering
 Workflows, simuleringsfaddere med relative datoer (7/30 dager), admin fadderliste, vitest for metrics, Workflows og hjelp i admin. Nettside-interesse uten auto-tildeling barn.
 15. oktober 2026, tre koordinatorer
-Tre feltkoordinatorer i Brazzaville med eget elevsnitt i prototype (visningsmodus). Barn har koordinatorId. Koordinator sender rapport og skolefoto til godkjenning i Oslo f?r fadder ser innhold. Se docs/COORDINATOR_WORKFLOW.md.
+Tre feltkoordinatorer i Brazzaville med eget elevsnitt i prototype (visningsmodus). Barn har koordinatorId. Koordinator sender rapport og skolefoto til godkjenning i Kristiansand f?r fadder ser innhold. Se docs/COORDINATOR_WORKFLOW.md.
 
 Arbeidsdokument - Versjon 1.27 - 15. oktober 2026
 
@@ -534,3 +534,36 @@ Arbeidsdokument - Versjon 1.48 - 15. oktober 2026
 Knappen i CMS heter Forh?ndsvis. Den ?pner den ekte offentlige siden i et vindu ved siden av redigeringen (iframe, samme m?nster som menighetsplan.no), med desktop, nettbrett og mobil, og Ny fane.
 
 Arbeidsdokument - Versjon 1.49 - 15. oktober 2026
+
+15. oktober 2026, innholdstabell
+Godkjenningsk?en kan vises som kort (n?r det er f?) eller som tabell. Tabellen har ventende og publiserte rapporter i samme liste, med status og sortering p? dato (nyeste ?verst).
+
+Arbeidsdokument - Versjon 1.50 - 15. oktober 2026
+
+15. oktober 2026, Barn og Faddere
+Siden har en tabell med barn og en tabell med faddere. Plusstegn legger til barn eller fadder. En liten boks kobler dem manuelt. Boksene for nye faddere siste 7 og 30 dager er tatt bort.
+
+Arbeidsdokument - Versjon 1.51 - 15. oktober 2026
+
+15. oktober 2026, adminsted
+Administrasjonen sitter i Kristiansand, ikke Oslo. Visningsmodus, koordinatortekster og faddermeldinger bruker Kristiansand. Enkelte faddere kan fortsatt ha poststed Oslo.
+
+Arbeidsdokument - Versjon 1.52 - 15. oktober 2026
+
+15. oktober 2026, okonomi-tabell
+Transaksjonsloggen har klikkbare kolonneoverskrifter for sortering og et lite tidsintervall (fra/til og snarveier). Nokkeltallboksene har samme stil. Tallene hentes fra fadderavtaler, kuer og innbetalinger; avstemmingsgrad og aksjonsinnsamling summeres fra transaksjoner. Admin vedlikeholder ikke egne KPI-tall.
+
+Arbeidsdokument - Versjon 1.53 - 15. oktober 2026
+
+15. oktober 2026, flere barn per fadder
+Norske faddere kan stotte mer enn ett barn. Administrator kobler flere barn til samme avtale. Fadderportalen viser alle tildelte barn med valg mellom dem. Hvert barn har fortsatt bare en fadder. Maanedsbelopet ligger pa avtalen (typisk 250 eller 350 kroner per barn).
+
+Arbeidsdokument - Versjon 1.54 - 15. oktober 2026
+
+15. oktober 2026, klassebok-aksjon fjernet
+Aksjonen om felles laereboker og regneregler for barnetrinnet er tatt bort. Ekstra innsamling skal vaere knyttet til barn, ikke til skoleklasser eller felles boker.
+
+Arbeidsdokument - Versjon 1.55 - 15. oktober 2026
+
+15. oktober 2026, CMS bred visning
+CMS-skrivebordet bruker hele skjermbredden nar Forhandsvis er apent. Redigeringsboksene og live-vinduet deler flaten uten fast piksel-tak, slik at bade preview og redigering far plass. Mini-forhandsvisning av banner og CTA skjules nar live-vinduet er apent.

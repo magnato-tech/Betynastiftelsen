@@ -24,7 +24,7 @@ Appen bruker i dag `localStorage`. Typene i `src/types/index.ts` er kilden. Saml
 | `emailOutbox` | EmailOutboxItem (henvendelse, system, nyhetsbrev) | admin |
 | `catalogPhotos` | CatalogPhoto | admin; koordinator egne. Felt `barnIds[]` (child-id, internKode eller fornavn). Ett dokument vises på alle merket barneprofiler. |
 
-Relasjoner: `children.koordinatorId`, `children.tildeltFadderId`, `sponsors.tildeltBarnId`, `campaigns.barnIds[]`, `catalogPhotos.barnIds[]`.
+Relasjoner: `children.koordinatorId`, `children.tildeltFadderId`, `sponsors.tildeltBarnIds[]`, `campaigns.barnIds[]`, `catalogPhotos.barnIds[]`.
 
 ## Første gang
 

@@ -17,7 +17,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'vipps',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(380),
-      tildeltBarnId: 'child-01',
+      tildeltBarnIds: ['child-01', 'child-06'],
       registrertKilde: 'admin',
     },
     {
@@ -30,7 +30,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'avtalegiro',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(370),
-      tildeltBarnId: 'child-02',
+      tildeltBarnIds: ['child-02'],
       registrertKilde: 'admin',
     },
     {
@@ -43,7 +43,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'vipps',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(200),
-      tildeltBarnId: 'child-03',
+      tildeltBarnIds: ['child-03'],
       registrertKilde: 'nettside',
     },
     {
@@ -56,7 +56,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'bank',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(420),
-      tildeltBarnId: 'child-04',
+      tildeltBarnIds: ['child-04'],
       registrertKilde: 'admin',
     },
     {
@@ -69,7 +69,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'vipps',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(1),
-      tildeltBarnId: '',
+      tildeltBarnIds: [],
       registrertKilde: 'nettside',
     },
     {
@@ -82,7 +82,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'bank',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(5),
-      tildeltBarnId: '',
+      tildeltBarnIds: [],
       registrertKilde: 'nettside',
     },
     {
@@ -95,7 +95,7 @@ export function buildSimulationSponsors(): Sponsor[] {
       betalingsmetode: 'vipps',
       betalingsstatus: 'aktiv',
       startDato: isoDaysAgo(18),
-      tildeltBarnId: '',
+      tildeltBarnIds: [],
       registrertKilde: 'admin',
     },
   ];
@@ -103,7 +103,7 @@ export function buildSimulationSponsors(): Sponsor[] {
 
 /** Korte personaer for visningsmodus / dokumentasjon */
 export const SIMULATION_SPONSOR_PERSONAS = [
-  { id: 'sponsor-01', label: 'Etablert fadder (Ephraim)', childId: 'child-01' },
+  { id: 'sponsor-01', label: 'Etablert fadder (Ephraim og Grace)', childId: 'child-01' },
   { id: 'sponsor-05', label: 'Ny i går — venter barn', childId: null },
   { id: 'sponsor-06', label: 'Ny denne uken — venter barn', childId: null },
 ] as const;

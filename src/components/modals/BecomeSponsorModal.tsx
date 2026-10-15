@@ -77,7 +77,7 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
               <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Bli fast fadder</span>
               <h3 className="text-2xl font-serif font-bold text-[#3C3C3C] mt-1">Støtt et barn gjennom utdanningsløpet</h3>
               <p className="text-xs text-stone-600 mt-2 leading-relaxed font-sans">
-                Bidraget går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen. Administrator tildeler et barn, og du får en personlig fadderportal.
+                Bidraget går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen. Administrator tildeler barn manuelt. Du kan støtte mer enn ett barn på samme avtale.
               </p>
             </div>
 
@@ -252,7 +252,7 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
             </div>
             <h3 className="text-2xl font-serif font-bold text-[#3C3C3C]">Hjertelig takk, {navn}!</h3>
             <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-sans">
-              Din fadderavtale er nå registrert i systemet. Administrator i Norge har automatisk tildelt et barn som ventet på fadder. Du kan nå åpne fadderportalen for å se barnets profil og skolegang.
+              Din fadderavtale er nå registrert i systemet. Administrator i Kristiansand har automatisk tildelt et barn som ventet på fadder. Du kan nå åpne fadderportalen for å se barnets profil og skolegang.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <button

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { childIdsOfSponsor, childrenOfSponsor } from '../../utils/sponsorChildren';
 import { VisualCard } from '../common/VisualCard';
 import { ChildHistoryTimeline } from '../common/ChildHistoryTimeline';
 import {
@@ -42,17 +43,36 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
 
   const [newQuestion, setNewQuestion] = useState('');
   const [questionSentToast, setQuestionSentToast] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState('');
 
   const unreadReportNotif = currentRoleNotifications.find(
-    (n) => n.type === 'report_approved' && (!n.recipientId || n.recipientId === currentSponsor?.id) && !n.read
+    (n) =>
+      n.type === 'report_approved' &&
+      (!n.recipientId || n.recipientId === currentSponsor?.id) &&
+      !n.read &&
+      (!n.relatedEntityId || !selectedChildId || n.relatedEntityId === selectedChildId)
   );
 
   const unreadMilestoneNotif = currentRoleNotifications.find(
-    (n) => n.type === 'milestone_logged' && (!n.recipientId || n.recipientId === currentSponsor?.id) && !n.read
+    (n) =>
+      n.type === 'milestone_logged' &&
+      (!n.recipientId || n.recipientId === currentSponsor?.id) &&
+      !n.read &&
+      (!n.relatedEntityId || !selectedChildId || n.relatedEntityId === selectedChildId)
   );
 
-  // Find sponsored child strictly
-  const child = childrenList.find((c) => c.id === currentSponsor?.tildeltBarnId);
+  const myChildren = childrenOfSponsor(childrenList, currentSponsor);
+  const myChildIds = childIdsOfSponsor(currentSponsor).join(',');
+  useEffect(() => {
+    const ids = myChildIds ? myChildIds.split(',') : [];
+    if (!ids.length) {
+      setSelectedChildId('');
+      return;
+    }
+    setSelectedChildId((current) => (ids.includes(current) ? current : ids[0]));
+  }, [currentSponsor?.id, myChildIds]);
+
+  const child = myChildren.find((c) => c.id === selectedChildId) || myChildren[0];
 
   // Filter milestones strictly for this child
   const childMilestones = milestones.filter((m) => m.barnId === child?.id);
@@ -104,7 +124,7 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
         return (
           <span className="inline-flex items-center gap-1 text-xs text-stone-600 font-medium">
             <Clock className="w-3.5 h-3.5" />
-            <span>Mottatt av Oslo-kontoret</span>
+            <span>Mottatt av Kristiansand-kontoret</span>
           </span>
         );
     }
@@ -118,7 +138,7 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
         </div>
         <h2 className="text-2xl font-serif font-bold text-stone-900">Venter på tildeling av fadderbarn</h2>
         <p className="text-sm text-stone-600 max-w-md mx-auto">
-          Hei {currentSponsor?.navn}! Din fadderavtale er aktiv ({currentSponsor?.maanedsbelop} kr/mnd). Administrator i Norge er i ferd med å koble din avtale med et barn som nylig er registrert av koordinator.
+          Hei {currentSponsor?.navn}! Din fadderavtale er aktiv ({currentSponsor?.maanedsbelop} kr/mnd). Administrator i Kristiansand kobler ett eller flere barn til avtalen. Du ser bare barna du er tildelt.
         </p>
       </div>
     );
@@ -137,6 +157,24 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
           <h1 className="text-2xl md:text-3xl font-serif font-bold text-stone-900">
             Fadderoppfølging for {child.fornavn}
           </h1>
+          {myChildren.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {myChildren.map((ch) => (
+                <button
+                  key={ch.id}
+                  type="button"
+                  onClick={() => setSelectedChildId(ch.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer border ${
+                    ch.id === child.id
+                      ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]'
+                      : 'bg-white text-stone-700 border-stone-300 hover:border-stone-400'
+                  }`}
+                >
+                  {ch.fornavn}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

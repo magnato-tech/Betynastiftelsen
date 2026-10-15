@@ -46,7 +46,9 @@ import {
 } from '@betyna/seed';
 import { coordinatorDisplayName } from '../data/simulationCoordinators';
 import { childrenForCoordinator, migrateChildrenCoordinatorIds } from '../utils/coordinatorScope';
+import { addChildId, childIdsOfSponsor, migrateSponsorsChildIds, removeChildId } from '../utils/sponsorChildren';
 import { migrateCmsKpiStats } from '../utils/cmsKpiMigrate';
+import { migrateCampaignPayments, migrateCampaigns } from '../utils/campaignMigrate';
 import { buildFieldFact } from '../utils/fieldFacts';
 import { postBetynaEmail } from '../email/client';
 
@@ -197,12 +199,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [childrenList, setChildrenList] = useState<Child[]>(() =>
     migrateChildrenCoordinatorIds(loadState('children', INITIAL_CHILDREN))
   );
-  const [sponsors, setSponsors] = useState<Sponsor[]>(() => loadState('sponsors', INITIAL_SPONSORS));
+  const [sponsors, setSponsors] = useState<Sponsor[]>(() =>
+    migrateSponsorsChildIds(loadState('sponsors', INITIAL_SPONSORS))
+  );
   const [reports, setReports] = useState<Report[]>(() => loadState('reports', INITIAL_REPORTS));
   const [milestones, setMilestones] = useState<ChildMilestone[]>(() => loadState('milestones', INITIAL_MILESTONES));
   const [inquiries, setInquiries] = useState<Inquiry[]>(() => loadState('inquiries', INITIAL_INQUIRIES));
-  const [payments, setPayments] = useState<PaymentRecord[]>(() => loadState('payments', INITIAL_PAYMENTS));
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => loadState('campaigns', INITIAL_CAMPAIGNS));
+  const [payments, setPayments] = useState<PaymentRecord[]>(() => {
+    const loadedCampaigns = migrateCampaigns(loadState('campaigns', INITIAL_CAMPAIGNS));
+    return migrateCampaignPayments(loadState('payments', INITIAL_PAYMENTS), loadedCampaigns);
+  });
+  const [campaigns, setCampaigns] = useState<Campaign[]>(() =>
+    migrateCampaigns(loadState('campaigns', INITIAL_CAMPAIGNS))
+  );
   const [fieldFacts, setFieldFacts] = useState<FieldFact[]>(() => loadState('fieldFacts', INITIAL_FACTS));
   const [stories, setStories] = useState<AdultGraduateStory[]>(() => loadState('stories', INITIAL_STORIES));
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() => loadState('auditLogs', INITIAL_AUDIT_LOG));
@@ -238,6 +247,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEY_PREFIX + 'payments', JSON.stringify(payments));
   }, [payments]);
   useEffect(() => {
+    setCampaigns((prev) => {
+      const next = migrateCampaigns(prev);
+      setPayments((pays) => migrateCampaignPayments(pays, next));
+      return next.length === prev.length ? prev : next;
+    });
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PREFIX + 'campaigns', JSON.stringify(campaigns));
   }, [campaigns]);
   useEffect(() => {
@@ -272,7 +289,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const value = JSON.parse(event.newValue);
         if (key === 'cms') setCmsContent(migrateCmsKpiStats(value, INITIAL_CMS_CONTENT.kpiStats));
-        if (key === 'campaigns') setCampaigns(value);
+        if (key === 'campaigns') setCampaigns(migrateCampaigns(value));
         if (key === 'stories') setStories(value);
         if (key === 'language') setLanguageState(normalizeLanguage(value));
       } catch {
@@ -570,7 +587,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((c) => (c.id === childId ? { ...c, tildeltFadderId: sponsorId, sistOppdatert: new Date().toISOString().slice(0, 10) } : c))
     );
     setSponsors((prev) =>
-      prev.map((s) => (s.id === sponsorId ? { ...s, tildeltBarnId: childId } : s))
+      prev.map((s) => {
+        const ids = childIdsOfSponsor(s);
+        if (s.id === sponsorId) return { ...s, tildeltBarnIds: addChildId(ids, childId) };
+        if (ids.includes(childId)) return { ...s, tildeltBarnIds: removeChildId(ids, childId) };
+        return s;
+      })
     );
     const child = childrenList.find((c) => c.id === childId);
     const sponsor = sponsors.find((s) => s.id === sponsorId);
@@ -600,9 +622,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const endSponsorship = (childId: string) => {
     const child = childrenList.find((c) => c.id === childId);
     if (!child) return;
+    const sponsorId = child.tildeltFadderId;
     setChildrenList((prev) =>
       prev.map((c) => (c.id === childId ? { ...c, status: 'avsluttet', tildeltFadderId: undefined } : c))
     );
+    if (sponsorId) {
+      setSponsors((prev) =>
+        prev.map((s) =>
+          s.id === sponsorId ? { ...s, tildeltBarnIds: removeChildId(childIdsOfSponsor(s), childId) } : s
+        )
+      );
+    }
     addAuditLog('Avsluttet fadderforhold', `Fadderforhold for ${child.fornavn} (${child.internKode}) avsluttet etter endt skolegang.`);
   };
 
@@ -650,7 +680,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       targetRole: 'coordinator',
       recipientId: coordId,
       title: `Rapport envoyée pour validation (${newReport.barnNavn})`,
-      message: `Votre rapport pour ${newReport.barnNavn} est bien transmis et en cours d'examen auprès du bureau d'Oslo.`,
+      message: `Votre rapport pour ${newReport.barnNavn} est bien transmis et en cours d'examen auprès du bureau de Kristiansand.`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'report_needs_approval',
       read: false,
@@ -754,7 +784,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       targetRole: 'coordinator',
       recipientId: coordId,
       title: `Modifications requises sur un rapport (${childName || 'Élève'})`,
-      message: `Le bureau d'Oslo sollicite des ajustements pour ${childName} : "${reason}".`,
+      message: `Le bureau de Kristiansand sollicite des ajustements pour ${childName} : "${reason}".`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'report_rejected',
       read: false,
@@ -857,7 +887,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       targetRole: 'coordinator',
       recipientId: child.koordinatorId,
       title: `Photo publiée (${child.fornavn})`,
-      message: `La photo soumise pour ${child.fornavn} a été validée par Oslo et est visible pour le parrain.`,
+      message: `La photo soumise pour ${child.fornavn} a été validée par Kristiansand et est visible pour le parrain.`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'photo_approved',
       read: false,
@@ -889,7 +919,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       targetRole: 'coordinator',
       recipientId: child.koordinatorId,
       title: `Photo refusée (${child.fornavn})`,
-      message: `Oslo a demandé une nouvelle photo : ${reason}`,
+      message: `Kristiansand a demandé une nouvelle photo : ${reason}`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'photo_rejected',
       read: false,
@@ -1064,8 +1094,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'notif-' + Date.now(),
       targetRole: 'coordinator',
       recipientId: coordId,
-      title: `Demande de précision d'Oslo (${barnNavn})`,
-      message: note || `Le bureau d'Oslo sollicite des précisions de terrain concernant ${barnNavn}.`,
+      title: `Demande de précision de Kristiansand (${barnNavn})`,
+      message: note || `Le bureau de Kristiansand sollicite des précisions de terrain concernant ${barnNavn}.`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'inquiry_forwarded',
       read: false,
@@ -1110,7 +1140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       betalingsmetode: data.betalingsmetode,
       betalingsstatus: 'aktiv',
       startDato: new Date().toISOString().slice(0, 10),
-      tildeltBarnId: '',
+      tildeltBarnIds: [],
       registrertKilde: 'nettside',
     };
 
@@ -1157,7 +1187,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       betalingsmetode: data.betalingsmetode,
       betalingsstatus: 'aktiv',
       startDato: new Date().toISOString().slice(0, 10),
-      tildeltBarnId: '',
+      tildeltBarnIds: [],
       registrertKilde: 'admin',
     };
     setSponsors((prev) => [...prev, newSponsor]);

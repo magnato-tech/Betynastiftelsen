@@ -59,12 +59,12 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
     {
       id: 'ADM-01',
       role: 'Admin',
-      title: 'Se nye faddere siste uke',
+      title: 'Koble fadder og barn',
       steps: [
-        'Bytt til Administrasjon (Oslo) i Visningsmodus.',
-        'Åpne Økonomi & avstemming for nøkkeltall, eller Barn & Faddere for listen.',
-        'Bekreft at listen «Nye faddere denne uken» viser sim-brukere (f.eks. Erik Nyreg, Hanna Uke).',
-        'Koble en ventende fadder til Priscille via tildelingsverktøyet.',
+        'Bytt til Administrasjon (Kristiansand) i Visningsmodus.',
+        'Åpne Barn & Faddere. Siden viser en barn-tabell og en faddertabell.',
+        'Bruk plusstegnet for å legge til barn eller fadder. Koble dem i den lille boksen «Koble barn og fadder».',
+        'Koble en ventende fadder til et barn uten fadder (f.eks. Priscille).',
       ],
       go: () => openAsRole('admin', 'tildeling'),
     },
@@ -103,7 +103,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
     {
       id: 'KOORD-02',
       role: 'Koordinator',
-      title: 'Rapport + bilde til Oslo',
+      title: 'Rapport + bilde til Kristiansand',
       steps: [
         'Rédiger un rapport for et av dine barn (+ Rédiger un rapport).',
         'Gå til Photos scolaires, last opp bilde med samtykke, send inn.',
@@ -174,7 +174,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
             <h3 className="text-lg font-serif font-bold text-stone-900">Slik henger det sammen</h3>
             <ol className="list-decimal list-inside space-y-2">
               <li>Koordinator i Kongo registrerer fakta, rapporter, bilde og øyeblikk (fransk grensesnitt).</li>
-              <li>Administrator i Norge godkjenner, oversetter og publiserer til fadder og offentlig side.</li>
+              <li>Administrator i Kristiansand godkjenner, oversetter og publiserer til fadder og offentlig side.</li>
               <li>Fadder i Norge ser kun sitt barn, godkjente rapporter og betalingsoversikt.</li>
               <li>Offentlig besøkende ser forsiden uten private barneprofiler.</li>
             </ol>
@@ -222,7 +222,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
           <div className="space-y-4 text-sm text-stone-700">
             <h3 className="text-lg font-serif font-bold text-stone-900">Fadderportal (Norge)</h3>
             <ul className="space-y-2 list-disc list-inside">
-              <li>Én fadder knyttes til ett barn.</li>
+              <li>En fadder kan støtte flere barn. Hvert barn har likevel bare én fadder.</li>
               <li>Viser fornavn, skole, klassetrinn og godkjent bakgrunnshistorie.</li>
               <li>Siste godkjente rapport synlig; eldre bak lenke.</li>
               <li>Betalingsoversikt: beløp og om siste innbetaling er registrert.</li>
@@ -275,20 +275,20 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-4 text-sm text-stone-700">
-              <h3 className="text-lg font-serif font-bold text-stone-900">Administrator (Oslo)</h3>
+              <h3 className="text-lg font-serif font-bold text-stone-900">Administrator (Kristiansand)</h3>
               <p>Innholdskø eldst først. Du kan rette tekst og fakta, forhåndsvise hele faddersiden, og publisere med ett klikk.</p>
               <ul className="space-y-2 list-disc list-inside">
                 <li>
                   <strong>Godkjenningskø:</strong> fransk og norsk side om side; godkjenn eller avvis rapporter.
                 </li>
                 <li>
-                  <strong>Barn &amp; faddere:</strong> full fadderliste, nye siste 7 og 30 dager, manuell kobling (ingen auto-tildeling fra nettside).
+                  <strong>Barn &amp; faddere:</strong> barn-tabell og faddertabell, plusstegn for å legge til, og en liten boks for manuell kobling (ingen auto-tildeling fra nettside).
                 </li>
                 <li>
                   <strong>Spørsmålsflyt:</strong> svar eller send videre til koordinator (senere).
                 </li>
                 <li>
-                  <strong>Økonomi:</strong> registrer og avstem innbetalinger (prototype).
+                  <strong>Økonomi:</strong> nøkkeltall fra fadderavtaler og transaksjonsloggen, sorterbar tabell og tidsintervall. Avstemmingsgrad telles fra innbetalinger, ikke et tall admin skriver inn.
                 </li>
                 <li>
                   <strong>CMS:</strong> én fane for forsidetekst, ekstraordinære aksjoner og vitnesbyrd (samtykke og godkjenning før de vises åpent).

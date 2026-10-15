@@ -35,7 +35,7 @@ export interface Child {
   koordinatorId: string;
   /** Godkjent bilde synlig for tildelt fadder. */
   publisertFotoUrl?: string;
-  /** Bilde sendt til Oslo, venter godkjenning. */
+  /** Bilde sendt til Kristiansand, venter godkjenning. */
   ventendeFotoUrl?: string;
   ventendeFotoBeskrivelseFr?: string;
   ventendeFotoStatus?: 'innsendt' | 'avvist';
@@ -103,7 +103,8 @@ export interface Sponsor {
   betalingsmetode: 'vipps' | 'avtalegiro' | 'bank';
   betalingsstatus: 'aktiv' | 'pause';
   startDato: string;
-  tildeltBarnId: string;
+  /** Ett eller flere barn. Hvert barn har likevel bare én fadder. */
+  tildeltBarnIds: string[];
   /** Hvor registreringen kom fra (simulering / prototype). */
   registrertKilde?: 'admin' | 'nettside' | 'import';
 }

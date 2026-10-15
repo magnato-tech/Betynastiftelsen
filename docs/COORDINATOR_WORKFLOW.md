@@ -13,10 +13,10 @@
 | Steg | Fane | Handling |
 |------|------|----------|
 | 1 | Liste des élèves / Elevliste | Sorterbar tabell over egne elever (klikk kolonneoverskrift). Status fadder, hopp til rapport/milepæl |
-| 2 | + Rédiger un rapport | Franskspråklig rapport → status `innsendt` i Oslo |
+| 2 | + Rédiger un rapport | Franskspråklig rapport → status `innsendt` i Kristiansand |
 | 3 | Photos scolaires | Last opp bilde (data-URL) → venter admin |
 | 4 | Jalons | Øyeblikk/tidslinje (synlig for fadder etter registrering) |
-| 5 | Questions d'Oslo | Spørsmål videresendt fra admin for egne barn |
+| 5 | Questions de Kristiansand | Spørsmål videresendt fra admin for egne barn |
 
 ## Admin-kobling
 

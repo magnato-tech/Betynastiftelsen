@@ -18,10 +18,10 @@ Plan for prototypen (15. oktober 2026). Gjelder Betyna i Brazzaville. Ingen klas
 
 ## Hva som blir igjen på koordinatorhjemmet
 
-- Elevliste (kort/tabell), nye rapporter, fakta, ny elev, spørsmål, effekt, innsending av bilder til Oslo.
+- Elevliste (kort/tabell), nye rapporter, fakta, ny elev, spørsmål, effekt, innsending av bilder til Kristiansand.
 - Fanen **Milepæler** er en **velger**: åpner barnets profil, ikke en andre tidslinje.
 - Fanen **Rapporter** er fortsatt alle rapporter for koordinatorens barn; per-barn-listen er på profilen.
-- Fanen **Bilder** er katalog + merking + innsending av fadderportrett (ett bilde per barn til Oslo).
+- Fanen **Bilder** er katalog + merking + innsending av fadderportrett (ett bilde per barn til Kristiansand).
 
 ## Datamodell for bildemerking
 

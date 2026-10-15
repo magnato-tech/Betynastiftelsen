@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_CAMPAIGNS, INITIAL_CHILDREN } from '../data/initialData';
+import { migrateCampaigns } from '../utils/campaignMigrate';
+import type { Campaign } from '../types';
 
 describe('Aksjoner knyttet til barn', () => {
   it('samler ikke inn til bøker for skoleklasser', () => {
@@ -15,6 +17,21 @@ describe('Aksjoner knyttet til barn', () => {
         expect(INITIAL_CHILDREN.some((c) => c.id === id)).toBe(true);
       }
     }
+  });
+
+  it('fjerner gammel klassebok-aksjon fra lagret data', () => {
+    const leftover = {
+      id: 'camp-books',
+      tittel: 'Felles lærebøker og regneregler for barnetrinnet',
+      beskrivelse: 'Innkjøp av 40 offisielt godkjente lærebøker.',
+      maalbelop: 6500,
+      innsamletBelop: 6500,
+      enhetBeskrivelse: '40 bøker + frakt',
+      status: 'fullfort' as const,
+      antallGivere: 7,
+      barnIds: [],
+    } satisfies Campaign;
+    expect(migrateCampaigns([...INITIAL_CAMPAIGNS, leftover])).toEqual(INITIAL_CAMPAIGNS);
   });
 
   it('aktiv innsamling er symaskiner til jenter i fadderordningen', () => {
