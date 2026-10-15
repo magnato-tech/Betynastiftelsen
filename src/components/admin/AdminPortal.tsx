@@ -6,9 +6,6 @@ import {
   CheckCircle,
   XCircle,
   Languages,
-  UserCheck,
-  CreditCard,
-  History,
   AlertCircle,
   Clock,
   Sparkles,
@@ -16,10 +13,7 @@ import {
   Layers,
   ArrowRight,
   TrendingUp,
-  FileText,
   UserPlus,
-  Quote,
-  Mail,
 } from 'lucide-react';
 import { CmsEditor } from './CmsEditor';
 import { TestimonialEditor } from './TestimonialEditor';
@@ -219,108 +213,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div className="text-xl font-bold font-mono text-[#A3B18A] tabular-nums">{newSponsorsLastWeek.length}</div>
           </button>
         </div>
-      </div>
-
-      {/* 2. Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#DFD9CB] pb-3 text-xs overflow-x-auto">
-        <button
-          onClick={() => setActiveSection('godkjenning')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'godkjenning' || activeSection === 'home'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Languages className="w-3.5 h-3.5" />
-          <span>Godkjenningskø & oversettelse ({pendingReports.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('tildeling')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'tildeling'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>Barn & Faddere ({childrenList.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('sporsmaal')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'sporsmaal'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <span>Spørsmålsflyt ({pendingInquiries.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('okonomi')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'okonomi'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <CreditCard className="w-3.5 h-3.5" />
-          <span>Økonomi & Innbetalinger ({payments.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('aksjoner')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'aksjoner'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <History className="w-3.5 h-3.5" />
-          <span>Aksjoner & Revisjonslogg</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('cms')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'cms'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Edit3 className="w-3.5 h-3.5" />
-          <span>Nettsideredigering (CMS)</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('historier')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'historier' || activeSection === 'testimonials'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Quote className="w-3.5 h-3.5" />
-          <span>Testimonial-editor ({stories.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('hjelp')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'hjelp'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Workflows & hjelp</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('nyhetsbrev')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'nyhetsbrev'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Mail className="w-3.5 h-3.5" />
-          <span>E-post</span>
-        </button>
       </div>
 
       {/* 3. TAB: GODKJENNINGSKØ & TOSPRAKLIG REVISJON */}

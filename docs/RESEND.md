@@ -10,6 +10,8 @@ Admin: **E-post** (`/api/email` og `/api/newsletter`). Når admin trykker **Publ
 
 Uten `RESEND_API_KEY` svarer POST **503 NOT_CONFIGURED**. Utkastet lagres i e-postkøen.
 
+Serverless på Vercel kaller Resend over **HTTP** (`POST https://api.resend.com/emails`). Funksjonene under `api/` importerer ikke SDK eller `src/`, slik at `GET /api/email` ikke krasjer ved lasting.
+
 ## DNS hos Uniweb (betyna.no)
 
 Domenet ligger hos Uniweb. Kopier **hele** verdiene fra Resend (ikke forkortede `[…]`). Region er EU (`rsend-eu`).

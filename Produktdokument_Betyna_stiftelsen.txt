@@ -494,3 +494,8 @@ Arbeidsdokument - Versjon 1.40 - 15. oktober 2026
 betyna.no er verifisert i Resend (EU). DKIM og SPF (rsend/send) er groenne. Utsending paa. Neste: API-noekkel og EMAIL_FROM i Vercel/.env.
 
 Arbeidsdokument - Versjon 1.41 - 15. oktober 2026
+
+15. oktober 2026, e-post p? nettsiden
+Publiser svar til fadder skal sende e-post via Resend p? betyna.no. GET/POST /api/email krasjet (500) fordi Vercel-funksjonen lastet SDK og src/. Endepunktet er selvstendig og kaller Resend over HTTP. Internt varsel i prototypen er uendret.
+
+Arbeidsdokument - Versjon 1.42 - 15. oktober 2026

@@ -14,7 +14,6 @@ import {
   Save,
   MessageCircle,
   Shield,
-  HelpCircle,
   TrendingUp,
   BarChart3,
   Award,
@@ -436,104 +435,14 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
             <UserPlus className="w-4 h-4" />
             <span>{ui.enroll}</span>
           </button>
+          <button
+            onClick={() => setActiveSection('faits')}
+            className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <Send className="w-4 h-4" />
+            <span>{ui.factsKicker}</span>
+          </button>
         </div>
-      </div>
-
-      {/* 2. Subnav tabs */}
-      <div className="flex items-center gap-2 border-b border-stone-200 pb-3 text-xs overflow-x-auto">
-        <button
-          onClick={() => setActiveSection('eleves')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'eleves' || activeSection === 'home' || isCoordinatorChildProfileSection(activeSection)
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabStudents(coordinatorChildren.length)}
-        </button>
-        <button
-          onClick={() => setActiveSection('jalons')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'jalons'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Award className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>{ui.tabMilestones(myMilestones.length)}</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('impact')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'impact'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <TrendingUp className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>{ui.tabImpact}</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('rapports')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'rapports'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabReports(myReports.length)}
-        </button>
-        <button
-          onClick={() => setActiveSection('photos')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'photos'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabPhotos}
-        </button>
-        <button
-          onClick={() => setActiveSection('questions')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSection === 'questions'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <HelpCircle className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>{ui.tabQuestions(inquiriesWaitingCoordinator.length)}</span>
-        </button>
-        <button
-          onClick={() => setActiveSection('nouveau')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'nouveau'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabWriteReport}
-        </button>
-        <button
-          onClick={() => setActiveSection('faits')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'faits'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabFacts}
-        </button>
-        <button
-          onClick={() => setActiveSection('nouvel-eleve')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSection === 'nouvel-eleve'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          {ui.tabNewStudent}
-        </button>
       </div>
 
       {/* Coordinator Alert Banner for Reports Needing Approval / Actions */}
