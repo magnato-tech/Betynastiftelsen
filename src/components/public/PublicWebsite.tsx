@@ -55,7 +55,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   return (
     <div className="space-y-20 pb-16">
       {/* 1. HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 pt-6">
+      <section id="home" className="max-w-7xl mx-auto px-6 pt-6 scroll-mt-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-[#4D6B3E]">
@@ -262,7 +262,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             : defaultCta;
 
           return (
-            <div className="relative overflow-hidden mt-8 p-6 sm:p-8 rounded-xl border border-[#DFD9CB] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#EBE7DC]/60">
+            <div id="cta" className="relative overflow-hidden mt-8 p-6 sm:p-8 rounded-xl border border-[#DFD9CB] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#EBE7DC]/60 scroll-mt-24">
               {cta.backgroundImageUrl && (
                 <>
                   <img

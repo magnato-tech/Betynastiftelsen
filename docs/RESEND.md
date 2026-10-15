@@ -2,7 +2,7 @@
 
 Betyna bruker **Resend** til nyhetsbrev, svar på henvendelser og systemmeldinger. Ikke Mailchimp. Nøkkel skal **ikke** ligge i git. Koplig av nøkkel kommer senere; admin kan likevel skrive og køe.
 
-Admin: **E-post** (`/api/email` og `/api/newsletter`). Når admin trykker **Publiser svar til fadder**, køes automatisk malen `inquiry_answered` med lenke til faddersiden.
+Admin: **E-post** er den daglige køen (henvendelse, system, nyhetsbrev). **Innstillinger** styrer hvilke hendelser som sender e-post automatisk (svar, godkjent rapport, velkomst, avstemt betaling). Standard: bare svar på spørsmål er på.
 
 ## Status
 

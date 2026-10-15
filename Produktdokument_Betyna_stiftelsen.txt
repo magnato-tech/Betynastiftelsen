@@ -195,7 +195,7 @@ Aksjonssiden skal gj?re det mulig ? samle inn penger til et avgrenset, konkret b
 * Tittel, beskrivelse av behov, bilder med tillatelse, m?lbel?p, eventuell frist og status.
 * Bel?p innsamlet og gjenst?ende bel?p, n?r dataene er tilgjengelige og kontrollert.
 * Vipps- eller bankbasert bidrag etter valgt betalingsl?sning.
-* Administratorgodkjenning f?r publisering. Bildet p? hvert behovskort settes i Nettsideredigering (CMS), fanen Konkrete behov: last opp fra maskinen eller lim inn en bildeadresse.
+* Administratorgodkjenning f?r publisering. Aksjoner, vitnesbyrd og forsidetekst redigeres i ?n CMS-fane. Under Aksjoner settes tittel, beskrivelse, m?lbel?p, barn, status, sluttrapport og bilde. Innsamlet bel?p kommer fra gaver.
 * Separat registrering og rapportering av aksjonsmidler og fadderbidrag.
 * Sluttrapport som forklarer hvordan midlene ble brukt, basert p? dokumenterte tall.
 Eksempelbel?p som 3 ? 3 000 kroner kan brukes i intern prototype eller planlegging, men skal ikke presenteres offentlig som et faktisk behov f?r det er bekreftet.
@@ -294,7 +294,7 @@ Avklart 14. oktober 2026
 * Koordinatorer: flere, hver med sine barn.
 * Betaling i neste tegning: interesseskjema og manuell registrering. Ikke ekte Vipps enn?.
 * Koordinatorens personlige barneprofil: klikk paa barn aapner profil med milepaeler, rapporter og merkede katalogbilder (barnIds[]). Avklart 15. oktober 2026.
-* E-post: Resend til nyhetsbrev, henvendelser og systemmeldinger. Naar admin publiserer svar til fadder, koes systemmelding med lenke til faddersiden. Noekkel koples senere. Avklart 15. oktober 2026.
+* E-post: Resend til nyhetsbrev, henvendelser og systemmeldinger. Den daglige e-postjobben ligger under Admin ? E-post. Automatiske varsler styres under Admin ? Innstillinger av daglig leder (av/p?). Manuell sending er uavhengig. N?r ?Svar p? sp?rsm?l? er p? og admin publiserer svar, g?r systemmelding med lenke til faddersiden. Avklart 15. oktober 2026.
 
 Fortsatt ?pent
 * Vipps: om en senere versjon skal bruke Vipps Checkout eller en enklere donasjonsflyt.
@@ -350,7 +350,7 @@ BETYNA STIFTELSEN  |  PRODUKTDOKUMENT
 Arbeidsdokument ? Versjon 1.19 ? 14. oktober 2026
 
 14. oktober 2026, behov
-Administrator kan selv legge bilde p? kortene under Konkrete behov, i CMS-fanen med samme navn.
+Administrator redigerer aksjoner (tekst, barn, m?l, bilde) i CMS, ikke i revisjonsloggen.
 
 14. oktober 2026, ny fadder
 Administrator legger til en ny fadder under Barn og Faddere. Barnet kobles i neste steg og tildeles ikke automatisk. Bel?pet er 250 eller 350 kroner, og betalingen er Vipps eller bank.
@@ -499,3 +499,38 @@ Arbeidsdokument - Versjon 1.41 - 15. oktober 2026
 Publiser svar til fadder skal sende e-post via Resend p? betyna.no. GET/POST /api/email krasjet (500) fordi Vercel-funksjonen lastet SDK og src/. Endepunktet er selvstendig og kaller Resend over HTTP. Internt varsel i prototypen er uendret.
 
 Arbeidsdokument - Versjon 1.42 - 15. oktober 2026
+
+15. oktober 2026, e-post av/p? i admin
+Daglig leder bestemmer i Admin ? E-post hvilke automatiske meldinger som g?r ut (svar, godkjent rapport, velkomst, avstemt betaling). Standard er bare svar p? sp?rsm?l. Manuell sending p?virkes ikke. Engangslenke kommer med innlogging.
+
+Arbeidsdokument - Versjon 1.43 - 15. oktober 2026
+
+15. oktober 2026, e-postvalg i innstillinger
+Automatiske e-postvarsler (av/p?) er flyttet fra den daglige E-post-skjermen til Admin ? Innstillinger, slik at systemvalg ikke ligger i veien for ? svare og sende.
+
+Arbeidsdokument - Versjon 1.44 - 15. oktober 2026
+
+15. oktober 2026, admin-banner og innstillinger
+Den svarte fellesfanen er fjernet fra alle admin-sider. Teksten (styrende prinsipp) ligger i Innstillinger sammen med brukerveiledning og workflows. N?kkeltall-boksene vises bare under ?konomi & avstemming. Workflows og innstillinger er ?n meny.
+
+Arbeidsdokument - Versjon 1.45 - 15. oktober 2026
+
+15. oktober 2026, skriveflate til fadder
+Admin publiserer til fadder fra ?n k? (eldst f?rst): historie fra fakta, og skolerapport. Samme skriveflate: kildetekst til venstre, norsk tekst til h?yre, forh?ndsvisning av det fadderen ser, deretter Publiser til fadder. Admin retter selv. Ikke retur til koordinator i denne flaten.
+
+Arbeidsdokument - Versjon 1.46 - 15. oktober 2026
+
+15. oktober 2026, samlet CMS
+Ekstraordin?re aksjoner redigeres i CMS sammen med nettside og vitnesbyrd. Testimonial-editor er ikke lenger en egen toppfane. Revisjonsloggen viser bare hva som er gjort.
+
+Arbeidsdokument - Versjon 1.47 - 15. oktober 2026
+
+15. oktober 2026, CMS venstremeny
+CMS-seksjonene ligger i en vertikal meny til venstre, ikke som horisontal fanerad. Arbeidsflaten er til h?yre.
+
+Arbeidsdokument - Versjon 1.48 - 15. oktober 2026
+
+15. oktober 2026, CMS live forh?ndsvisning
+Knappen i CMS heter Forh?ndsvis. Den ?pner den ekte offentlige siden i et vindu ved siden av redigeringen (iframe, samme m?nster som menighetsplan.no), med desktop, nettbrett og mobil, og Ny fane.
+
+Arbeidsdokument - Versjon 1.49 - 15. oktober 2026

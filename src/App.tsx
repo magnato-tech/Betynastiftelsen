@@ -15,25 +15,35 @@ import { DonateCampaignModal } from './components/modals/DonateCampaignModal';
 import { Campaign } from './types';
 import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 import { parseSponsorPortalLink } from './email/sponsorPortalLink';
+import { readCmsPreviewFlags } from './utils/cmsPreview';
 
 const MainLayout: React.FC = () => {
   const { role, setRole, setCurrentSponsorId } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
+  const previewFlags = readCmsPreviewFlags();
 
   useEffect(() => {
+    if (previewFlags.preview) {
+      setRole('public');
+      const hash = window.location.hash.replace('#', '') || 'home';
+      setActiveSection(hash);
+      const onHash = () => setActiveSection(window.location.hash.replace('#', '') || 'home');
+      window.addEventListener('hashchange', onHash);
+      return () => window.removeEventListener('hashchange', onHash);
+    }
     const parsed = parseSponsorPortalLink(window.location.search);
     if (!parsed) return;
     setRole('sponsor');
     setCurrentSponsorId(parsed.sponsorId);
     setActiveSection(parsed.section);
-  }, [setRole, setCurrentSponsorId]);
+  }, [previewFlags.preview, setRole, setCurrentSponsorId]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
       {/* 1. Persistent Role Switcher Ribbon for immediate testing */}
-      {prototypeRoleSwitcherEnabled && <RoleSwitcherBanner />}
+      {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
 
       {/* 2. Top Bar complying with strict 1-row 3-zone contract */}
       <Navbar

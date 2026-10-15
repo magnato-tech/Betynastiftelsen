@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
-import { AdultGraduateStory, CmsContent, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
+import { CmsLivePreview } from './CmsLivePreview';
+import { AdultGraduateStory, Campaign, CmsContent, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
 import {
   Layout,
   Layers,
@@ -25,15 +26,26 @@ import {
   FileCheck,
   Users,
   Megaphone,
+  type LucideIcon,
 } from 'lucide-react';
-
-interface CmsEditorProps {
-  onViewPublicSite: () => void;
-}
 
 type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov';
 
-export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
+const CMS_NAV: { id: CmsSubTab; label: string; hint: string; icon: LucideIcon }[] = [
+  { id: 'hero', label: 'Hovedbanner', hint: 'Første inntrykk', icon: Layout },
+  { id: 'steps', label: 'Fadderordningen', hint: 'Ramme 1–2–3', icon: Layers },
+  { id: 'stories', label: 'Vitnesbyrd', hint: 'Historier med samtykke', icon: MessageSquare },
+  { id: 'about', label: 'Kjernerammer', hint: 'Verdier og etikk', icon: ShieldCheck },
+  { id: 'kpis', label: 'Nøkkeltall', hint: 'Faktabånd på forsiden', icon: TrendingUp },
+  { id: 'cta', label: 'Fadderoppfordring', hint: 'Handlingsbånd', icon: Megaphone },
+  { id: 'behov', label: 'Aksjoner', hint: 'Konkrete behov', icon: ImageIcon },
+];
+
+interface CmsEditorProps {
+  initialSubTab?: CmsSubTab;
+}
+
+export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
   const {
     cmsContent,
     updateCmsSection,
@@ -44,10 +56,16 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
     updateStory,
     deleteStory,
     campaigns,
+    addCampaign,
     updateCampaign,
+    deleteCampaign,
+    childrenList,
   } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState<CmsSubTab>('hero');
+  const [activeSubTab, setActiveSubTab] = useState<CmsSubTab>(initialSubTab ?? 'hero');
+  const [previewOpen, setPreviewOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1280
+  );
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Story modal state
@@ -61,6 +79,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
   const [storyYear, setStoryYear] = useState<number>(2024);
   const [storyBildeUrl, setStoryBildeUrl] = useState('');
   const [storyConsent, setStoryConsent] = useState(true);
+
+  const [showNewCampaign, setShowNewCampaign] = useState(false);
 
   const showNotification = (msg: string) => {
     setSaveToast(msg);
@@ -252,20 +272,26 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
             <span>Seksjonsbasert CMS · Betyna Stiftelsen</span>
           </div>
           <h2 className="text-xl font-serif font-bold text-stone-900 mt-1">
-            Rediger tekster, bilde-URLer og filopplastinger
+            Offentlig innhold: nettside, aksjoner og vitnesbyrd
           </h2>
           <p className="text-xs text-stone-600 mt-0.5">
-            Full kontroll over innhold, bilder og visuell stil på den offentlige landingssiden. Endringer trer i kraft umiddelbart.
+            Én arbeidsflate for det besøkende ser. Tekst, bilder, ekstraordinære aksjoner og godkjente vitnesbyrd. Endringer vises med én gang.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={onViewPublicSite}
-            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
+            type="button"
+            onClick={() => setPreviewOpen((open) => !open)}
+            aria-pressed={previewOpen}
+            className={`px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs ${
+              previewOpen
+                ? 'bg-[#4D6B3E] text-white hover:bg-[#3B522F]'
+                : 'bg-stone-900 hover:bg-stone-800 text-white'
+            }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Forhåndsvis offentlig side</span>
+            <span>Forhåndsvis</span>
           </button>
           <button
             onClick={() => {
@@ -325,87 +351,50 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
         </div>
       </div>
 
-      {/* Section Subtabs */}
-      <div className="flex items-center gap-2 border-b border-[#DFD9CB] pb-3 text-xs overflow-x-auto">
-        <button
-          onClick={() => setActiveSubTab('hero')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'hero'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
+      <div className={`flex flex-col lg:flex-row gap-6 items-start ${previewOpen ? 'xl:flex-row' : ''}`}>
+        <nav
+          aria-label="CMS-seksjoner"
+          className="w-full lg:w-56 shrink-0 lg:sticky lg:top-24 bg-white rounded-xl border border-stone-200 shadow-xs p-2"
         >
-          <Layout className="w-3.5 h-3.5" />
-          <span>Hovedbanner (Hero)</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('steps')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'steps'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          <span>Fadderordningen (Ramme 1-2-3)</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('stories')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'stories'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span>Vitnesbyrd & Historier ({stories.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('about')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'about'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Kjernerammer & Etikk</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('kpis')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'kpis'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <TrendingUp className="w-3.5 h-3.5" />
-          <span>Nøkkeltallsbånd</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('cta')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'cta'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <Megaphone className="w-3.5 h-3.5" />
-          <span>Fadderoppfordring (CTA)</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab('behov')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeSubTab === 'behov'
-              ? 'bg-[#4D6B3E] text-white shadow-xs'
-              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
-          }`}
-        >
-          <ImageIcon className="w-3.5 h-3.5" />
-          <span>Konkrete behov</span>
-        </button>
-      </div>
+          <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-stone-400">
+            Seksjoner
+          </p>
+          <ul className="space-y-0.5">
+            {CMS_NAV.map((item) => {
+              const Icon = item.icon;
+              const active = activeSubTab === item.id;
+              const count =
+                item.id === 'stories' ? stories.length : item.id === 'behov' ? campaigns.length : null;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubTab(item.id)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg cursor-pointer transition-colors flex items-start gap-2.5 ${
+                      active
+                        ? 'bg-[#4D6B3E] text-white shadow-xs'
+                        : 'text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? 'text-white' : 'text-[#4D6B3E]'}`} />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold">
+                        {item.label}
+                        {count !== null ? ` (${count})` : ''}
+                      </span>
+                      <span className={`block text-[11px] leading-snug ${active ? 'text-white/80' : 'text-stone-500'}`}>
+                        {item.hint}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
+        <div className={`min-w-0 flex-1 w-full space-y-8 ${previewOpen ? 'xl:max-w-xl 2xl:max-w-2xl' : ''}`}>
       {/* =========================================================================
           TAB 1: HOVEDBANNER (HERO BANNER)
          ========================================================================= */}
@@ -660,7 +649,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
           TAB 3: VITNESBYRD & HISTORIER (STORIES) -> TESTIMONIAL EDITOR
          ========================================================================= */}
       {activeSubTab === 'stories' && (
-        <TestimonialEditor onViewPublicSite={onViewPublicSite} />
+        <TestimonialEditor onViewPublicSite={() => setPreviewOpen(true)} />
       )}
 
       {/* =========================================================================
@@ -953,30 +942,318 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ onViewPublicSite }) => {
 
       {activeSubTab === 'behov' && (
         <div className="space-y-6">
-          <p className="text-sm text-stone-600 leading-relaxed max-w-2xl">
-            Hvert kort under Konkrete behov på forsiden kan ha sitt eget bilde. Last opp fra maskinen, eller lim inn en bildeadresse. Bildet vises med én gang.
-          </p>
-          {campaigns.map((camp) => (
-            <div key={camp.id} className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
-              <div>
-                <h3 className="text-base font-serif font-bold text-stone-900">{camp.tittel}</h3>
-                <p className="text-xs text-stone-500 mt-1">{camp.enhetBeskrivelse}</p>
-              </div>
-              <ImagePickerField
-                label="Bilde på behovskortet"
-                sublabel="Last opp et bilde fra maskinen, velg et ferdig motiv, eller lim inn en adresse."
-                currentUrl={camp.bildeUrl}
-                currentPreset={camp.bildeUrl ? 'custom' : 'pattern'}
-                showScrimSlider={false}
-                onChange={(updates) => {
-                  updateCampaign(camp.id, { bildeUrl: updates.backgroundImageUrl || '' });
-                  showNotification(`Bildet for «${camp.tittel}» er oppdatert.`);
-                }}
-              />
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-serif font-bold text-stone-900">Ekstraordinære aksjoner</h3>
+              <p className="text-xs text-stone-600 mt-0.5 max-w-2xl">
+                Dette er det besøkende ser under Konkrete behov. Hver aksjon må knyttes til barn i fadderordningen — ikke til en skoleklasse. Innsamlet beløp kommer fra gaver og redigeres ikke her.
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowNewCampaign(true)}
+              className="px-4 py-2 bg-[#4D6B3E] hover:bg-[#3B522F] text-white rounded-lg text-xs font-medium cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Ny aksjon
+            </button>
+          </div>
+
+          {showNewCampaign && (
+            <CampaignForm
+              title="Ny aksjon"
+              childrenList={childrenList}
+              initial={{
+                tittel: '',
+                beskrivelse: '',
+                enhetBeskrivelse: '',
+                maalbelop: 0,
+                status: 'aktiv',
+                barnIds: [],
+                sluttrapport: '',
+                bildeUrl: '',
+              }}
+              onCancel={() => setShowNewCampaign(false)}
+              onSave={(draft) => {
+                if (!draft.tittel.trim() || draft.barnIds.length === 0) {
+                  showNotification('Skriv tittel og knytt minst ett barn før du publiserer.');
+                  return;
+                }
+                addCampaign({
+                  tittel: draft.tittel.trim(),
+                  beskrivelse: draft.beskrivelse.trim(),
+                  enhetBeskrivelse: draft.enhetBeskrivelse.trim(),
+                  maalbelop: draft.maalbelop,
+                  status: draft.status,
+                  barnIds: draft.barnIds,
+                  sluttrapport: draft.sluttrapport || undefined,
+                  bildeUrl: draft.bildeUrl || undefined,
+                });
+                setShowNewCampaign(false);
+                showNotification('Aksjonen er publisert på den åpne siden.');
+              }}
+            />
+          )}
+
+          {campaigns.length === 0 && !showNewCampaign && (
+            <p className="text-sm text-stone-500">Ingen aksjoner ennå. Opprett den første her.</p>
+          )}
+
+          {campaigns.map((camp) => (
+            <CampaignForm
+              key={camp.id}
+              title={camp.tittel}
+              childrenList={childrenList}
+              liveProgress={{ innsamlet: camp.innsamletBelop, givere: camp.antallGivere }}
+              initial={{
+                tittel: camp.tittel,
+                beskrivelse: camp.beskrivelse,
+                enhetBeskrivelse: camp.enhetBeskrivelse,
+                maalbelop: camp.maalbelop,
+                status: camp.status,
+                barnIds: camp.barnIds ?? [],
+                sluttrapport: camp.sluttrapport || '',
+                bildeUrl: camp.bildeUrl || '',
+              }}
+              onSave={(draft) => {
+                if (!draft.tittel.trim() || draft.barnIds.length === 0) {
+                  showNotification('Tittel og minst ett barn er påkrevd.');
+                  return;
+                }
+                updateCampaign(camp.id, {
+                  tittel: draft.tittel.trim(),
+                  beskrivelse: draft.beskrivelse.trim(),
+                  enhetBeskrivelse: draft.enhetBeskrivelse.trim(),
+                  maalbelop: draft.maalbelop,
+                  status: draft.status,
+                  barnIds: draft.barnIds,
+                  sluttrapport: draft.sluttrapport || undefined,
+                });
+                showNotification(`«${draft.tittel.trim()}» er oppdatert.`);
+              }}
+              onDelete={() => {
+                if (window.confirm(`Slette aksjonen «${camp.tittel}» fra den åpne siden?`)) {
+                  deleteCampaign(camp.id);
+                  showNotification('Aksjonen er fjernet.');
+                }
+              }}
+              onImageChange={(url) => {
+                updateCampaign(camp.id, { bildeUrl: url });
+                showNotification(`Bildet for «${camp.tittel}» er oppdatert.`);
+              }}
+            />
           ))}
         </div>
       )}
+        </div>
+        {previewOpen && (
+          <div className="w-full xl:w-[min(48%,640px)] 2xl:w-[min(50%,760px)] shrink-0">
+            <CmsLivePreview section={activeSubTab} onClose={() => setPreviewOpen(false)} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+
+type CampaignDraft = {
+  tittel: string;
+  beskrivelse: string;
+  enhetBeskrivelse: string;
+  maalbelop: number;
+  status: Campaign['status'];
+  barnIds: string[];
+  sluttrapport: string;
+  bildeUrl: string;
+};
+
+function CampaignForm({
+  title,
+  childrenList,
+  initial,
+  liveProgress,
+  onSave,
+  onCancel,
+  onDelete,
+  onImageChange,
+}: {
+  title: string;
+  childrenList: { id: string; fornavn: string; internKode: string }[];
+  initial: CampaignDraft;
+  liveProgress?: { innsamlet: number; givere: number };
+  onSave: (draft: CampaignDraft) => void;
+  onCancel?: () => void;
+  onDelete?: () => void;
+  onImageChange?: (url: string) => void;
+}) {
+  const [draft, setDraft] = useState<CampaignDraft>({
+    ...initial,
+    barnIds: initial.barnIds ?? [],
+  });
+
+  const toggleChild = (id: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      barnIds: prev.barnIds.includes(id) ? prev.barnIds.filter((x) => x !== id) : [...prev.barnIds, id],
+    }));
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <h4 className="text-base font-serif font-bold text-stone-900">{title}</h4>
+        {liveProgress && (
+          <span className="text-xs font-mono font-semibold text-stone-800 shrink-0">
+            {liveProgress.innsamlet.toLocaleString('no-NO')} kr · {liveProgress.givere} givere
+          </span>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-stone-700 mb-1">Tittel *</label>
+        <input
+          type="text"
+          value={draft.tittel}
+          onChange={(e) => setDraft({ ...draft, tittel: e.target.value })}
+          className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-stone-700 mb-1">Beskrivelse</label>
+        <textarea
+          rows={4}
+          value={draft.beskrivelse}
+          onChange={(e) => setDraft({ ...draft, beskrivelse: e.target.value })}
+          className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] resize-none leading-relaxed"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold text-stone-700 mb-1">Enhet / fordeling</label>
+          <input
+            type="text"
+            value={draft.enhetBeskrivelse}
+            onChange={(e) => setDraft({ ...draft, enhetBeskrivelse: e.target.value })}
+            className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+            placeholder="f.eks. 3 maskiner à 3 000 kr"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-stone-700 mb-1">Målbeløp (kr)</label>
+          <input
+            type="number"
+            min={0}
+            value={draft.maalbelop}
+            onChange={(e) => setDraft({ ...draft, maalbelop: Number(e.target.value) || 0 })}
+            className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 font-mono focus:outline-hidden focus:border-[#4D6B3E]"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs font-semibold text-stone-700">Status</span>
+        <button
+          type="button"
+          onClick={() => setDraft({ ...draft, status: 'aktiv' })}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${
+            draft.status === 'aktiv' ? 'bg-[#4D6B3E] text-white' : 'bg-stone-100 text-stone-700 border border-stone-200'
+          }`}
+        >
+          Aktiv på nettsiden
+        </button>
+        <button
+          type="button"
+          onClick={() => setDraft({ ...draft, status: 'fullfort' })}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${
+            draft.status === 'fullfort' ? 'bg-emerald-700 text-white' : 'bg-stone-100 text-stone-700 border border-stone-200'
+          }`}
+        >
+          Fullført
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-stone-700 mb-2">Knyttet til barn *</label>
+        <div className="flex flex-wrap gap-2">
+          {childrenList.map((child) => {
+            const selected = (draft.barnIds ?? []).includes(child.id);
+            return (
+              <button
+                key={child.id}
+                type="button"
+                onClick={() => toggleChild(child.id)}
+                className={`px-2.5 py-1 rounded-md text-xs cursor-pointer border ${
+                  selected
+                    ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                {child.fornavn}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {draft.status === 'fullfort' && (
+        <div>
+          <label className="block text-xs font-semibold text-stone-700 mb-1">Sluttrapport (hvordan midlene ble brukt)</label>
+          <textarea
+            rows={3}
+            value={draft.sluttrapport}
+            onChange={(e) => setDraft({ ...draft, sluttrapport: e.target.value })}
+            className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] resize-none"
+          />
+        </div>
+      )}
+
+      {onImageChange && (
+        <ImagePickerField
+          label="Bilde på behovskortet"
+          sublabel="Last opp fra maskinen, velg et ferdig motiv, eller lim inn en adresse."
+          currentUrl={draft.bildeUrl}
+          currentPreset={draft.bildeUrl ? 'custom' : 'pattern'}
+          showScrimSlider={false}
+          onChange={(updates) => {
+            const url = updates.backgroundImageUrl || '';
+            setDraft((prev) => ({ ...prev, bildeUrl: url }));
+            onImageChange(url);
+          }}
+        />
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100">
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-3 py-2 text-stone-600 border border-stone-300 rounded-lg text-xs font-medium cursor-pointer"
+            >
+              Avbryt
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="px-3 py-2 text-red-700 hover:bg-red-50 rounded-lg text-xs font-medium cursor-pointer flex items-center gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              Slett
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => onSave(draft)}
+          className="px-4 py-2 bg-[#4D6B3E] hover:bg-[#3B522F] text-white rounded-lg text-xs font-medium cursor-pointer"
+        >
+          Lagre aksjon
+        </button>
+      </div>
+    </div>
+  );
+}

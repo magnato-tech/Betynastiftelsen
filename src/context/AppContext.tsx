@@ -18,6 +18,15 @@ import {
   CatalogPhoto,
   EmailOutboxItem,
 } from '../types';
+import {
+  DEFAULT_EMAIL_AUTO_SEND,
+  migrateEmailAutoSend,
+  isEmailAutoSendOn,
+  type EmailAutoSendEvent,
+  type EmailAutoSendPrefs,
+} from '../email/autoSendPrefs';
+import { composeSystemEmail } from '../email/composeSystemEmail';
+import type { SystemTemplateId } from '../email/templates';
 import translationsData from '../locales/translations.json';
 import {
   INITIAL_CHILDREN,
@@ -39,7 +48,6 @@ import { coordinatorDisplayName } from '../data/simulationCoordinators';
 import { childrenForCoordinator, migrateChildrenCoordinatorIds } from '../utils/coordinatorScope';
 import { migrateCmsKpiStats } from '../utils/cmsKpiMigrate';
 import { buildFieldFact } from '../utils/fieldFacts';
-import { composeInquiryAnsweredEmail } from '../email/composeInquiryAnswered';
 import { postBetynaEmail } from '../email/client';
 
 interface AppContextType {
@@ -81,6 +89,16 @@ interface AppContextType {
   coordinatorChildren: Child[];
   fieldFacts: FieldFact[];
   submitFieldFact: (barnId: string, trivsel: string) => void;
+  publishChildStory: (
+    factId: string,
+    draft: {
+      fornavn: string;
+      skoleNavn: string;
+      klassetrinn: string;
+      trivsel: string;
+      historie: string;
+    }
+  ) => void;
 
   // Actions
   addChild: (childData: Partial<Child>) => void;
@@ -126,7 +144,9 @@ interface AppContextType {
   }) => string;
 
   donateToCampaign: (campaignId: string, amount: number, donorName: string, method: 'vipps' | 'bank') => void;
+  addCampaign: (data: Omit<Campaign, 'id' | 'innsamletBelop' | 'antallGivere'>) => string;
   updateCampaign: (id: string, updates: Partial<Campaign>) => void;
+  deleteCampaign: (id: string) => void;
   reconcilePayment: (paymentId: string) => void;
 
   // Notifications
@@ -140,6 +160,8 @@ interface AppContextType {
   emailOutbox: EmailOutboxItem[];
   addEmailOutboxItem: (item: Omit<EmailOutboxItem, 'id' | 'createdAt'>) => EmailOutboxItem;
   updateEmailOutboxItem: (id: string, updates: Partial<EmailOutboxItem>) => void;
+  emailAutoSend: EmailAutoSendPrefs;
+  setEmailAutoSendEvent: (id: EmailAutoSendEvent, enabled: boolean) => void;
 }
 
 const STORAGE_KEY_PREFIX = 'betyna_v1_';
@@ -192,6 +214,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadState('catalogPhotos', INITIAL_CATALOG_PHOTOS)
   );
   const [emailOutbox, setEmailOutbox] = useState<EmailOutboxItem[]>(() => loadState('emailOutbox', []));
+  const [emailAutoSend, setEmailAutoSend] = useState<EmailAutoSendPrefs>(() =>
+    migrateEmailAutoSend(loadState('emailAutoSend', DEFAULT_EMAIL_AUTO_SEND))
+  );
 
   // Sync to localStorage
   useEffect(() => {
@@ -236,6 +261,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PREFIX + 'emailOutbox', JSON.stringify(emailOutbox));
   }, [emailOutbox]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_PREFIX + 'emailAutoSend', JSON.stringify(emailAutoSend));
+  }, [emailAutoSend]);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (!event.key?.startsWith(STORAGE_KEY_PREFIX) || event.newValue == null) return;
+      const key = event.key.slice(STORAGE_KEY_PREFIX.length);
+      try {
+        const value = JSON.parse(event.newValue);
+        if (key === 'cms') setCmsContent(migrateCmsKpiStats(value, INITIAL_CMS_CONTENT.kpiStats));
+        if (key === 'campaigns') setCampaigns(value);
+        if (key === 'stories') setStories(value);
+        if (key === 'language') setLanguageState(normalizeLanguage(value));
+      } catch {
+        /* ignorer ødelagt mellomlagring */
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   // Notifications filtering for active persona / role
   const currentRoleNotifications = notifications.filter((n) => {
@@ -365,6 +411,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
+  const setEmailAutoSendEvent = (id: EmailAutoSendEvent, enabled: boolean) => {
+    setEmailAutoSend((prev) => ({ ...prev, [id]: enabled }));
+    addAuditLog('E-postvarsler', `Automatisk «${id}» er ${enabled ? 'på' : 'av'}.`);
+  };
+
+  const queueSponsorSystemEmail = (
+    templateId: SystemTemplateId,
+    sponsor: Sponsor | undefined,
+    relatedId: string
+  ) => {
+    if (!sponsor || !isEmailAutoSendOn(emailAutoSend, templateId)) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://betyna.no';
+    const mail = composeSystemEmail({
+      templateId,
+      relatedId,
+      sponsorId: sponsor.id,
+      sponsorName: sponsor.navn,
+      sponsorEmail: sponsor.epost,
+      origin,
+    });
+    if (!mail.ok) return;
+    const row = addEmailOutboxItem({
+      kind: mail.kind,
+      subject: mail.subject,
+      body: mail.html,
+      toEmails: mail.emails,
+      relatedId: mail.relatedId,
+      templateId: mail.templateId,
+      status: 'venter_nøkkel',
+      note: 'Automatisk systemmelding (på i admin).',
+    });
+    addAuditLog('Systemmelding til fadder', `${templateId} til ${sponsor.epost}.`);
+    void postBetynaEmail({
+      kind: mail.kind,
+      subject: mail.subject,
+      html: mail.html,
+      emails: mail.emails,
+      relatedId: mail.relatedId,
+      templateId: mail.templateId,
+    })
+      .then(({ status, json }) => {
+        if (status === 200 && json.ok) {
+          updateEmailOutboxItem(row.id, { status: 'sendt', note: json.id ? `Resend ${json.id}` : 'Sendt' });
+        } else if (status !== 503) {
+          updateEmailOutboxItem(row.id, { status: 'feilet', note: json.message });
+        }
+      })
+      .catch(() => {
+        /* Uten API: utkastet ligger i køen. */
+      });
+  };
+
   const currentSponsor = sponsors.find((s) => s.id === currentSponsorId);
   const currentCoordinator = coordinators.find((c) => c.id === currentCoordinatorId);
   const coordinatorChildren = childrenForCoordinator(childrenList, currentCoordinatorId);
@@ -393,7 +491,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       koordinatorId: childData.koordinatorId || currentCoordinatorId || 'coord-01',
     };
     setChildrenList((prev) => [...prev, newChild]);
-    addAuditLog('Registrerte nytt barn', `Ny elev ${newChild.fornavn} (${newChild.internKode}) registrert.`);
+    const fact = buildFieldFact({
+      child: newChild,
+      koordinatorId: newChild.koordinatorId,
+      trivsel: 'Ny elev registrert. Skriv historien fadderen skal lese.',
+    });
+    setFieldFacts((prev) => [fact, ...prev]);
+    addAuditLog('Registrerte nytt barn', `Ny elev ${newChild.fornavn} (${newChild.internKode}) i køen skriv historien.`);
   };
 
   const submitFieldFact = (barnId: string, trivsel: string) => {
@@ -406,6 +510,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setFieldFacts((prev) => [fact, ...prev]);
     addAuditLog('Koordinator sendte fakta', `Fakta for ${child.fornavn} ligger i kø som skriv historien.`);
+  };
+
+  const publishChildStory = (
+    factId: string,
+    draft: {
+      fornavn: string;
+      skoleNavn: string;
+      klassetrinn: string;
+      trivsel: string;
+      historie: string;
+    }
+  ) => {
+    const fact = fieldFacts.find((f) => f.id === factId);
+    if (!fact || !draft.historie.trim()) return;
+    setFieldFacts((prev) =>
+      prev.map((f) =>
+        f.id === factId
+          ? {
+              ...f,
+              status: 'publisert' as const,
+              fornavn: draft.fornavn.trim(),
+              skoleNavn: draft.skoleNavn.trim(),
+              klassetrinn: draft.klassetrinn.trim(),
+              trivsel: draft.trivsel.trim() || f.trivsel,
+            }
+          : f
+      )
+    );
+    setChildrenList((prev) =>
+      prev.map((c) =>
+        c.id === fact.barnId
+          ? {
+              ...c,
+              fornavn: draft.fornavn.trim() || c.fornavn,
+              skoleNavn: draft.skoleNavn.trim() || c.skoleNavn,
+              klassetrinn: draft.klassetrinn.trim() || c.klassetrinn,
+              bakgrunnskontekst: draft.historie.trim(),
+              sistOppdatert: new Date().toISOString().slice(0, 10),
+            }
+          : c
+      )
+    );
+    addAuditLog(
+      'Publiserte historie til fadder',
+      `Historien om ${draft.fornavn.trim() || fact.barnNavn} er synlig på faddersiden.`
+    );
   };
 
   const updateChild = (id: string, updates: Partial<Child>) => {
@@ -572,6 +722,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (newNotificationsToAdd.length > 0) {
       setNotifications((prev) => [...newNotificationsToAdd, ...prev]);
+    }
+
+    if (child?.tildeltFadderId) {
+      queueSponsorSystemEmail(
+        'report_approved',
+        sponsors.find((s) => s.id === child.tildeltFadderId),
+        id
+      );
     }
   };
 
@@ -872,52 +1030,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         relatedEntityId: id,
       };
       setNotifications((prev) => [sponsorAnswerNotif, ...prev]);
-
-      const sponsor = sponsors.find((s) => s.id === fadderId);
-      if (sponsor) {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://betyna.no';
-        const mail = composeInquiryAnsweredEmail({
-          inquiryId: id,
-          sponsorId: sponsor.id,
-          sponsorName: sponsor.navn,
-          sponsorEmail: sponsor.epost,
-          origin,
-        });
-        if (mail.ok) {
-          const row = addEmailOutboxItem({
-            kind: mail.kind,
-            subject: mail.subject,
-            body: mail.html,
-            toEmails: mail.emails,
-            relatedId: mail.relatedId,
-            templateId: mail.templateId,
-            status: 'venter_nøkkel',
-            note: 'Systemmelding når svar publiseres.',
-          });
-          addAuditLog(
-            'Systemmelding til fadder',
-            `Svar på spørsmål til ${sponsor.epost}. Sendes via Resend når nøkkelen er satt.`
-          );
-          void postBetynaEmail({
-            kind: mail.kind,
-            subject: mail.subject,
-            html: mail.html,
-            emails: mail.emails,
-            relatedId: mail.relatedId,
-            templateId: mail.templateId,
-          })
-            .then(({ status, json }) => {
-              if (status === 200 && json.ok) {
-                updateEmailOutboxItem(row.id, { status: 'sendt', note: json.id ? `Resend ${json.id}` : 'Sendt' });
-              } else if (status !== 503) {
-                updateEmailOutboxItem(row.id, { status: 'feilet', note: json.message });
-              }
-            })
-            .catch(() => {
-              /* Uten API: utkastet ligger i køen. */
-            });
-        }
-      }
+      queueSponsorSystemEmail(
+        'inquiry_answered',
+        sponsors.find((s) => s.id === fadderId),
+        id
+      );
     }
   };
 
@@ -1048,6 +1165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'La til fadder',
       `${data.navn} ble registrert av administrator (${data.maanedsbelop} kr/mnd via ${data.betalingsmetode}). Ingen barn er tildelt ennå.`
     );
+    queueSponsorSystemEmail('sponsor_welcome', newSponsor, newSponsorId);
     return newSponsorId;
   };
 
@@ -1085,16 +1203,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('Mottok aksjonsbidrag', `${donorName || 'Giver'} ga ${amount} kr til "${camp?.tittel}".`);
   };
 
+  const addCampaign = (data: Omit<Campaign, 'id' | 'innsamletBelop' | 'antallGivere'>) => {
+    const newCampaign: Campaign = {
+      ...data,
+      id: 'camp-' + Date.now(),
+      innsamletBelop: 0,
+      antallGivere: 0,
+    };
+    setCampaigns((prev) => [newCampaign, ...prev]);
+    addAuditLog('Opprettet aksjon', `Aksjonen «${newCampaign.tittel}» ble opprettet i CMS.`);
+    return newCampaign.id;
+  };
+
   const updateCampaign = (id: string, updates: Partial<Campaign>) => {
     setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
-    addAuditLog('Oppdaterte aksjon', `Aksjonen "${id}" ble oppdatert fra CMS.`);
+    addAuditLog('Oppdaterte aksjon', `Aksjonen «${id}» ble oppdatert fra CMS.`);
+  };
+
+  const deleteCampaign = (id: string) => {
+    const camp = campaigns.find((c) => c.id === id);
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    addAuditLog('Slettet aksjon', `Aksjonen «${camp?.tittel || id}» ble slettet fra CMS.`);
   };
 
   const reconcilePayment = (paymentId: string) => {
+    const pay = payments.find((p) => p.id === paymentId);
     setPayments((prev) =>
       prev.map((p) => (p.id === paymentId ? { ...p, status: 'avstemt' } : p))
     );
     addAuditLog('Avstemte betaling', `Betaling ${paymentId} merket som avstemt mot bankregnskap.`);
+    if (pay?.fadderId) {
+      queueSponsorSystemEmail(
+        'payment_registered',
+        sponsors.find((s) => s.id === pay.fadderId),
+        paymentId
+      );
+    }
   };
 
   // CMS Actions
@@ -1157,6 +1301,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_KEY_PREFIX + 'fieldFacts');
     localStorage.removeItem(STORAGE_KEY_PREFIX + 'catalogPhotos');
     localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailOutbox');
+    localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailAutoSend');
 
     setChildrenList(INITIAL_CHILDREN);
     setSponsors(INITIAL_SPONSORS);
@@ -1172,6 +1317,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFieldFacts(INITIAL_FACTS);
     setCatalogPhotos(INITIAL_CATALOG_PHOTOS);
     setEmailOutbox([]);
+    setEmailAutoSend(DEFAULT_EMAIL_AUTO_SEND);
     setCurrentSponsorId('sponsor-01');
     setCurrentCoordinatorId('coord-01');
     setRole('public');
@@ -1217,6 +1363,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         coordinatorChildren,
         fieldFacts,
         submitFieldFact,
+        publishChildStory,
         addChild,
         updateChild,
         assignSponsorToChild,
@@ -1240,13 +1387,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         registerNewSponsorInterest,
         addSponsor,
         donateToCampaign,
+        addCampaign,
         updateCampaign,
+        deleteCampaign,
         reconcilePayment,
         addAuditLog,
         resetAllData,
         emailOutbox,
         addEmailOutboxItem,
         updateEmailOutboxItem,
+        emailAutoSend,
+        setEmailAutoSendEvent,
       }}
     >
       {children}

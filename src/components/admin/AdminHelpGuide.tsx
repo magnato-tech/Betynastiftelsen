@@ -62,7 +62,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       title: 'Se nye faddere siste uke',
       steps: [
         'Bytt til Administrasjon (Oslo) i Visningsmodus.',
-        'Åpne fanen Barn & Faddere (eller klikk telleren «Nye faddere (7 dager)» på toppen).',
+        'Åpne Økonomi & avstemming for nøkkeltall, eller Barn & Faddere for listen.',
         'Bekreft at listen «Nye faddere denne uken» viser sim-brukere (f.eks. Erik Nyreg, Hanna Uke).',
         'Koble en ventende fadder til Priscille via tildelingsverktøyet.',
       ],
@@ -74,8 +74,8 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       title: 'Godkjenn koordinatorrapport',
       steps: [
         'Gå til Godkjenningskø.',
-        'Velg rapport med status «innsendt», rediger norsk tekst om nødvendig.',
-        'Godkjenn og publiser — sjekk deretter Fadderportal for riktig barn.',
+        'Åpne eldste sak (historie eller rapport) med «Skriv og publiser».',
+        'Skriv norsk tekst, se forhåndsvisningen og trykk Publiser til fadder.',
       ],
       go: () => openAsRole('admin', 'godkjenning'),
     },
@@ -116,11 +116,11 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       role: 'Admin',
       title: 'E-post: henvendelse, system og nyhetsbrev',
       steps: [
-        'Åpne E-post. Tre faner: henvendelse, systemmelding, nyhetsbrev.',
-        'Publiser svar i Spørsmålsflyt — da køes automatisk en systemmelding med lenke til fadder.',
-        'Uten Resend-nøkkel ligger utkastet i køen (503), ikke sendt.',
+        'Åpne E-post for å svare på henvendelser, sende systemmelding eller nyhetsbrev.',
+        'Automatiske varsler (av/på) ligger på denne siden, øverst under Innstillinger.',
+        'Publiser svar i Spørsmålsflyt sender e-post bare hvis «Svar på spørsmål» er på.',
       ],
-      go: () => openAsRole('admin', 'nyhetsbrev'),
+      go: () => openAsRole('admin', 'innstillinger'),
     },
     {
       id: 'PUB-01',
@@ -291,10 +291,10 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
                   <strong>Økonomi:</strong> registrer og avstem innbetalinger (prototype).
                 </li>
                 <li>
-                  <strong>CMS:</strong> tekst og bilder på forsiden, inkl. «Konkrete behov».
+                  <strong>CMS:</strong> én fane for forsidetekst, ekstraordinære aksjoner og vitnesbyrd (samtykke og godkjenning før de vises åpent).
                 </li>
                 <li>
-                  <strong>Testimonial-editor:</strong> voksne historier med samtykke (ikke på åpen side før godkjent).
+                  <strong>Revisjonslogg:</strong> hva som er gjort i administrasjonen. Ikke et redigeringssted.
                 </li>
               </ul>
               <button

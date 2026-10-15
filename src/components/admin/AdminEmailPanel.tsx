@@ -11,8 +11,15 @@ type Tab = EmailKind;
 type SendStatus = 'idle' | 'sending' | 'ok' | 'wait-config' | 'error';
 
 export const AdminEmailPanel: React.FC = () => {
-  const { sponsors, coordinators, inquiries, emailOutbox, addEmailOutboxItem, updateEmailOutboxItem, addAuditLog } =
-    useApp();
+  const {
+    sponsors,
+    coordinators,
+    inquiries,
+    emailOutbox,
+    addEmailOutboxItem,
+    updateEmailOutboxItem,
+    addAuditLog,
+  } = useApp();
   const [resendReady, setResendReady] = useState<boolean | null>(null);
   const [resendFrom, setResendFrom] = useState('');
   const [tab, setTab] = useState<Tab>('inquiry');
@@ -274,8 +281,7 @@ export const AdminEmailPanel: React.FC = () => {
           }}
         >
           <p className="text-xs text-stone-600">
-            Maler for varsler (rapport, svar, betaling, velkomst, engangslenke). De sendes ikke automatisk ennå — admin
-            forhåndsviser og køer. Koplig til godkjenning og innlogging kommer senere.
+            Maler for varsler. Her sender du manuelt. Hva som går ut av seg selv, styres under Innstillinger.
           </p>
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">Mal</label>

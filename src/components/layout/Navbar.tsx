@@ -213,36 +213,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Økonomi & avstemming
               </button>
               <button
-                onClick={() => setActiveSection('aksjoner')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'aksjoner' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                Aksjoner & logg
-              </button>
-              <button
                 onClick={() => setActiveSection('cms')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'cms' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  activeSection === 'cms' ||
+                  activeSection === 'historier' ||
+                  activeSection === 'testimonials'
+                    ? 'text-[#4D6B3E] font-semibold'
+                    : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Nettsideredigering (CMS)
+                CMS
               </button>
               <button
-                onClick={() => setActiveSection('historier')}
+                onClick={() => setActiveSection('logg')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'historier' || activeSection === 'testimonials' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  activeSection === 'logg' || activeSection === 'aksjoner'
+                    ? 'text-[#4D6B3E] font-semibold'
+                    : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Testimonial-editor
-              </button>
-              <button
-                onClick={() => setActiveSection('hjelp')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'hjelp' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                Workflows
+                Revisjonslogg
               </button>
               <button
                 onClick={() => setActiveSection('nyhetsbrev')}
@@ -251,6 +241,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 E-post
+              </button>
+              <button
+                onClick={() => setActiveSection('innstillinger')}
+                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeSection === 'innstillinger' || activeSection === 'hjelp'
+                    ? 'text-[#4D6B3E] font-semibold'
+                    : 'hover:text-[#3C3C3C]'
+                }`}
+              >
+                Innstillinger
               </button>
             </>
           )}

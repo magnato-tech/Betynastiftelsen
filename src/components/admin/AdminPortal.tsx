@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Report, Child, Sponsor, Inquiry, PaymentRecord, Campaign } from '../../types';
+import { Report, Child, Sponsor, Inquiry, PaymentRecord } from '../../types';
 import {
-  ShieldCheck,
   CheckCircle,
-  XCircle,
-  Languages,
-  AlertCircle,
   Clock,
-  Sparkles,
-  Edit3,
-  Layers,
-  ArrowRight,
-  TrendingUp,
   UserPlus,
 } from 'lucide-react';
 import { CmsEditor } from './CmsEditor';
-import { TestimonialEditor } from './TestimonialEditor';
-import { AdminHelpGuide } from './AdminHelpGuide';
 import { AdminNewsletterPanel } from './AdminNewsletterPanel';
+import { AdminSettingsPanel } from './AdminSettingsPanel';
 import { filterSponsorsLastDays } from '../../utils/sponsorMetrics';
 import { isoDaysAgo } from '../../utils/dateFormat';
-import { factsWaitingForStory } from '../../utils/fieldFacts';
+import { buildAdminContentQueue, seedStoryFromFacts } from '../../utils/adminContentQueue';
+import { AdminContentWorkbench } from './AdminContentWorkbench';
+import type { FieldFact } from '../../types';
 
 interface AdminPortalProps {
   activeSection: string;
@@ -43,7 +35,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     stories,
     auditLogs,
     approveReport,
-    rejectReport,
+    publishChildStory,
     approveChildPhoto,
     rejectChildPhoto,
     assignSponsorToChild,
@@ -52,15 +44,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     answerInquiry,
     forwardInquiryToCoordinator,
     reconcilePayment,
-    setRole,
   } = useApp();
 
   // Review & Translation State
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [editTitleNo, setEditTitleNo] = useState('');
   const [editContentNo, setEditContentNo] = useState('');
-  const [rejectReason, setRejectReason] = useState('');
-  const [isRejecting, setIsRejecting] = useState(false);
 
   // Inquiry Answer State
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
@@ -79,27 +67,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [sponsorMetode, setSponsorMetode] = useState<'vipps' | 'bank'>('vipps');
   const [sponsorSavedName, setSponsorSavedName] = useState<string | null>(null);
 
-  // Active review report
-  const selectedReport = reports.find((r) => r.id === selectedReportId);
+  const [desk, setDesk] = useState<{ kind: 'historie' | 'rapport'; id: string } | null>(null);
+  const [storyDraft, setStoryDraft] = useState({
+    fornavn: '',
+    skoleNavn: '',
+    klassetrinn: '',
+    trivsel: '',
+    historie: '',
+  });
+
+  const deskFact = desk?.kind === 'historie' ? fieldFacts.find((f) => f.id === desk.id) : undefined;
+  const deskReport = desk?.kind === 'rapport' ? reports.find((r) => r.id === desk.id) : undefined;
+  const deskChild = childrenList.find((c) => c.id === (deskFact?.barnId || deskReport?.barnId));
+  const contentQueue = buildAdminContentQueue(fieldFacts, reports);
 
   const startReviewReport = (rep: Report) => {
-    setSelectedReportId(rep.id);
     setEditTitleNo(rep.tittelNorsk);
     setEditContentNo(rep.innholdNorsk);
-    setIsRejecting(false);
+    setDesk({ kind: 'rapport', id: rep.id });
+  };
+
+  const openStoryDesk = (fact: FieldFact) => {
+    setDesk({ kind: 'historie', id: fact.id });
+    setStoryDraft({
+      fornavn: fact.fornavn,
+      skoleNavn: fact.skoleNavn,
+      klassetrinn: fact.klassetrinn,
+      trivsel: fact.trivsel,
+      historie: seedStoryFromFacts(fact),
+    });
+  };
+
+  const closeDesk = () => {
+    setDesk(null);
   };
 
   const handleApproveReport = (id: string) => {
     approveReport(id, editTitleNo, editContentNo);
-    setSelectedReportId(null);
+    closeDesk();
   };
 
-  const handleRejectReport = (id: string) => {
-    if (!rejectReason.trim()) return;
-    rejectReport(id, rejectReason.trim());
-    setSelectedReportId(null);
-    setRejectReason('');
-    setIsRejecting(false);
+  const handlePublishStory = () => {
+    if (!deskFact) return;
+    publishChildStory(deskFact.id, storyDraft);
+    closeDesk();
   };
 
   const handleAnswerInquiry = (id: string) => {
@@ -167,88 +178,88 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const totalCampaignsRaised = campaigns.reduce((sum, c) => sum + c.innsamletBelop, 0);
 
+  const statusBoxes = (
+    <div className="flex flex-wrap gap-3 text-xs">
+      <button
+        type="button"
+        onClick={() => setActiveSection('godkjenning')}
+        className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5 text-left hover:bg-stone-800 transition-colors cursor-pointer"
+      >
+        <span className="text-stone-400">Rapporter til godkjenning:</span>
+        <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingReports.length}</div>
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveSection('godkjenning')}
+        className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5 text-left hover:bg-stone-800 transition-colors cursor-pointer"
+      >
+        <span className="text-stone-400">Bilder til godkjenning:</span>
+        <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingPhotos.length}</div>
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveSection('sporsmaal')}
+        className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5 text-left hover:bg-stone-800 transition-colors cursor-pointer"
+      >
+        <span className="text-stone-400">Åpne spørsmål:</span>
+        <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingInquiries.length}</div>
+      </button>
+      <div className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5">
+        <span className="text-stone-400">Månedlige fadderbidrag:</span>
+        <div className="text-xl font-bold font-mono text-emerald-400 tabular-nums">{totalMonthlyPledged} kr</div>
+      </div>
+      <button
+        type="button"
+        onClick={() => setActiveSection('tildeling')}
+        className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5 text-left hover:bg-stone-800 transition-colors cursor-pointer"
+        title="Gå til Barn & Faddere"
+      >
+        <span className="text-stone-400">Nye faddere (7 dager):</span>
+        <div className="text-xl font-bold font-mono text-[#A3B18A] tabular-nums">{newSponsorsLastWeek.length}</div>
+      </button>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
-      {/* 1. Header ribbon */}
-      <div className="bg-stone-900 text-stone-100 rounded-2xl p-6 md:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-stone-800">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs text-[#A3B18A] font-semibold uppercase tracking-wider">
-            <span>Betyna Stiftelsen — Administrasjon & CMS</span>
-            <span aria-hidden="true">·</span>
-            <span>Oslo, Norge</span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-serif font-bold text-white">
-            Kontrollpanel & Godkjenningssenter
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-300 max-w-2xl font-sans leading-relaxed">
-            Styrende prinsipp: Koordinator registrerer opplysninger i Kongo. Administrator i Norge kontrollerer, oversetter og godkjenner før innhold når fadderne.
-          </p>
-        </div>
-
-        {/* Quick status indicators */}
-        <div className="flex flex-wrap gap-3 text-xs">
-          <div className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5">
-            <span className="text-stone-400">Rapporter til godkjenning:</span>
-            <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingReports.length}</div>
-          </div>
-          <div className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5">
-            <span className="text-stone-400">Bilder til godkjenning:</span>
-            <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingPhotos.length}</div>
-          </div>
-          <div className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5">
-            <span className="text-stone-400">Åpne spørsmål:</span>
-            <div className="text-xl font-bold font-mono text-[#A3B18A]">{pendingInquiries.length}</div>
-          </div>
-          <div className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5">
-            <span className="text-stone-400">Månedlige fadderbidrag:</span>
-            <div className="text-xl font-bold font-mono text-emerald-400 tabular-nums">{totalMonthlyPledged} kr</div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActiveSection('tildeling')}
-            className="p-3 bg-stone-800/90 rounded-lg border border-stone-700 space-y-0.5 text-left hover:bg-stone-800 transition-colors cursor-pointer"
-            title="Gå til Barn & Faddere"
-          >
-            <span className="text-stone-400">Nye faddere (7 dager):</span>
-            <div className="text-xl font-bold font-mono text-[#A3B18A] tabular-nums">{newSponsorsLastWeek.length}</div>
-          </button>
-        </div>
-      </div>
-
       {/* 3. TAB: GODKJENNINGSKØ & TOSPRAKLIG REVISJON */}
       {(activeSection === 'godkjenning' || activeSection === 'home') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-serif font-bold text-stone-900">
-                Innsendte feltrapporter til godkjenning
-              </h2>
+              <h2 className="text-xl font-serif font-bold text-stone-900">Innhold til fadder</h2>
               <p className="text-xs text-stone-600 mt-0.5">
-                Kontroller fransk original mot norsk oversettelse, gjør eventuelle redaksjonelle justeringer og godkjenn.
+                Eldst først. Åpne saken, skriv norsk tekst fadderen skal lese, se forhåndsvisningen og publiser. Du retter
+                selv — ingenting sendes tilbake til koordinator.
               </p>
             </div>
           </div>
 
-          {factsWaitingForStory(fieldFacts).length > 0 && (
-            <div className="bg-white rounded-xl border border-stone-200 p-6 space-y-3">
-              <h3 className="text-lg font-serif font-bold text-stone-900">
-                Skriv historien ({factsWaitingForStory(fieldFacts).length})
-              </h3>
-              <p className="text-xs text-stone-600">
-                Koordinator har sendt fakta. Eldst først. Historie-skriving og forhåndsvisning av faddersiden kommer i samme sprint.
-              </p>
-              <ul className="divide-y divide-stone-100 border border-stone-200 rounded-lg">
-                {factsWaitingForStory(fieldFacts).map((f) => (
-                  <li key={f.id} className="px-4 py-3 text-xs space-y-1">
-                    <p className="font-semibold text-stone-900">
-                      {f.fornavn} · {f.klassetrinn} · {f.dato.split('-').reverse().join('.')}
-                    </p>
-                    <p className="text-stone-500">{f.skoleNavn}</p>
-                    <p className="text-stone-700">{f.trivsel}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {desk?.kind === 'historie' && deskFact && deskChild && (
+            <AdminContentWorkbench
+              mode="historie"
+              fact={deskFact}
+              child={deskChild}
+              latestApproved={reports.find((r) => r.barnId === deskChild.id && r.status === 'godkjent')}
+              draft={storyDraft}
+              onChange={setStoryDraft}
+              onClose={closeDesk}
+              onPublish={handlePublishStory}
+            />
+          )}
+
+          {desk?.kind === 'rapport' && deskReport && deskChild && (
+            <AdminContentWorkbench
+              mode="rapport"
+              report={deskReport}
+              child={deskChild}
+              titleNo={editTitleNo}
+              bodyNo={editContentNo}
+              onTitle={setEditTitleNo}
+              onBody={setEditContentNo}
+              onClose={closeDesk}
+              onPublish={() => handleApproveReport(deskReport.id)}
+            />
           )}
 
           {pendingPhotos.length > 0 && (
@@ -302,183 +313,53 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           )}
 
-          {/* Modal / Side-by-side Review Panel when an item is selected */}
-          {selectedReport && (
-            <div className="bg-white border-2 border-[#4D6B3E]/60 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-              <div className="flex items-center justify-between border-b border-stone-200 pb-4">
-                <div className="space-y-0.5">
-                  <span className="text-xs uppercase tracking-wider text-[#4D6B3E] font-semibold">
-                    Tospråklig kvalitetskontroll & revisjon
-                  </span>
-                  <h3 className="text-xl font-serif font-bold text-stone-900">
-                    Rapport for {selectedReport.barnNavn} · Innsendt av {selectedReport.koordinatorNavn}
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setSelectedReportId(null)}
-                  className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800 cursor-pointer"
-                >
-                  Lukk revisjon
-                </button>
-              </div>
-
-              {/* Side by side columns */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left: French Original */}
-                <div className="p-5 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-stone-600 font-medium">
-                    <span className="flex items-center gap-1.5 text-[#4D6B3E]">
-                      <Languages className="w-3.5 h-3.5" />
-                      <span>Originaltekst fra Kongo (Français)</span>
-                    </span>
-                    <span>Oppmøte: {selectedReport.oppmoteProsent}%</span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Titre original</h4>
-                    <p className="text-sm font-semibold text-stone-900 mt-0.5">{selectedReport.tittelFransk}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Contenu du rapport</h4>
-                    <p className="text-xs sm:text-sm text-stone-800 mt-1 leading-relaxed font-sans whitespace-pre-line">
-                      {selectedReport.innholdFransk}
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-stone-200 text-xs text-stone-500">
-                    <strong>Prestasjon i felt:</strong> {selectedReport.skoleprestasjon}
-                  </div>
-                </div>
-
-                {/* Right: Norwegian Translated & Editable */}
-                <div className="p-5 bg-[#A3B18A]/10 rounded-xl border border-[#A3B18A]/40 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-[#4D6B3E] font-medium">
-                    <span className="flex items-center gap-1.5">
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Norsk versjon til fadderportalen (Redigerbar)</span>
-                    </span>
-                    <span className="text-xs text-stone-500">Synlig for fadder etter godkjenning</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">Norsk tittel *</label>
-                    <input
-                      type="text"
-                      value={editTitleNo}
-                      onChange={(e) => setEditTitleNo(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">Norsk rapportinnhold *</label>
-                    <textarea
-                      rows={6}
-                      value={editContentNo}
-                      onChange={(e) => setEditContentNo(e.target.value)}
-                      className="w-full p-3 bg-white border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E] resize-none font-sans leading-relaxed"
-                    />
-                  </div>
-
-                  <p className="text-[11px] text-stone-500 italic">
-                    Tips: Sikre verdig språk og kontroller at ingen sensitive helseopplysninger tas med.
-                  </p>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              {isRejecting ? (
-                <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-3">
-                  <label className="block text-xs font-semibold text-rose-900">
-                    Begrunnelse for retur til koordinator i Kongo:
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    placeholder="F.eks. Ber om presisering av dato for eksamen eller mer utfyllende beskrivelse av skolemateriell..."
-                    className="w-full p-2 bg-white border border-rose-300 rounded-lg text-xs text-stone-800"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleRejectReport(selectedReport.id)}
-                      className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-medium rounded-lg text-xs cursor-pointer"
-                    >
-                      Bekreft retur med kommentar
-                    </button>
-                    <button
-                      onClick={() => setIsRejecting(false)}
-                      className="px-3 py-2 bg-stone-200 text-stone-700 font-medium rounded-lg text-xs cursor-pointer"
-                    >
-                      Avbryt
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-stone-200">
-                  <button
-                    onClick={() => setIsRejecting(true)}
-                    className="px-4 py-2.5 text-xs text-rose-700 hover:text-rose-800 font-medium border border-rose-300 rounded-lg cursor-pointer hover:bg-rose-50 transition-colors"
-                  >
-                    Be koordinator om endring / avvis
-                  </button>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setSelectedReportId(null)}
-                      className="px-4 py-2.5 text-xs text-stone-600 hover:text-stone-900 cursor-pointer"
-                    >
-                      Avbryt
-                    </button>
-                    <button
-                      onClick={() => handleApproveReport(selectedReport.id)}
-                      className="px-6 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium text-xs rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Godkjenn & Publiser til fadderportal</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* List of pending reports */}
-          <div className="space-y-4">
-            {pendingReports.map((rep) => (
+          <div className="space-y-3">
+            {contentQueue.map((item) => (
               <div
-                key={rep.id}
-                className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                key={`${item.kind}-${item.id}`}
+                className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
               >
-                <div className="space-y-2 max-w-2xl">
-                  <div className="flex items-center gap-2 text-xs text-stone-500">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+                    <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 font-medium">
+                      {item.kind === 'historie' ? 'Historie' : 'Rapport'}
+                    </span>
                     <Clock className="w-3.5 h-3.5 text-[#4D6B3E]" />
-                    <span>Innsendt: {rep.dato}</span>
+                    <span>{item.dato.split('-').reverse().join('.')}</span>
                     <span aria-hidden="true">·</span>
-                    <span>Elev: <strong className="text-stone-800">{rep.barnNavn}</strong></span>
-                    <span aria-hidden="true">·</span>
-                    <span>Fra: {rep.koordinatorNavn}</span>
+                    <strong className="text-stone-800">{item.barnNavn}</strong>
+                    {item.from && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span>{item.from}</span>
+                      </>
+                    )}
                   </div>
-                  <h3 className="text-base font-serif font-bold text-stone-900">{rep.tittelFransk}</h3>
-                  <p className="text-xs text-stone-600 line-clamp-2">{rep.innholdFransk}</p>
+                  <p className="text-xs text-stone-600 line-clamp-2">{item.excerpt}</p>
                 </div>
-
                 <button
-                  onClick={() => startReviewReport(rep)}
-                  className="px-5 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer shadow-xs flex items-center gap-1.5"
+                  type="button"
+                  onClick={() => {
+                    if (item.kind === 'historie') {
+                      const fact = fieldFacts.find((f) => f.id === item.id);
+                      if (fact) openStoryDesk(fact);
+                    } else {
+                      const rep = reports.find((r) => r.id === item.id);
+                      if (rep) startReviewReport(rep);
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white text-xs font-medium rounded-lg whitespace-nowrap cursor-pointer"
                 >
-                  <Languages className="w-3.5 h-3.5" />
-                  <span>Start revisjon & oversettelse</span>
+                  Skriv og publiser
                 </button>
               </div>
             ))}
 
-            {pendingReports.length === 0 && (
+            {contentQueue.length === 0 && pendingPhotos.length === 0 && (
               <div className="p-8 bg-white rounded-xl border border-stone-200 text-center text-xs text-stone-500 space-y-1">
                 <CheckCircle className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p className="font-semibold text-stone-800">Godkjenningskøen er tom!</p>
-                <p>Alle feltrapporter fra Kongo er gjennomgått og behandlet.</p>
+                <p className="font-semibold text-stone-800">Køen er tom</p>
+                <p>Ingen historie eller rapport venter. Det som er publisert, står på faddersiden.</p>
               </div>
             )}
           </div>
@@ -987,6 +868,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* 6. TAB: ØKONOMI & INNBETALINGER */}
       {activeSection === 'okonomi' && (
         <div className="space-y-6">
+          <div className="bg-stone-900 text-stone-100 rounded-2xl p-6 shadow-md border border-stone-800">
+            {statusBoxes}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-1">
               <span className="text-xs text-stone-500 uppercase tracking-wider font-medium">Månedlig fadderinntekt</span>
@@ -1072,72 +956,44 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* 7. TAB: AKSJONER & REVISJONSLOGG */}
-      {activeSection === 'aksjoner' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-6 space-y-6">
-            <h3 className="text-base font-serif font-bold text-stone-900">Ekstraordinære aksjoner</h3>
-
-            <div className="space-y-4">
-              {campaigns.map((c) => (
-                <div key={c.id} className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-stone-800">{c.tittel}</span>
-                    <span className={c.status === 'fullfort' ? 'text-emerald-700' : 'text-[#4D6B3E]'}>
-                      {c.status === 'fullfort' ? 'Fullført' : 'Aktiv'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-600">{c.beskrivelse}</p>
-                  <div className="text-xs font-mono font-semibold text-stone-800">
-                    {c.innsamletBelop.toLocaleString('no-NO')} / {c.maalbelop.toLocaleString('no-NO')} kr innsamlet ({c.antallGivere} givere)
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* 7. TAB: REVISJONSLOGG */}
+      {(activeSection === 'logg' || activeSection === 'aksjoner') && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-serif font-bold text-stone-900">Sikkerhets- og revisjonslogg</h3>
+            <p className="text-xs text-stone-500 mt-1 max-w-2xl">
+              Hva som er gjort i administrasjonen. Ekstraordinære aksjoner og vitnesbyrd redigeres under CMS.
+            </p>
           </div>
-
-          <div className="lg:col-span-6 space-y-6">
-            <h3 className="text-base font-serif font-bold text-stone-900">Sikkerhets- og revisjonslogg (Audit Log)</h3>
-
-            <div className="bg-white rounded-xl border border-stone-200 shadow-xs divide-y divide-stone-100 max-h-[500px] overflow-y-auto">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="p-4 text-xs space-y-1">
-                  <div className="flex items-center justify-between text-stone-500 font-mono">
-                    <span>{log.tidspunkt}</span>
-                    <span className="font-sans font-semibold text-stone-700">{log.brukerRolle}</span>
-                  </div>
-                  <div className="font-medium text-stone-900">{log.handling}</div>
-                  <p className="text-stone-600 font-sans">{log.detaljer}</p>
+          <div className="bg-white rounded-xl border border-stone-200 shadow-xs divide-y divide-stone-100 max-h-[640px] overflow-y-auto">
+            {auditLogs.map((log) => (
+              <div key={log.id} className="p-4 text-xs space-y-1">
+                <div className="flex items-center justify-between text-stone-500 font-mono">
+                  <span>{log.tidspunkt}</span>
+                  <span className="font-sans font-semibold text-stone-700">{log.brukerRolle}</span>
                 </div>
-              ))}
-            </div>
+                <div className="font-medium text-stone-900">{log.handling}</div>
+                <p className="text-stone-600 font-sans">{log.detaljer}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* 8. TAB: CMS & NETTSIDEREDIGERING */}
-      {activeSection === 'cms' && (
+      {/* 8. TAB: SAMLET CMS */}
+      {(activeSection === 'cms' || activeSection === 'historier' || activeSection === 'testimonials') && (
         <CmsEditor
-          onViewPublicSite={() => {
-            setRole('public');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          initialSubTab={
+            activeSection === 'historier' || activeSection === 'testimonials' ? 'stories' : undefined
+          }
         />
       )}
-
-      {/* 9. TAB: TESTIMONIAL EDITOR (HISTORIER & VITNESBYRD) */}
-      {(activeSection === 'historier' || activeSection === 'testimonials') && (
-        <TestimonialEditor
-          onViewPublicSite={() => {
-            setRole('public');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-      )}
-
-      {activeSection === 'hjelp' && <AdminHelpGuide setActiveSection={setActiveSection} />}
 
       {activeSection === 'nyhetsbrev' && <AdminNewsletterPanel />}
+
+      {(activeSection === 'innstillinger' || activeSection === 'hjelp') && (
+        <AdminSettingsPanel setActiveSection={setActiveSection} />
+      )}
     </div>
   );
 };
