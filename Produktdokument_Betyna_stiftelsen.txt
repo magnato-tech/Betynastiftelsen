@@ -90,7 +90,7 @@ Offentlig bes?kende	Se offentlig informasjon, lese godkjente historier fra voksn
 
 Innlogging, besluttet 14. oktober 2026
 * Administrator og koordinator logger inn med Google.
-* Fadder logger inn med en engangslenke p? e-post, uten passord.
+* Fadder logger inn med en engangslenke p? e-post, uten passord. Lenken sendes av Firebase Authentication (innlogging med e-postlenke), ikke via Resend. Avsender og tekst er Firebase sin standard til videre.
 * Serversiden m? likevel h?ndheve tilgang f?r ekte barneopplysninger tas i bruk. Det ble ikke tegnet i denne sesjonen.
 
 5. Barnets profil og oppf?lging
@@ -567,3 +567,38 @@ Arbeidsdokument - Versjon 1.55 - 15. oktober 2026
 
 15. oktober 2026, CMS bred visning
 CMS-skrivebordet bruker hele skjermbredden nar Forhandsvis er apent. Redigeringsboksene og live-vinduet deler flaten uten fast piksel-tak, slik at bade preview og redigering far plass. Mini-forhandsvisning av banner og CTA skjules nar live-vinduet er apent.
+
+Arbeidsdokument - Versjon 1.56 - 15. oktober 2026
+
+15. oktober 2026, Firestore og seed
+Datamodellen er samlinger med id-relasjoner (docs/FIRESTORE.md): barn, fadder, koordinator, fakta, rapport, betaling, CMS, m.m. I produksjon er databasen eneste kilde. Mock lastes ikke ved oppstart og ikke hver dag. Det som allerede ligger i basen blir staaende. Seed-jobb krever at system/seedLock ikke finnes; appen skriver aldri den lasen. Opprettelse av Google-prosjektet krever innlogging i Firebase-konsollen.
+
+Arbeidsdokument - Versjon 1.57 - 15. oktober 2026
+
+15. oktober 2026, lanseringsinnhold er ekte
+Alt som vises paa nettsiden naa er lanseringsdata. Det importeres en gang (create, aldri overwrite) og lases med system/seedLock. Admin bytter ut tekst og bilder i CMS. Automatisk tilbakestilling til mock er fjernet. Produksjon skal ikke bytte til tom publicData-fil ved lansering.
+
+Arbeidsdokument - Versjon 1.58 - 15. oktober 2026
+
+15. oktober 2026, Firebase-prosjekt
+Repoet peker paa Firebase-prosjekt betyna-23040. Firestore (default) er opprettet paa Spark. Storage er ikke tatt i bruk. Bilder blir i appen til videre.
+
+Arbeidsdokument - Versjon 1.59 - 15. oktober 2026
+
+15. oktober 2026, Firestore-kobling og nettleserimport
+Appen kan lese og lagre i Firestore. Foerste import tar det som ligger i nettleseren naa (localStorage), ikke en ny mock. Admin: Innstillinger, logg inn med Google, Lagre nettleserinnhold i Firestore. Etter seed-laas overskrives ikke data automatisk. Storage kan tas i bruk ved behov (Blaze).
+
+Arbeidsdokument - Versjon 1.60 - 15. oktober 2026
+
+15. oktober 2026, bekreftet datakilde for import
+Kunden bekrefter at innholdet som vises i nettleseren naa (det som er redigert og lagret lokalt) er det som skal inn i Firestore. Ingen ny seed fra mock ved import. Firebase Storage er ikke paakrevd for foerste import; bilder kan ligge i appen til kunden oppgraderer til Blaze og aktiverer Storage.
+
+Arbeidsdokument - Versjon 1.61 - 15. oktober 2026
+
+15. oktober 2026, brukerroller og innlogging
+To administratorer (magnar.totland@gmail.com og totland.s@gmail.com) skal kunne administrere. Langsiktig styres tilgang av Firestore userDirectory (e-post + rolle admin, koordinator eller fadder, med koordinatorId/sponsorId der det trengs). Ved Google-innlogging opprettes users/{uid} fra katalogen; appen setter portal ut fra rolle naar visningsmodus er av (VITE_PROTOTYPE_ROLE_SWITCHER=false). Midlertidig bootstrap i regler for de to admin-epostene til katalogen er pa plass.
+
+Arbeidsdokument - Versjon 1.62 - 15. oktober 2026
+
+15. oktober 2026, plan for innlogging og valg av fadderlenke
+Planen for aa innfoere innlogging er fem steg: (0) faa Google-innlogging for administrator til aa virke, (1) roller styrer hva som vises og data lastes i to lag (offentlig og per rolle), (2) koordinator med Google, (3) fadder med engangslenke, (4) stram inn regler, fjern bootstrap og gaa live paa betyna.no. Ekte barneopplysninger tas ikke i bruk foer steg 4 er testet med administrator, koordinator og fadder. Kunden valgte at engangslenken til fadder sendes av Firebase Authentication (e-postlenke), ikke via Resend. Dette erstatter ikke tidligere beslutning om engangslenke uten passord; det presiserer avsender. Valget kan endres til Resend senere hvis avsender eller tekst blir et problem. Lenken med ?sponsor=id skal ikke lenger gi tilgang.

@@ -7,8 +7,21 @@ service cloud.firestore {
     function userDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+    function bootstrapAdmin() {
+      return signedIn() && (
+        request.auth.token.email == 'magnar.totland@gmail.com' ||
+        request.auth.token.email == 'totland.s@gmail.com'
+      );
+    }
+    function directoryInvite() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/userDirectory/$(request.auth.token.email));
+    }
     function isAdmin() {
       return signedIn() && userDoc().role == 'admin';
+    }
+    function canAdminWrite() {
+      return isAdmin() || bootstrapAdmin();
     }
     function isCoordinator() {
       return signedIn() && userDoc().role == 'coordinator';
@@ -23,105 +36,123 @@ service cloud.firestore {
       return isSponsor() && resource.data.tildeltFadderId == userDoc().sponsorId;
     }
 
+    match /userDirectory/{emailId} {
+      allow read: if signedIn() && request.auth.token.email == emailId;
+      allow write: if canAdminWrite();
+    }
+
     match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAdmin();
+      allow read: if signedIn() && (request.auth.uid == uid || canAdminWrite());
+      allow create: if canAdminWrite()
+        || (signedIn() && request.auth.uid == uid && (directoryInvite() || bootstrapAdmin()));
+      allow update: if canAdminWrite() || (signedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
     }
 
     match /coordinators/{id} {
-      allow read: if isAdmin() || (isCoordinator() && userDoc().coordinatorId == id);
-      allow write: if isAdmin();
+      allow read: if canAdminWrite() || (isCoordinator() && userDoc().coordinatorId == id);
+      allow write: if canAdminWrite();
     }
 
     match /sponsors/{id} {
-      allow read: if isAdmin() || (isSponsor() && userDoc().sponsorId == id);
-      allow write: if isAdmin();
+      allow read: if canAdminWrite() || (isSponsor() && userDoc().sponsorId == id);
+      allow write: if canAdminWrite();
     }
 
     match /children/{id} {
-      allow read: if isAdmin() || ownCoordinator() || ownSponsorChild();
-      allow create, update: if isAdmin() || isCoordinator();
-      allow delete: if isAdmin();
+      allow read: if canAdminWrite() || ownCoordinator() || ownSponsorChild();
+      allow create, update: if canAdminWrite() || isCoordinator();
+      allow delete: if canAdminWrite();
     }
 
     match /facts/{id} {
-      allow read: if isAdmin() || ownCoordinator();
-      allow create: if isAdmin() || isCoordinator();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if canAdminWrite() || ownCoordinator();
+      allow create: if canAdminWrite() || isCoordinator();
+      allow update: if canAdminWrite();
+      allow delete: if canAdminWrite();
     }
 
     match /reports/{id} {
-      allow read: if isAdmin()
+      allow read: if canAdminWrite()
         || ownCoordinator()
         || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId
             && resource.data.status == 'godkjent');
-      allow create: if isAdmin() || isCoordinator();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create: if canAdminWrite() || isCoordinator();
+      allow update: if canAdminWrite();
+      allow delete: if canAdminWrite();
     }
 
     match /milestones/{id} {
-      allow read: if isAdmin()
+      allow read: if canAdminWrite()
         || ownCoordinator()
         || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId);
-      allow create, update: if isAdmin() || isCoordinator();
-      allow delete: if isAdmin();
+      allow create, update: if canAdminWrite() || isCoordinator();
+      allow delete: if canAdminWrite();
     }
 
     match /inquiries/{id} {
-      allow read: if isAdmin()
+      allow read: if canAdminWrite()
         || (isSponsor() && resource.data.fadderId == userDoc().sponsorId)
         || ownCoordinator();
-      allow create: if isAdmin() || (isSponsor() && request.resource.data.fadderId == userDoc().sponsorId);
-      allow update: if isAdmin() || isCoordinator();
-      allow delete: if isAdmin();
+      allow create: if canAdminWrite() || (isSponsor() && request.resource.data.fadderId == userDoc().sponsorId);
+      allow update: if canAdminWrite() || isCoordinator();
+      allow delete: if canAdminWrite();
     }
 
     match /payments/{id} {
-      allow read: if isAdmin() || (isSponsor() && resource.data.fadderId == userDoc().sponsorId);
-      allow write: if isAdmin();
+      allow read: if canAdminWrite() || (isSponsor() && resource.data.fadderId == userDoc().sponsorId);
+      allow write: if canAdminWrite();
     }
 
     match /campaigns/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if canAdminWrite();
     }
 
     match /testimonials/{id} {
-      allow read: if resource.data.godkjentAvAdmin == true || isAdmin();
-      allow write: if isAdmin();
+      allow read: if resource.data.godkjentAvAdmin == true || canAdminWrite();
+      allow write: if canAdminWrite();
     }
 
     match /notifications/{id} {
-      allow read: if isAdmin()
+      allow read: if canAdminWrite()
         || (signedIn() && resource.data.recipientId == userDoc().sponsorId)
         || (signedIn() && resource.data.recipientId == userDoc().coordinatorId)
-        || (isAdmin() && resource.data.targetRole == 'admin');
-      allow write: if isAdmin() || signedIn();
+        || (canAdminWrite() && resource.data.targetRole == 'admin');
+      allow write: if canAdminWrite() || signedIn();
     }
 
     match /auditLogs/{id} {
-      allow read, write: if isAdmin();
+      allow read, write: if canAdminWrite();
     }
 
     match /cms/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if canAdminWrite();
     }
 
     match /newsletterLogs/{id} {
-      allow read, write: if isAdmin();
+      allow read, write: if canAdminWrite();
     }
 
     match /emailOutbox/{id} {
-      allow read, write: if isAdmin();
+      allow read, write: if canAdminWrite();
     }
 
     match /catalogPhotos/{id} {
-      allow read: if isAdmin() || ownCoordinator();
-      allow create, update: if isAdmin() || isCoordinator();
-      allow delete: if isAdmin();
+      allow read: if canAdminWrite() || ownCoordinator();
+      allow create, update: if canAdminWrite() || isCoordinator();
+      allow delete: if canAdminWrite();
+    }
+
+    match /settings/{id} {
+      allow read, write: if canAdminWrite();
+    }
+
+    match /system/{id} {
+      allow read: if canAdminWrite();
+      allow create: if canAdminWrite() && id == 'seedLock';
+      allow update, delete: if false;
     }
   }
 }

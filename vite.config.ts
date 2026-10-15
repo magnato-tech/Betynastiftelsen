@@ -6,9 +6,6 @@ import {newsletterDevApi} from './src/plugins/newsletterDevApi';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const publicSeedOnly =
-    mode === 'production' && env.VITE_PROTOTYPE_ROLE_SWITCHER === 'false';
-
   return {
     plugins: [react(), tailwindcss(), newsletterDevApi(env)],
     resolve: {
@@ -16,10 +13,7 @@ export default defineConfig(({ mode }) => {
         { find: '@', replacement: path.resolve(__dirname, '.') },
         {
           find: '@betyna/seed',
-          replacement: path.resolve(
-            __dirname,
-            publicSeedOnly ? 'src/data/publicData.ts' : 'src/data/initialData.ts',
-          ),
+          replacement: path.resolve(__dirname, 'src/data/initialData.ts'),
         },
       ],
     },

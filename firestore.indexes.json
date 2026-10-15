@@ -41,6 +41,14 @@
       ]
     },
     {
+      "collectionGroup": "reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "koordinatorId", "order": "ASCENDING" },
+        { "fieldPath": "dato", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "milestones",
       "queryScope": "COLLECTION",
       "fields": [

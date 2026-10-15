@@ -11,7 +11,10 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:sprint0": "vitest run src/workflows/sprint0.workflows.test.ts"
+    "test:sprint0": "vitest run src/workflows/sprint0.workflows.test.ts",
+    "firebase:deploy-rules": "npx firebase-tools deploy --only firestore --project betyna-23040",
+    "emulators": "npx firebase-tools emulators:start --only firestore,storage",
+    "firestore:plan-import": "npx tsx scripts/import-live-firestore.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -19,6 +22,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "firebase": "^13.0.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",

@@ -28,27 +28,16 @@ import {
 import { composeSystemEmail } from '../email/composeSystemEmail';
 import type { SystemTemplateId } from '../email/templates';
 import translationsData from '../locales/translations.json';
-import {
-  INITIAL_CHILDREN,
-  INITIAL_SPONSORS,
-  INITIAL_REPORTS,
-  INITIAL_INQUIRIES,
-  INITIAL_PAYMENTS,
-  INITIAL_CAMPAIGNS,
-  INITIAL_STORIES,
-  INITIAL_AUDIT_LOG,
-  INITIAL_NOTIFICATIONS,
-  INITIAL_CMS_CONTENT,
-  INITIAL_MILESTONES,
-  INITIAL_COORDINATORS,
-  INITIAL_FACTS,
-  INITIAL_CATALOG_PHOTOS,
-} from '@betyna/seed';
 import { coordinatorDisplayName } from '../data/simulationCoordinators';
 import { childrenForCoordinator, migrateChildrenCoordinatorIds } from '../utils/coordinatorScope';
 import { addChildId, childIdsOfSponsor, migrateSponsorsChildIds, removeChildId } from '../utils/sponsorChildren';
 import { migrateCmsKpiStats } from '../utils/cmsKpiMigrate';
 import { migrateCampaignPayments, migrateCampaigns } from '../utils/campaignMigrate';
+import { LIVE_LAUNCH_VERSION, liveLaunchContent } from '../db/liveLaunchContent';
+import { bootStoredOrLive, contentIsLocked, createSeedLock, type SeedLock } from '../db/seedPolicy';
+import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
+import { prototypeRoleSwitcherEnabled } from '../config/prototypeAccess';
+import type { AppDataSnapshot } from '../db/firestoreData';
 import { buildFieldFact } from '../utils/fieldFacts';
 import { postBetynaEmail } from '../email/client';
 
@@ -164,6 +153,15 @@ interface AppContextType {
   updateEmailOutboxItem: (id: string, updates: Partial<EmailOutboxItem>) => void;
   emailAutoSend: EmailAutoSendPrefs;
   setEmailAutoSendEvent: (id: EmailAutoSendEvent, enabled: boolean) => void;
+
+  firestoreEnabled: boolean;
+  firestoreBackendActive: boolean;
+  firestoreUserEmail: string | null;
+  firestoreImportMessage: string | null;
+  firestoreAuthError: string | null;
+  signInFirestoreGoogle: () => Promise<void>;
+  signInFirestoreGoogleRedirect: () => Promise<void>;
+  importBrowserToFirestore: () => Promise<void>;
 }
 
 const STORAGE_KEY_PREFIX = 'betyna_v1_';
@@ -174,17 +172,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [role, setRoleState] = useState<UserRole>('public');
   const [currentSponsorId, setCurrentSponsorId] = useState<string>('sponsor-01');
   const [currentCoordinatorId, setCurrentCoordinatorId] = useState<string>('coord-01');
-  const [coordinators] = useState<Coordinator[]>(INITIAL_COORDINATORS);
+  const [coordinators] = useState<Coordinator[]>(liveLaunchContent.coordinators);
 
-  // Load from localStorage or initial
-  const loadState = <T,>(key: string, fallback: T): T => {
+  const loadState = <T,>(key: string): T | undefined => {
     try {
       const item = localStorage.getItem(STORAGE_KEY_PREFIX + key);
-      return item ? JSON.parse(item) : fallback;
+      return item ? (JSON.parse(item) as T) : undefined;
     } catch {
-      return fallback;
+      return undefined;
     }
   };
+
+  const [contentLock] = useState<SeedLock | null>(() => {
+    const stored = loadState<SeedLock>('contentLock');
+    if (stored?.completed) return stored;
+    const lock = createSeedLock(LIVE_LAUNCH_VERSION);
+    try {
+      localStorage.setItem(STORAGE_KEY_PREFIX + 'contentLock', JSON.stringify(lock));
+    } catch {
+      /* privat modus */
+    }
+    return lock;
+  });
 
   const normalizeLanguage = (raw: unknown): AppLanguage => {
     if (raw === 'fr' || raw === 'no') return raw;
@@ -193,39 +202,150 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [language, setLanguageState] = useState<AppLanguage>(() =>
-    normalizeLanguage(loadState('language', 'no'))
+    normalizeLanguage(loadState('language') ?? 'no')
   );
 
   const [childrenList, setChildrenList] = useState<Child[]>(() =>
-    migrateChildrenCoordinatorIds(loadState('children', INITIAL_CHILDREN))
+    migrateChildrenCoordinatorIds(
+      bootStoredOrLive(loadState<Child[]>('children'), liveLaunchContent.children)
+    )
   );
   const [sponsors, setSponsors] = useState<Sponsor[]>(() =>
-    migrateSponsorsChildIds(loadState('sponsors', INITIAL_SPONSORS))
+    migrateSponsorsChildIds(
+      bootStoredOrLive(loadState<Sponsor[]>('sponsors'), liveLaunchContent.sponsors)
+    )
   );
-  const [reports, setReports] = useState<Report[]>(() => loadState('reports', INITIAL_REPORTS));
-  const [milestones, setMilestones] = useState<ChildMilestone[]>(() => loadState('milestones', INITIAL_MILESTONES));
-  const [inquiries, setInquiries] = useState<Inquiry[]>(() => loadState('inquiries', INITIAL_INQUIRIES));
+  const [reports, setReports] = useState<Report[]>(() =>
+    bootStoredOrLive(loadState<Report[]>('reports'), liveLaunchContent.reports)
+  );
+  const [milestones, setMilestones] = useState<ChildMilestone[]>(() =>
+    bootStoredOrLive(loadState<ChildMilestone[]>('milestones'), liveLaunchContent.milestones)
+  );
+  const [inquiries, setInquiries] = useState<Inquiry[]>(() =>
+    bootStoredOrLive(loadState<Inquiry[]>('inquiries'), liveLaunchContent.inquiries)
+  );
   const [payments, setPayments] = useState<PaymentRecord[]>(() => {
-    const loadedCampaigns = migrateCampaigns(loadState('campaigns', INITIAL_CAMPAIGNS));
-    return migrateCampaignPayments(loadState('payments', INITIAL_PAYMENTS), loadedCampaigns);
+    const loadedCampaigns = migrateCampaigns(
+      bootStoredOrLive(loadState<Campaign[]>('campaigns'), liveLaunchContent.campaigns)
+    );
+    return migrateCampaignPayments(
+      bootStoredOrLive(loadState<PaymentRecord[]>('payments'), liveLaunchContent.payments),
+      loadedCampaigns
+    );
   });
   const [campaigns, setCampaigns] = useState<Campaign[]>(() =>
-    migrateCampaigns(loadState('campaigns', INITIAL_CAMPAIGNS))
+    migrateCampaigns(bootStoredOrLive(loadState<Campaign[]>('campaigns'), liveLaunchContent.campaigns))
   );
-  const [fieldFacts, setFieldFacts] = useState<FieldFact[]>(() => loadState('fieldFacts', INITIAL_FACTS));
-  const [stories, setStories] = useState<AdultGraduateStory[]>(() => loadState('stories', INITIAL_STORIES));
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() => loadState('auditLogs', INITIAL_AUDIT_LOG));
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => loadState('notifications', INITIAL_NOTIFICATIONS));
-  const [cmsContent, setCmsContent] = useState<CmsContent>(() =>
-    migrateCmsKpiStats(loadState('cms', INITIAL_CMS_CONTENT), INITIAL_CMS_CONTENT.kpiStats)
+  const [fieldFacts, setFieldFacts] = useState<FieldFact[]>(() =>
+    bootStoredOrLive(loadState<FieldFact[]>('fieldFacts'), liveLaunchContent.facts)
   );
+  const [stories, setStories] = useState<AdultGraduateStory[]>(() =>
+    bootStoredOrLive(loadState<AdultGraduateStory[]>('stories'), liveLaunchContent.testimonials)
+  );
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() =>
+    bootStoredOrLive(loadState<AuditLogItem[]>('auditLogs'), liveLaunchContent.auditLogs)
+  );
+  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
+    bootStoredOrLive(loadState<AppNotification[]>('notifications'), liveLaunchContent.notifications)
+  );
+  const [cmsContent, setCmsContent] = useState<CmsContent>(() => {
+    const stored = loadState<CmsContent>('cms');
+    const base = bootStoredOrLive(stored, liveLaunchContent.cms);
+    if (stored) return base;
+    return migrateCmsKpiStats(base, liveLaunchContent.cms.kpiStats);
+  });
   const [catalogPhotos, setCatalogPhotos] = useState<CatalogPhoto[]>(() =>
-    loadState('catalogPhotos', INITIAL_CATALOG_PHOTOS)
+    bootStoredOrLive(loadState<CatalogPhoto[]>('catalogPhotos'), liveLaunchContent.catalogPhotos)
   );
-  const [emailOutbox, setEmailOutbox] = useState<EmailOutboxItem[]>(() => loadState('emailOutbox', []));
+  const [emailOutbox, setEmailOutbox] = useState<EmailOutboxItem[]>(() =>
+    bootStoredOrLive(loadState<EmailOutboxItem[]>('emailOutbox'), [])
+  );
   const [emailAutoSend, setEmailAutoSend] = useState<EmailAutoSendPrefs>(() =>
-    migrateEmailAutoSend(loadState('emailAutoSend', DEFAULT_EMAIL_AUTO_SEND))
+    migrateEmailAutoSend(
+      bootStoredOrLive(loadState<EmailAutoSendPrefs>('emailAutoSend'), liveLaunchContent.emailAutoSend)
+    )
   );
+
+  const firestore = useFirestoreAppSync();
+
+  useEffect(() => {
+    const h = firestore.hydration;
+    if (!h) return;
+    if (h.children?.length) setChildrenList(h.children);
+    if (h.sponsors?.length) setSponsors(h.sponsors);
+    if (h.reports?.length) setReports(h.reports);
+    if (h.milestones?.length) setMilestones(h.milestones);
+    if (h.inquiries?.length) setInquiries(h.inquiries);
+    if (h.payments?.length) setPayments(h.payments);
+    if (h.campaigns?.length) setCampaigns(migrateCampaigns(h.campaigns));
+    if (h.facts?.length) setFieldFacts(h.facts);
+    if (h.testimonials?.length) setStories(h.testimonials);
+    if (h.auditLogs?.length) setAuditLogs(h.auditLogs);
+    if (h.notifications?.length) setNotifications(h.notifications);
+    if (h.catalogPhotos?.length) setCatalogPhotos(h.catalogPhotos);
+    if (h.emailOutbox?.length) setEmailOutbox(h.emailOutbox);
+    if (h.cms) setCmsContent(h.cms);
+    if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
+  }, [firestore.hydration]);
+
+  useEffect(() => {
+    const profile = firestore.firestoreUserProfile;
+    if (!profile || prototypeRoleSwitcherEnabled) return;
+    setRoleState(profile.role);
+    if (profile.role === 'sponsor' && profile.sponsorId) {
+      setCurrentSponsorId(profile.sponsorId);
+    }
+    if (profile.role === 'coordinator' && profile.coordinatorId) {
+      setCurrentCoordinatorId(profile.coordinatorId);
+    }
+  }, [firestore.firestoreUserProfile]);
+
+  const buildDataSnapshot = useCallback((): AppDataSnapshot => ({
+    coordinators,
+    children: childrenList,
+    sponsors,
+    catalogPhotos,
+    facts: fieldFacts,
+    reports,
+    milestones,
+    inquiries,
+    payments,
+    campaigns,
+    testimonials: stories,
+    notifications,
+    auditLogs,
+    cms: cmsContent,
+    emailOutbox,
+    emailAutoSend,
+    language,
+  }), [
+    coordinators,
+    childrenList,
+    sponsors,
+    catalogPhotos,
+    fieldFacts,
+    reports,
+    milestones,
+    inquiries,
+    payments,
+    campaigns,
+    stories,
+    notifications,
+    auditLogs,
+    cmsContent,
+    emailOutbox,
+    emailAutoSend,
+    language,
+  ]);
+
+  useEffect(() => {
+    firestore.registerSnapshotProvider(buildDataSnapshot);
+  }, [firestore, buildDataSnapshot]);
+
+  useEffect(() => {
+    if (!firestore.backendActive) return;
+    firestore.schedulePersist(buildDataSnapshot());
+  }, [firestore.backendActive, buildDataSnapshot, firestore.schedulePersist]);
 
   // Sync to localStorage
   useEffect(() => {
@@ -288,7 +408,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const key = event.key.slice(STORAGE_KEY_PREFIX.length);
       try {
         const value = JSON.parse(event.newValue);
-        if (key === 'cms') setCmsContent(migrateCmsKpiStats(value, INITIAL_CMS_CONTENT.kpiStats));
+        if (key === 'cms') setCmsContent(value);
         if (key === 'campaigns') setCampaigns(migrateCampaigns(value));
         if (key === 'stories') setStories(value);
         if (key === 'language') setLanguageState(normalizeLanguage(value));
@@ -1280,18 +1400,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('Oppdaterte CMS-innhold', `Seksjonen "${String(section)}" ble oppdatert.`);
   };
 
-  const resetCmsSection = (section: keyof CmsContent) => {
-    setCmsContent((prev) => ({
-      ...prev,
-      [section]: INITIAL_CMS_CONTENT[section],
-    }));
-    addAuditLog('Tilbakestilte CMS-seksjon', `Seksjonen "${String(section)}" ble tilbakestilt til standard.`);
+  const resetCmsSection = (_section: keyof CmsContent) => {
+    if (contentIsLocked(contentLock)) return;
   };
 
   const resetAllCms = () => {
-    setCmsContent(INITIAL_CMS_CONTENT);
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'cms');
-    addAuditLog('Tilbakestilte alt CMS-innhold', 'Hele nettstedets innhold ble tilbakestilt til standard.');
+    if (contentIsLocked(contentLock)) return;
   };
 
   const addStory = (storyData: Omit<AdultGraduateStory, 'id'>) => {
@@ -1333,19 +1447,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailOutbox');
     localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailAutoSend');
 
-    setChildrenList(INITIAL_CHILDREN);
-    setSponsors(INITIAL_SPONSORS);
-    setReports(INITIAL_REPORTS);
-    setMilestones(INITIAL_MILESTONES);
-    setInquiries(INITIAL_INQUIRIES);
-    setPayments(INITIAL_PAYMENTS);
-    setCampaigns(INITIAL_CAMPAIGNS);
-    setStories(INITIAL_STORIES);
-    setAuditLogs(INITIAL_AUDIT_LOG);
-    setNotifications(INITIAL_NOTIFICATIONS);
-    setCmsContent(INITIAL_CMS_CONTENT);
-    setFieldFacts(INITIAL_FACTS);
-    setCatalogPhotos(INITIAL_CATALOG_PHOTOS);
+    setChildrenList(liveLaunchContent.children);
+    setSponsors(liveLaunchContent.sponsors);
+    setReports(liveLaunchContent.reports);
+    setMilestones(liveLaunchContent.milestones);
+    setInquiries(liveLaunchContent.inquiries);
+    setPayments(liveLaunchContent.payments);
+    setCampaigns(liveLaunchContent.campaigns);
+    setStories(liveLaunchContent.testimonials);
+    setAuditLogs(liveLaunchContent.auditLogs);
+    setNotifications(liveLaunchContent.notifications);
+    setCmsContent(liveLaunchContent.cms);
+    setFieldFacts(liveLaunchContent.facts);
+    setCatalogPhotos(liveLaunchContent.catalogPhotos);
     setEmailOutbox([]);
     setEmailAutoSend(DEFAULT_EMAIL_AUTO_SEND);
     setCurrentSponsorId('sponsor-01');
@@ -1428,6 +1542,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateEmailOutboxItem,
         emailAutoSend,
         setEmailAutoSendEvent,
+        firestoreEnabled: firestore.firestoreEnabled,
+        firestoreBackendActive: firestore.backendActive,
+        firestoreUserEmail: firestore.firebaseUser?.email ?? null,
+        firestoreImportMessage: firestore.importMessage,
+        firestoreAuthError: firestore.authError,
+        signInFirestoreGoogle: firestore.signInWithGoogle,
+        signInFirestoreGoogleRedirect: firestore.signInWithGoogleRedirect,
+        importBrowserToFirestore: async () => {
+          await firestore.importBrowserToFirestore();
+        },
       }}
     >
       {children}

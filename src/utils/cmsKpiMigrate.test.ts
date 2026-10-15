@@ -11,15 +11,14 @@ describe('CMS nøkkeltall', () => {
     ).toBe(true);
   });
 
-  it('bytter ut tomme plassholdere', () => {
+  it('lar tom eller ekte CMS-tekst stå — fyller ikke inn mock på nytt', () => {
+    expect(shouldReplaceKpiStats([])).toBe(false);
     expect(
       shouldReplaceKpiStats([
         { id: 'kpi-1', value: '15', label: 'Barn har fått skolegang', sublabel: 'Brazzaville' },
         { id: 'kpi-2', value: '—', label: 'Fullført videregående', sublabel: '' },
-        { id: 'kpi-3', value: '—', label: 'Fagbrev (métier)', sublabel: '' },
-        { id: 'kpi-4', value: '—', label: 'Bachelor', sublabel: '' },
       ])
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('beholder nye utdanningstall', () => {

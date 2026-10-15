@@ -9,7 +9,18 @@ interface AdminSettingsPanelProps {
 }
 
 export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiveSection }) => {
-  const { emailAutoSend, setEmailAutoSendEvent } = useApp();
+  const {
+    emailAutoSend,
+    setEmailAutoSendEvent,
+    firestoreEnabled,
+    firestoreBackendActive,
+    firestoreUserEmail,
+    firestoreImportMessage,
+    firestoreAuthError,
+    signInFirestoreGoogle,
+    signInFirestoreGoogleRedirect,
+    importBrowserToFirestore,
+  } = useApp();
 
   return (
     <div className="max-w-5xl space-y-10">
@@ -25,6 +36,79 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
           oversetter og godkjenner før innhold når fadderne.
         </p>
       </div>
+
+      {firestoreEnabled && (
+        <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
+          <div>
+            <h3 className="text-sm font-serif font-bold text-stone-900">Database (Firestore)</h3>
+            <p className="text-xs text-stone-600 mt-1 leading-relaxed max-w-2xl">
+              Første gang: logg inn med Google og lagre det som ligger i <strong>denne nettleseren</strong> nå
+              (tekster, barn, CMS — alt du har jobbet med). Etterpå leser og lagrer appen i skyen. Ingenting overskrives
+              automatisk på nytt. Hvem som er admin, koordinator eller fadder styres av Firestore-samlingen{' '}
+              <code className="text-[10px]">userDirectory</code> (e-post + rolle); begge nåværende admin-e-poster er
+              tillatt inntil listen er fylt ut.
+            </p>
+            <p className="text-xs text-stone-500 mt-2">
+              Status:{' '}
+              {firestoreBackendActive
+                ? 'Koblet til database — endringer lagres i Firestore.'
+                : 'Fortsatt bare i nettleseren til du har importert.'}
+              {firestoreUserEmail ? ` Innlogget: ${firestoreUserEmail}` : ''}
+            </p>
+            {firestoreImportMessage && (
+              <p className="text-xs text-emerald-800 mt-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                {firestoreImportMessage}
+              </p>
+            )}
+            {firestoreAuthError && (
+              <p className="text-xs text-red-900 mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {firestoreAuthError}
+              </p>
+            )}
+            {window.location.hostname !== 'localhost' && (
+              <p className="text-xs text-red-900 mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Du er på {window.location.host}. Innlogging virker bare på http://localhost:3000.
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {!firestoreUserEmail && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => signInFirestoreGoogleRedirect().catch(() => undefined)}
+                  className="px-4 py-2 bg-stone-900 text-white rounded-lg text-xs font-medium cursor-pointer"
+                >
+                  Logg inn med Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signInFirestoreGoogle().catch(() => undefined)}
+                  className="px-4 py-2 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-medium cursor-pointer"
+                >
+                  Logg inn med popup
+                </button>
+              </>
+            )}
+            {!firestoreBackendActive && (
+              <button
+                type="button"
+                disabled={!firestoreUserEmail}
+                onClick={() => importBrowserToFirestore().catch(() => undefined)}
+                className="px-4 py-2 bg-[#4D6B3E] text-white rounded-lg text-xs font-medium cursor-pointer disabled:opacity-40"
+              >
+                Lagre nettleserinnhold i Firestore
+              </button>
+            )}
+          </div>
+          {!firestoreUserEmail && (
+            <p className="text-[11px] text-stone-500 leading-relaxed">
+              Bruk den svarte knappen. Hele siden går til Google og kommer tilbake hit. Ikke bruk «Logg inn med popup»
+              — den er blokkert i denne nettleseren.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
         <div className="flex items-start gap-2">

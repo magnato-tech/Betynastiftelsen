@@ -7,6 +7,8 @@
  */
 export const FIRESTORE_COLLECTIONS = {
   users: 'users',
+  /** Invitasjon før første innlogging — dokument-ID = e-post (lowercase). */
+  userDirectory: 'userDirectory',
   coordinators: 'coordinators',
   children: 'children',
   sponsors: 'sponsors',
@@ -23,7 +25,34 @@ export const FIRESTORE_COLLECTIONS = {
   newsletterLogs: 'newsletterLogs',
   emailOutbox: 'emailOutbox',
   catalogPhotos: 'catalogPhotos',
+  settings: 'settings',
+  system: 'system',
 } as const;
+
+/** Relasjoner (fremmednøkler). Firestore har ikke JOIN — appen slår opp via id. */
+export const FIRESTORE_RELATIONS = [
+  { from: 'users', field: 'coordinatorId', to: 'coordinators', card: 'n:1' as const },
+  { from: 'users', field: 'sponsorId', to: 'sponsors', card: 'n:1' as const },
+  { from: 'children', field: 'koordinatorId', to: 'coordinators', card: 'n:1' as const },
+  { from: 'children', field: 'tildeltFadderId', to: 'sponsors', card: 'n:1' as const },
+  { from: 'sponsors', field: 'tildeltBarnIds[]', to: 'children', card: '1:n' as const },
+  { from: 'facts', field: 'barnId', to: 'children', card: 'n:1' as const },
+  { from: 'facts', field: 'koordinatorId', to: 'coordinators', card: 'n:1' as const },
+  { from: 'reports', field: 'barnId', to: 'children', card: 'n:1' as const },
+  { from: 'reports', field: 'koordinatorId', to: 'coordinators', card: 'n:1' as const },
+  { from: 'milestones', field: 'barnId', to: 'children', card: 'n:1' as const },
+  { from: 'inquiries', field: 'fadderId', to: 'sponsors', card: 'n:1' as const },
+  { from: 'inquiries', field: 'barnId', to: 'children', card: 'n:1' as const },
+  { from: 'inquiries', field: 'koordinatorId', to: 'coordinators', card: 'n:1' as const },
+  { from: 'payments', field: 'fadderId', to: 'sponsors', card: 'n:1' as const },
+  { from: 'payments', field: 'aksjonId', to: 'campaigns', card: 'n:1' as const },
+  { from: 'campaigns', field: 'barnIds[]', to: 'children', card: 'n:n' as const },
+  { from: 'catalogPhotos', field: 'barnIds[]', to: 'children', card: 'n:n' as const },
+  { from: 'catalogPhotos', field: 'koordinatorId', to: 'coordinators', card: 'n:1' as const },
+] as const;
+
+export const SETTINGS_EMAIL_DOC_ID = 'emailAutoSend';
+export const SYSTEM_SEED_LOCK_DOC_ID = 'seedLock';
 
 export type FirestoreCollectionName =
   (typeof FIRESTORE_COLLECTIONS)[keyof typeof FIRESTORE_COLLECTIONS];
@@ -39,6 +68,15 @@ export interface FirestoreUser {
   coordinatorId?: string;
   sponsorId?: string;
   createdAt: string;
+}
+
+/** Admin legger inn brukere her; ved Google-innlogging kopieres til `users/{authUid}`. */
+export interface FirestoreUserDirectoryEntry {
+  email: string;
+  role: 'admin' | 'coordinator' | 'sponsor';
+  displayName?: string;
+  coordinatorId?: string;
+  sponsorId?: string;
 }
 
 export const FIRESTORE_INDEXES: {
@@ -83,4 +121,5 @@ export const FIRESTORE_IMPORT_ORDER: FirestoreCollectionName[] = [
   FIRESTORE_COLLECTIONS.cms,
   FIRESTORE_COLLECTIONS.newsletterLogs,
   FIRESTORE_COLLECTIONS.emailOutbox,
+  FIRESTORE_COLLECTIONS.settings,
 ];

@@ -332,7 +332,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
           <div className="bg-white rounded-xl border border-[#DFD9CB] p-6 space-y-2">
             <h3 className="text-lg font-serif font-bold text-stone-900">Scenarioer for manuell test</h3>
             <p className="text-sm text-stone-700 leading-relaxed">
-              Kjør én workflow om gangen. Etter endringer i kode: bruk <strong>Nullstill data</strong> i Visningsmodus for å laste simuleringsseed på nytt.
+              Kjør én workflow om gangen. <strong>Nullstill data</strong> i visningsmodus laster lanseringsinnholdet på nytt (det som ligger på nettsiden). I produksjon finnes ikke knappen, og Firestore overskrives aldri av seed.
               Automatiserte enhetstester: <code className="text-xs bg-stone-100 px-1 rounded">npm test</code> (fadder-metrics).
             </p>
             <p className="text-xs text-stone-600">

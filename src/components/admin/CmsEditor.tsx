@@ -10,7 +10,6 @@ import {
   MessageSquare,
   ShieldCheck,
   TrendingUp,
-  RotateCcw,
   Plus,
   Trash2,
   Edit2,
@@ -49,8 +48,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
   const {
     cmsContent,
     updateCmsSection,
-    resetCmsSection,
-    resetAllCms,
     stories,
     addStory,
     updateStory,
@@ -293,19 +290,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             <Eye className="w-3.5 h-3.5" />
             <span>Forhåndsvis</span>
           </button>
-          <button
-            onClick={() => {
-              if (window.confirm('Er du sikker på at du vil tilbakestille alt CMS-innhold til standardtekst og standardbilder?')) {
-                resetAllCms();
-                showNotification('Alt innhold ble tilbakestilt til standard.');
-              }
-            }}
-            className="px-3 py-2 text-stone-500 hover:text-stone-800 border border-stone-300 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
-            title="Tilbakestill alle seksjoner"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Tilbakestill alt</span>
-          </button>
         </div>
       </div>
 
@@ -410,17 +394,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 <h3 className="text-base font-serif font-bold text-stone-900">Tekster og handlinger for hovedbanner</h3>
                 <p className="text-xs text-stone-500 mt-0.5">Første inntrykk for besøkende på landingssiden.</p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  resetCmsSection('hero');
-                  showNotification('Hovedbanner tilbakestilt til standard.');
-                }}
-                className="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Tilbakestill seksjon</span>
-              </button>
             </div>
 
             <div className="space-y-4">
@@ -567,17 +540,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 Rediger tittel, forklaring og valgfritt illustrasjonsbilde for hver av de 3 rammene på nettsiden.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                resetCmsSection('steps');
-                showNotification('Trinn 1-2-3 tilbakestilt til standard.');
-              }}
-              className="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Tilbakestill trinn</span>
-            </button>
           </div>
 
           <div className={`grid grid-cols-1 gap-4 ${previewOpen ? '' : 'md:grid-cols-3'}`}>
@@ -672,17 +634,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 Rediger de fire grunnleggende rammene under «Om stiftelsen», inkludert tittel, forklaring, ikon og valgfritt bilde.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                resetCmsSection('aboutCards');
-                showNotification('Kjernerammer tilbakestilt til standard.');
-              }}
-              className="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Tilbakestill rammer</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -759,20 +710,9 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 Nøkkeltall og faktabånd
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
-                Fire tall: skolegang, videregående, fagbrev (métier) og bachelor. Ikke oppmøte og ikke lederlønn. Foreløpig mock i prototypen (15 / 8 / 4 / 2). Bytt til bekreftede tall her før lansering.
+                Fire tall: skolegang, videregående, fagbrev (métier) og bachelor. Ikke oppmøte og ikke lederlønn. Bytt tallene her når dere har bekreftede antall.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                resetCmsSection('kpiStats');
-                showNotification('Nøkkeltall tilbakestilt til standard.');
-              }}
-              className="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Tilbakestill nøkkeltall</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -833,17 +773,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 <h3 className="text-base font-serif font-bold text-stone-900">Fadderoppfordring (CTA-banner)</h3>
                 <p className="text-xs text-stone-500 mt-0.5">Båndet som oppfordrer besøkende til å melde interesse som fadder.</p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  resetCmsSection('ctaBanner');
-                  showNotification('Oppfordringsbanner tilbakestilt til standard.');
-                }}
-                className="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Tilbakestill seksjon</span>
-              </button>
             </div>
 
             <div className="space-y-4">

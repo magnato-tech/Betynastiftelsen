@@ -147,7 +147,7 @@ export const RoleSwitcherBanner: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              if (window.confirm('Nullstill alle endringer til opprinnelige eksempeldata?')) {
+              if (window.confirm('Tilbakestill visningsdata til lanseringsinnholdet som ligger på nettsiden nå? Dette er bare for visningsmodus, ikke produksjon.')) {
                 resetAllData();
               }
             }}

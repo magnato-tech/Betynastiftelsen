@@ -25,6 +25,18 @@ const MainLayout: React.FC = () => {
   const previewFlags = readCmsPreviewFlags();
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem('betyna_return_to') === 'admin:innstillinger') {
+        sessionStorage.removeItem('betyna_return_to');
+        if (prototypeRoleSwitcherEnabled) {
+          setRole('admin');
+          setActiveSection('innstillinger');
+          return;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
     if (previewFlags.preview) {
       setRole('public');
       const hash = window.location.hash.replace('#', '') || 'home';
