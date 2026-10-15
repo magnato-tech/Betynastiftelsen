@@ -10,11 +10,29 @@ Admin: **E-post** (`/api/email` og `/api/newsletter`). Når admin trykker **Publ
 
 Uten `RESEND_API_KEY` svarer POST **503 NOT_CONFIGURED**. Utkastet lagres i e-postkøen.
 
-## Senere (konfigurasjon)
+## DNS hos Uniweb (betyna.no)
 
-1. Konto på [resend.com](https://resend.com)
-2. Verifiser domenet `betyna.no` (DNS hos Uniweb)
-3. API-nøkkel (kun server)
+Domenet ligger hos Uniweb. Kopier **hele** verdiene fra Resend (ikke forkortede `[…]`). Region er EU (`rsend-eu`).
+
+I Uniweb: domenet → DNS / sonefil. Legg inn:
+
+| Type | Navn (vert) | Innhold | Påkrevd |
+|------|-------------|---------|---------|
+| TXT | `resend._domainkey` | DKIM-nøkkelen fra Resend (`p=MII…`) | Ja (verifisering) |
+| CNAME | `rsend` | målet Resend viser (`rsend-eu.…mta.net`) | Ja (utsending) |
+| CNAME | `send` | målet Resend viser (`send.…mta.net`) | Ja (utsending) |
+| TXT | `_dmarc` | `v=DMARC1; p=none;` | Anbefalt |
+
+Navnet er **uten** `.betyna.no` (Uniweb legger på domenet selv). Ikke lag en ny SPF-TXT på `@` som overskriver annen post; Resend bruker CNAME `rsend` / `send`.
+
+Deretter i Resend: **Verify DNS Records**. Grønt merke kan ta noen minutter, av og til opptil 48 timer. Så: API-nøkkel + `EMAIL_FROM=Betyna <varsel@betyna.no>` (adressen må være på det verifiserte domenet).
+
+**Status 15. oktober 2026:** `betyna.no` er verifisert i Resend (EU, Ireland). DKIM og SPF (CNAME `rsend` / `send`) er grønne. Utsending er på. Innkommende e-post (`Enable Receiving`) står av — det trengs ikke.
+
+## Konfigurasjon (nøkkel)
+
+1. Konto på [resend.com](https://resend.com) og DNS som over
+2. API-nøkkel (kun server)
 4. Vercel prosjektvariabler (ikke `VITE_`):
 
 ```

@@ -484,3 +484,13 @@ Arbeidsdokument - Versjon 1.38 - 15. oktober 2026
 GET/POST /api/email, vercel.json, status i admin, send paa nytt fra koen. Noekkel kun i .env/Vercel. docs/RESEND.md.
 
 Arbeidsdokument - Versjon 1.39 - 15. oktober 2026
+
+15. oktober 2026, Resend-domene
+betyna.no er lagt til i Resend (EU). DNS-poster (DKIM TXT, CNAME rsend/send, valgfri DMARC) settes hos Uniweb. Se docs/RESEND.md.
+
+Arbeidsdokument - Versjon 1.40 - 15. oktober 2026
+
+15. oktober 2026, Resend DNS verifisert
+betyna.no er verifisert i Resend (EU). DKIM og SPF (rsend/send) er groenne. Utsending paa. Neste: API-noekkel og EMAIL_FROM i Vercel/.env.
+
+Arbeidsdokument - Versjon 1.41 - 15. oktober 2026
