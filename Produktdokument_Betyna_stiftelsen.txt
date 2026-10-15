@@ -607,3 +607,8 @@ Arbeidsdokument - Versjon 1.63 - 15. oktober 2026
 
 15. oktober 2026, innholdet ligger paa betyna.no
 Det som er redigert ligger i nettleseren paa www.betyna.no (ikke paa localhost), og det er det som skal importeres til Firestore. Kunden valgte aa publisere innloggingskoden til betyna.no, logge inn der og importere derfra. Foerst legges Firebase-verdiene inn i Vercel og betyna.no godkjennes som domene i Firebase Authentication. Innlogging fungerer ikke i Cursors innebygde nettleser; bruk Chrome eller Edge.
+
+Arbeidsdokument - Versjon 1.64 - 15. oktober 2026
+
+15. oktober 2026, foerste import gjennomfoert
+Administrator logget inn med Google paa www.betyna.no (popup i Chrome) og importerte innholdet fra nettleseren: 91 dokumenter ble lagret i Firestore (prosjekt betyna-23040), og importen er laast med system/seedLock. Innlogging via sidebytte (redirect) fungerte ikke fordi Chrome blokkerer lagring paa tvers av adresser; popup er derfor eneste innloggingsknapp. Gjenstaar: besoekende som ikke er innlogget leser fortsatt ikke fra Firestore (offentlig innhold maa leses uten innlogging), roller og brukerliste, og koordinator og fadder. Ekte barneopplysninger tas ikke i bruk foer innlogging og regler er testet for alle roller.
