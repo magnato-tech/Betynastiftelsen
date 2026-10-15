@@ -7,7 +7,6 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
-  Sparkles,
   Search,
   Filter,
   Image as ImageIcon,
@@ -72,74 +71,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       url: 'IMG_1194.jpg',
       category: 'child',
       desc: 'Innsendt feltbilde av elevgruppen samlet med lokal feltkoordinator',
-    },
-    {
-      id: 'teacher',
-      name: 'Utdannet lærer i klasserom',
-      url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=600&q=80',
-      category: 'graduate',
-      desc: 'Tidligere elev som nå underviser egen klasse',
-    },
-    {
-      id: 'tailor',
-      name: 'Syerske i verksted',
-      url: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80',
-      category: 'graduate',
-      desc: 'Fullført tekstilhåndverk og eget systuefellesskap',
-    },
-    {
-      id: 'donor-pair',
-      name: 'Fadderpar / Giver',
-      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-      category: 'donor',
-      desc: 'Engasjert fadderfamilie i Norge',
-    },
-  ];
-
-  const QUICK_TEMPLATES = [
-    {
-      label: 'Jente som trenger symaskin (Feltfoto)',
-      category: 'child' as TestimonialCategory,
-      name: 'Kavira (16 år)',
-      role: 'Jente i yrkesopplæring (søm & design)',
-      location: 'Masina, Brazzaville',
-      age: 16,
-      text: 'Jeg drømmer om å lære søm og mønsterklipp slik at jeg kan sy skoleuniformer og åpne et lite verksted. Å få opplæring og en egen mekanisk symaskin gir meg verdighet og en trygg framtid.',
-      edu: 'Tekstilhåndverk og opplæring på mekanisk symaskin',
-      imageUrl: 'FullSizeR.jpg',
-    },
-    {
-      label: 'Fadder: Tillit og direkte rapporter',
-      category: 'donor' as TestimonialCategory,
-      name: 'Kari & Lars Johansen',
-      role: 'Faddere for Ephraim siden 2024',
-      location: 'Oslo, Norge',
-      age: '',
-      text: 'Det som betyr mest for oss er den direkte, verifiserte kontakten og de grundige rapportene fra feltkoordinatoren. Vi vet nøyaktig hva pengene går til, og vi ser at Ephraim blomstrer i klasserommet.',
-      edu: 'Månedlig fadderbidrag til skolegang, uniform og materiell',
-      imageUrl: '',
-    },
-    {
-      label: 'Elev i grunnskolen (Feltfoto)',
-      category: 'child' as TestimonialCategory,
-      name: 'Dorcas (11 år)',
-      role: 'Elev i 5. klasse',
-      location: 'Institut Lumumba, Brazzaville',
-      age: 11,
-      text: 'Takket være fadderstøtten har jeg fått egne lærebøker og en solid skoleuniform. Før måtte vi dele én bok på fire elever. Nå kan jeg gjøre leksene mine hver ettermiddag og drømmer om å bli biolog.',
-      edu: 'Grunnskole 5. trinn (naturfag og fransk grammatikk)',
-      imageUrl: 'IMG_1194.jpg',
-    },
-    {
-      label: 'Fullført voksen elev: Barneskollelærer',
-      category: 'graduate' as TestimonialCategory,
-      name: 'Jean-Luc (24 år)',
-      role: 'Tidligere fadderbarn, nå barneskolelærer',
-      location: 'Brazzaville, Kongo-Brazzaville',
-      age: 24,
-      text: 'Jean-Luc mottok fadderstøtte fra han var 9 år gammel. Støtten sikret uavbrutt skolegang gjennom krevende år. I dag underviser han selv en klasse på 35 elever i Brazzaville og er økonomisk uavhengig.',
-      edu: 'Fullført grunnskole, videregående lærerskole og pedagogisk praksis',
-      imageUrl: '',
     },
   ];
 
@@ -209,17 +140,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setFormFeatured(st.fremhevetPaaForside ?? true);
     setUploadError(null);
     setIsModalOpen(true);
-  };
-
-  const handleApplyTemplate = (tmpl: typeof QUICK_TEMPLATES[0]) => {
-    setFormCategory(tmpl.category);
-    setFormName(tmpl.name);
-    setFormRole(tmpl.role);
-    setFormLocation(tmpl.location);
-    setFormAge(typeof tmpl.age === 'number' ? tmpl.age : '');
-    setFormText(tmpl.text);
-    setFormEdu(tmpl.edu);
-    setFormImageUrl(tmpl.imageUrl);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -639,28 +559,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
               </button>
             </div>
 
-            {/* Quick Templates (only when adding new) */}
-            {!editingId && (
-              <div className="p-3 bg-[#F6F4ED] rounded-xl border border-[#A3B18A]/40 space-y-2">
-                <span className="text-[11px] font-semibold text-[#4D6B3E] uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Hurtigmaler (ett klikk fyller ut forslag):</span>
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {QUICK_TEMPLATES.map((tmpl, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleApplyTemplate(tmpl)}
-                      className="px-2.5 py-1 bg-white hover:bg-[#A3B18A]/20 border border-stone-200 text-stone-700 rounded-lg text-xs font-medium cursor-pointer transition-colors"
-                    >
-                      {tmpl.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <form onSubmit={handleSave} className="space-y-4 text-xs font-sans">
               {/* Category Segment Selector */}
               <div>
@@ -716,7 +614,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   <input
                     type="text"
                     required
-                    placeholder="f.eks. Kari & Lars Johansen eller Kavira (16 år)"
+                    placeholder="Navn"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
@@ -730,7 +628,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   <input
                     type="text"
                     required
-                    placeholder="f.eks. Fadder for Ephraim siden 2024 / Jente i yrkesopplæring"
+                    placeholder="f.eks. Fadder siden 2024 / Jente i yrkesopplæring"
                     value={formRole}
                     onChange={(e) => setFormRole(e.target.value)}
                     className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"

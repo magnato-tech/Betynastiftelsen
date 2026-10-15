@@ -19,9 +19,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@betyna/seed": [
-        "./src/data/initialData.ts"
       ]
     },
     "allowImportingTsExtensions": true,

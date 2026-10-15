@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
+import { SaveStatusPill } from './components/common/SaveStatusPill';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { PublicWebsite } from './components/public/PublicWebsite';
@@ -18,7 +19,7 @@ import { parseSponsorPortalLink } from './email/sponsorPortalLink';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
 
 const MainLayout: React.FC = () => {
-  const { role, setRole, setCurrentSponsorId } = useApp();
+  const { role, setRole, setCurrentSponsorId, firestoreLoading } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
@@ -52,8 +53,17 @@ const MainLayout: React.FC = () => {
     setActiveSection(parsed.section);
   }, [previewFlags.preview, setRole, setCurrentSponsorId]);
 
+  if (firestoreLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F6F4ED] text-stone-500 text-sm">
+        Laster …
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
+      <SaveStatusPill />
       {/* 1. Persistent Role Switcher Ribbon for immediate testing */}
       {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
 

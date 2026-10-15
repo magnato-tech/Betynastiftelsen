@@ -13,8 +13,7 @@
     "test:watch": "vitest",
     "test:sprint0": "vitest run src/workflows/sprint0.workflows.test.ts",
     "firebase:deploy-rules": "npx firebase-tools deploy --only firestore --project betyna-23040",
-    "emulators": "npx firebase-tools emulators:start --only firestore,storage",
-    "firestore:plan-import": "npx tsx scripts/import-live-firestore.ts"
+    "emulators": "npx firebase-tools emulators:start --only firestore,storage"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

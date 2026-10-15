@@ -28,13 +28,19 @@ import {
 import { composeSystemEmail } from '../email/composeSystemEmail';
 import type { SystemTemplateId } from '../email/templates';
 import translationsData from '../locales/translations.json';
-import { coordinatorDisplayName } from '../data/simulationCoordinators';
-import { childrenForCoordinator, migrateChildrenCoordinatorIds } from '../utils/coordinatorScope';
+import { coordinatorDisplayName } from '../utils/coordinatorDisplay';
+import { childrenForCoordinator } from '../utils/coordinatorScope';
 import { addChildId, childIdsOfSponsor, migrateSponsorsChildIds, removeChildId } from '../utils/sponsorChildren';
-import { migrateCmsKpiStats } from '../utils/cmsKpiMigrate';
 import { migrateCampaignPayments, migrateCampaigns } from '../utils/campaignMigrate';
-import { LIVE_LAUNCH_VERSION, liveLaunchContent } from '../db/liveLaunchContent';
-import { bootStoredOrLive, contentIsLocked, createSeedLock, type SeedLock } from '../db/seedPolicy';
+import { EMPTY_APP_CONTENT } from '../db/emptyContent';
+import {
+  LIVE_LAUNCH_VERSION,
+  bootStoredOrLive,
+  contentIsLocked,
+  createSeedLock,
+  type SeedLock,
+} from '../db/seedPolicy';
+import { firestoreEnabled as firestoreConfigured } from '../config/firebase';
 import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
 import { prototypeRoleSwitcherEnabled } from '../config/prototypeAccess';
 import type { AppDataSnapshot } from '../db/firestoreData';
@@ -146,7 +152,6 @@ interface AppContextType {
   deleteNotification: (id: string) => void;
 
   addAuditLog: (handling: string, detaljer: string) => void;
-  resetAllData: () => void;
 
   emailOutbox: EmailOutboxItem[];
   addEmailOutboxItem: (item: Omit<EmailOutboxItem, 'id' | 'createdAt'>) => EmailOutboxItem;
@@ -162,20 +167,48 @@ interface AppContextType {
   signInFirestoreGoogle: () => Promise<void>;
   signInFirestoreGoogleRedirect: () => Promise<void>;
   importBrowserToFirestore: () => Promise<void>;
-  replacePublicContentInFirestore: () => Promise<void>;
+  /** Offentlig innhold er ikke lest fra databasen ennå. */
+  firestoreLoading: boolean;
+  firestoreSave: { state: 'idle' | 'saving' | 'saved' | 'error'; lastSavedAt: number | null; error: string | null };
 }
 
 const STORAGE_KEY_PREFIX = 'betyna_v1_';
+
+/**
+ * Når databasen er konfigurert, er den eneste kilden til innhold.
+ * Nettleseren husker bare språk. Eldre lagret innhold fjernes én gang.
+ */
+const LOCAL_CONTENT_KEYS = [
+  'children', 'sponsors', 'reports', 'milestones', 'inquiries', 'payments', 'campaigns',
+  'fieldFacts', 'stories', 'auditLogs', 'notifications', 'cms', 'catalogPhotos', 'emailOutbox',
+  'emailAutoSend', 'contentLock',
+];
+
+function purgeLocalContent() {
+  if (!firestoreConfigured) return;
+  try {
+    for (const key of LOCAL_CONTENT_KEYS) localStorage.removeItem(STORAGE_KEY_PREFIX + key);
+  } catch {
+    /* privat modus */
+  }
+}
+purgeLocalContent();
+
+function writeLocal(storageKey: string, json: string) {
+  if (firestoreConfigured && !storageKey.endsWith('language')) return;
+  localStorage.setItem(storageKey, json);
+}
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRoleState] = useState<UserRole>('public');
-  const [currentSponsorId, setCurrentSponsorId] = useState<string>('sponsor-01');
-  const [currentCoordinatorId, setCurrentCoordinatorId] = useState<string>('coord-01');
-  const [coordinators] = useState<Coordinator[]>(liveLaunchContent.coordinators);
+  const [currentSponsorId, setCurrentSponsorId] = useState<string>('');
+  const [currentCoordinatorId, setCurrentCoordinatorId] = useState<string>('');
+  const [coordinators, setCoordinators] = useState<Coordinator[]>(EMPTY_APP_CONTENT.coordinators);
 
   const loadState = <T,>(key: string): T | undefined => {
+    if (firestoreConfigured && key !== 'language') return undefined;
     try {
       const item = localStorage.getItem(STORAGE_KEY_PREFIX + key);
       return item ? (JSON.parse(item) as T) : undefined;
@@ -189,7 +222,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (stored?.completed) return stored;
     const lock = createSeedLock(LIVE_LAUNCH_VERSION);
     try {
-      localStorage.setItem(STORAGE_KEY_PREFIX + 'contentLock', JSON.stringify(lock));
+      writeLocal(STORAGE_KEY_PREFIX + 'contentLock', JSON.stringify(lock));
     } catch {
       /* privat modus */
     }
@@ -207,86 +240,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const [childrenList, setChildrenList] = useState<Child[]>(() =>
-    migrateChildrenCoordinatorIds(
-      bootStoredOrLive(loadState<Child[]>('children'), liveLaunchContent.children)
-    )
+    bootStoredOrLive(loadState<Child[]>('children'), EMPTY_APP_CONTENT.children)
   );
   const [sponsors, setSponsors] = useState<Sponsor[]>(() =>
     migrateSponsorsChildIds(
-      bootStoredOrLive(loadState<Sponsor[]>('sponsors'), liveLaunchContent.sponsors)
+      bootStoredOrLive(loadState<Sponsor[]>('sponsors'), EMPTY_APP_CONTENT.sponsors)
     )
   );
   const [reports, setReports] = useState<Report[]>(() =>
-    bootStoredOrLive(loadState<Report[]>('reports'), liveLaunchContent.reports)
+    bootStoredOrLive(loadState<Report[]>('reports'), EMPTY_APP_CONTENT.reports)
   );
   const [milestones, setMilestones] = useState<ChildMilestone[]>(() =>
-    bootStoredOrLive(loadState<ChildMilestone[]>('milestones'), liveLaunchContent.milestones)
+    bootStoredOrLive(loadState<ChildMilestone[]>('milestones'), EMPTY_APP_CONTENT.milestones)
   );
   const [inquiries, setInquiries] = useState<Inquiry[]>(() =>
-    bootStoredOrLive(loadState<Inquiry[]>('inquiries'), liveLaunchContent.inquiries)
+    bootStoredOrLive(loadState<Inquiry[]>('inquiries'), EMPTY_APP_CONTENT.inquiries)
   );
   const [payments, setPayments] = useState<PaymentRecord[]>(() => {
     const loadedCampaigns = migrateCampaigns(
-      bootStoredOrLive(loadState<Campaign[]>('campaigns'), liveLaunchContent.campaigns)
+      bootStoredOrLive(loadState<Campaign[]>('campaigns'), EMPTY_APP_CONTENT.campaigns)
     );
     return migrateCampaignPayments(
-      bootStoredOrLive(loadState<PaymentRecord[]>('payments'), liveLaunchContent.payments),
+      bootStoredOrLive(loadState<PaymentRecord[]>('payments'), EMPTY_APP_CONTENT.payments),
       loadedCampaigns
     );
   });
   const [campaigns, setCampaigns] = useState<Campaign[]>(() =>
-    migrateCampaigns(bootStoredOrLive(loadState<Campaign[]>('campaigns'), liveLaunchContent.campaigns))
+    migrateCampaigns(bootStoredOrLive(loadState<Campaign[]>('campaigns'), EMPTY_APP_CONTENT.campaigns))
   );
   const [fieldFacts, setFieldFacts] = useState<FieldFact[]>(() =>
-    bootStoredOrLive(loadState<FieldFact[]>('fieldFacts'), liveLaunchContent.facts)
+    bootStoredOrLive(loadState<FieldFact[]>('fieldFacts'), EMPTY_APP_CONTENT.facts)
   );
   const [stories, setStories] = useState<AdultGraduateStory[]>(() =>
-    bootStoredOrLive(loadState<AdultGraduateStory[]>('stories'), liveLaunchContent.testimonials)
+    bootStoredOrLive(loadState<AdultGraduateStory[]>('stories'), EMPTY_APP_CONTENT.testimonials)
   );
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() =>
-    bootStoredOrLive(loadState<AuditLogItem[]>('auditLogs'), liveLaunchContent.auditLogs)
+    bootStoredOrLive(loadState<AuditLogItem[]>('auditLogs'), EMPTY_APP_CONTENT.auditLogs)
   );
   const [notifications, setNotifications] = useState<AppNotification[]>(() =>
-    bootStoredOrLive(loadState<AppNotification[]>('notifications'), liveLaunchContent.notifications)
+    bootStoredOrLive(loadState<AppNotification[]>('notifications'), EMPTY_APP_CONTENT.notifications)
   );
   const [cmsContent, setCmsContent] = useState<CmsContent>(() => {
     const stored = loadState<CmsContent>('cms');
-    const base = bootStoredOrLive(stored, liveLaunchContent.cms);
-    if (stored) return base;
-    return migrateCmsKpiStats(base, liveLaunchContent.cms.kpiStats);
+    return bootStoredOrLive(stored, EMPTY_APP_CONTENT.cms);
   });
   const [catalogPhotos, setCatalogPhotos] = useState<CatalogPhoto[]>(() =>
-    bootStoredOrLive(loadState<CatalogPhoto[]>('catalogPhotos'), liveLaunchContent.catalogPhotos)
+    bootStoredOrLive(loadState<CatalogPhoto[]>('catalogPhotos'), EMPTY_APP_CONTENT.catalogPhotos)
   );
   const [emailOutbox, setEmailOutbox] = useState<EmailOutboxItem[]>(() =>
     bootStoredOrLive(loadState<EmailOutboxItem[]>('emailOutbox'), [])
   );
   const [emailAutoSend, setEmailAutoSend] = useState<EmailAutoSendPrefs>(() =>
     migrateEmailAutoSend(
-      bootStoredOrLive(loadState<EmailAutoSendPrefs>('emailAutoSend'), liveLaunchContent.emailAutoSend)
+      bootStoredOrLive(loadState<EmailAutoSendPrefs>('emailAutoSend'), EMPTY_APP_CONTENT.emailAutoSend)
     )
   );
 
   const firestore = useFirestoreAppSync();
 
   useEffect(() => {
-    const h = firestore.hydration;
-    if (!h) return;
-    if (h.children?.length) setChildrenList(h.children);
-    if (h.sponsors?.length) setSponsors(h.sponsors);
-    if (h.reports?.length) setReports(h.reports);
-    if (h.milestones?.length) setMilestones(h.milestones);
-    if (h.inquiries?.length) setInquiries(h.inquiries);
-    if (h.payments?.length) setPayments(h.payments);
-    if (h.campaigns?.length) setCampaigns(migrateCampaigns(h.campaigns));
-    if (h.facts?.length) setFieldFacts(h.facts);
-    if (h.testimonials?.length) setStories(h.testimonials);
-    if (h.auditLogs?.length) setAuditLogs(h.auditLogs);
-    if (h.notifications?.length) setNotifications(h.notifications);
-    if (h.catalogPhotos?.length) setCatalogPhotos(h.catalogPhotos);
-    if (h.emailOutbox?.length) setEmailOutbox(h.emailOutbox);
-    if (h.cms) setCmsContent(h.cms);
-    if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
+    const hy = firestore.hydration;
+    if (!hy) return;
+    const h = hy.data;
+    if (hy.full) {
+      // Full lasting er fasit: tomme samlinger i databasen betyr tomme lister her.
+      setCoordinators(h.coordinators ?? []);
+      setChildrenList(h.children ?? []);
+      setSponsors(h.sponsors ?? []);
+      setReports(h.reports ?? []);
+      setMilestones(h.milestones ?? []);
+      setInquiries(h.inquiries ?? []);
+      setPayments(h.payments ?? []);
+      setCampaigns(migrateCampaigns(h.campaigns ?? []));
+      setFieldFacts(h.facts ?? []);
+      setStories(h.testimonials ?? []);
+      setAuditLogs(h.auditLogs ?? []);
+      setNotifications(h.notifications ?? []);
+      setCatalogPhotos(h.catalogPhotos ?? []);
+      setEmailOutbox(h.emailOutbox ?? []);
+      if (h.cms) setCmsContent(h.cms);
+      if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
+      firestore.confirmHydrated(h);
+    } else {
+      if (h.cms) setCmsContent(h.cms);
+      if (h.campaigns) setCampaigns(migrateCampaigns(h.campaigns));
+      if (h.testimonials) setStories(h.testimonials);
+    }
   }, [firestore.hydration]);
 
   useEffect(() => {
@@ -350,22 +389,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'children', JSON.stringify(childrenList));
+    writeLocal(STORAGE_KEY_PREFIX + 'children', JSON.stringify(childrenList));
   }, [childrenList]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'sponsors', JSON.stringify(sponsors));
+    writeLocal(STORAGE_KEY_PREFIX + 'sponsors', JSON.stringify(sponsors));
   }, [sponsors]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'reports', JSON.stringify(reports));
+    writeLocal(STORAGE_KEY_PREFIX + 'reports', JSON.stringify(reports));
   }, [reports]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'milestones', JSON.stringify(milestones));
+    writeLocal(STORAGE_KEY_PREFIX + 'milestones', JSON.stringify(milestones));
   }, [milestones]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'inquiries', JSON.stringify(inquiries));
+    writeLocal(STORAGE_KEY_PREFIX + 'inquiries', JSON.stringify(inquiries));
   }, [inquiries]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'payments', JSON.stringify(payments));
+    writeLocal(STORAGE_KEY_PREFIX + 'payments', JSON.stringify(payments));
   }, [payments]);
   useEffect(() => {
     setCampaigns((prev) => {
@@ -376,31 +415,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'campaigns', JSON.stringify(campaigns));
+    writeLocal(STORAGE_KEY_PREFIX + 'campaigns', JSON.stringify(campaigns));
   }, [campaigns]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'fieldFacts', JSON.stringify(fieldFacts));
+    writeLocal(STORAGE_KEY_PREFIX + 'fieldFacts', JSON.stringify(fieldFacts));
   }, [fieldFacts]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'stories', JSON.stringify(stories));
+    writeLocal(STORAGE_KEY_PREFIX + 'stories', JSON.stringify(stories));
   }, [stories]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'auditLogs', JSON.stringify(auditLogs));
+    writeLocal(STORAGE_KEY_PREFIX + 'auditLogs', JSON.stringify(auditLogs));
   }, [auditLogs]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'notifications', JSON.stringify(notifications));
+    writeLocal(STORAGE_KEY_PREFIX + 'notifications', JSON.stringify(notifications));
   }, [notifications]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'cms', JSON.stringify(cmsContent));
+    writeLocal(STORAGE_KEY_PREFIX + 'cms', JSON.stringify(cmsContent));
   }, [cmsContent]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'catalogPhotos', JSON.stringify(catalogPhotos));
+    writeLocal(STORAGE_KEY_PREFIX + 'catalogPhotos', JSON.stringify(catalogPhotos));
   }, [catalogPhotos]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'emailOutbox', JSON.stringify(emailOutbox));
+    writeLocal(STORAGE_KEY_PREFIX + 'emailOutbox', JSON.stringify(emailOutbox));
   }, [emailOutbox]);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREFIX + 'emailAutoSend', JSON.stringify(emailAutoSend));
+    writeLocal(STORAGE_KEY_PREFIX + 'emailAutoSend', JSON.stringify(emailAutoSend));
   }, [emailAutoSend]);
 
   useEffect(() => {
@@ -473,7 +512,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setLanguage = (lang: AppLanguage) => {
     setLanguageState(lang);
     try {
-      localStorage.setItem(STORAGE_KEY_PREFIX + 'language', JSON.stringify(lang));
+      writeLocal(STORAGE_KEY_PREFIX + 'language', JSON.stringify(lang));
     } catch {}
   };
 
@@ -626,7 +665,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       behovSammendrag: childData.behovSammendrag || 'Skolegang, skolesaker og skolelunsj.',
       opprettetDato: new Date().toISOString().slice(0, 10),
       sistOppdatert: new Date().toISOString().slice(0, 10),
-      koordinatorId: childData.koordinatorId || currentCoordinatorId || 'coord-01',
+      koordinatorId: childData.koordinatorId || currentCoordinatorId || '',
     };
     setChildrenList((prev) => [...prev, newChild]);
     const fact = buildFieldFact({
@@ -815,7 +854,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const approveReport = (id: string, editedNorskTitle?: string, editedNorskContent?: string) => {
     let targetChildId = '';
     let targetChildName = '';
-    let reportCoordId = 'coord-01';
+    let reportCoordId = '';
 
     setReports((prev) =>
       prev.map((r) => {
@@ -886,7 +925,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const rejectReport = (id: string, reason: string) => {
     let childName = '';
-    let coordId = 'coord-01';
+    let coordId = '';
     setReports((prev) =>
       prev.map((r) => {
         if (r.id === id) {
@@ -941,7 +980,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'notif-' + Date.now(),
       targetRole: 'admin',
       title: `Nytt barnebilde til godkjenning (${child.fornavn})`,
-      message: `${coordinatorDisplayName(coordinators.find((x) => x.id === child.koordinatorId) || coordinators[0])} har sendt inn foto for ${child.fornavn}.`,
+      message: `${
+        coordinators.find((x) => x.id === child.koordinatorId)
+          ? coordinatorDisplayName(coordinators.find((x) => x.id === child.koordinatorId)!)
+          : 'Koordinator'
+      } har sendt inn foto for ${child.fornavn}.`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
       type: 'photo_needs_approval',
       read: false,
@@ -1191,13 +1234,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const forwardInquiryToCoordinator = (id: string, note?: string) => {
     let barnNavn = '';
-    let coordId = 'coord-01';
+    let coordId = '';
     setInquiries((prev) =>
       prev.map((inq) => {
         if (inq.id === id) {
           barnNavn = inq.barnNavn;
           const ch = childrenList.find((c) => c.id === inq.barnId);
-          coordId = ch?.koordinatorId || 'coord-01';
+          coordId = ch?.koordinatorId || '';
           return {
             ...inq,
             status: 'venter_koordinator',
@@ -1431,44 +1474,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('Slettet vitnesbyrd', `Vitnesbyrd for "${story?.navn || id}" ble fjernet.`);
   };
 
-  const resetAllData = () => {
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'children');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'sponsors');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'reports');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'milestones');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'inquiries');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'payments');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'campaigns');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'stories');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'auditLogs');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'notifications');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'cms');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'fieldFacts');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'catalogPhotos');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailOutbox');
-    localStorage.removeItem(STORAGE_KEY_PREFIX + 'emailAutoSend');
-
-    setChildrenList(liveLaunchContent.children);
-    setSponsors(liveLaunchContent.sponsors);
-    setReports(liveLaunchContent.reports);
-    setMilestones(liveLaunchContent.milestones);
-    setInquiries(liveLaunchContent.inquiries);
-    setPayments(liveLaunchContent.payments);
-    setCampaigns(liveLaunchContent.campaigns);
-    setStories(liveLaunchContent.testimonials);
-    setAuditLogs(liveLaunchContent.auditLogs);
-    setNotifications(liveLaunchContent.notifications);
-    setCmsContent(liveLaunchContent.cms);
-    setFieldFacts(liveLaunchContent.facts);
-    setCatalogPhotos(liveLaunchContent.catalogPhotos);
-    setEmailOutbox([]);
-    setEmailAutoSend(DEFAULT_EMAIL_AUTO_SEND);
-    setCurrentSponsorId('sponsor-01');
-    setCurrentCoordinatorId('coord-01');
-    setRole('public');
-    setLanguage('no');
-  };
-
   return (
     <AppContext.Provider
       value={{
@@ -1537,7 +1542,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteCampaign,
         reconcilePayment,
         addAuditLog,
-        resetAllData,
         emailOutbox,
         addEmailOutboxItem,
         updateEmailOutboxItem,
@@ -1553,9 +1557,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         importBrowserToFirestore: async () => {
           await firestore.importBrowserToFirestore();
         },
-        replacePublicContentInFirestore: async () => {
-          await firestore.replacePublicContent();
-        },
+        firestoreLoading: firestore.firestoreEnabled && firestore.loadState === 'loading',
+        firestoreSave: firestore.saveStatus,
       }}
     >
       {children}

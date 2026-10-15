@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INITIAL_CHILDREN } from '../data/initialData';
+import { makeChild, makeSponsor } from '../test/testData';
 import {
   addChildId,
   childIdsOfSponsor,
@@ -10,30 +10,23 @@ import {
 
 describe('sponsorChildren', () => {
   it('reads legacy tildeltBarnId as a one-item list', () => {
-    expect(childIdsOfSponsor({ tildeltBarnId: 'child-01' })).toEqual(['child-01']);
+    expect(childIdsOfSponsor({ tildeltBarnId: 'child-a' })).toEqual(['child-a']);
     expect(childIdsOfSponsor({ tildeltBarnIds: [] })).toEqual([]);
   });
 
   it('lets one sponsor keep several children', () => {
-    const ids = addChildId(addChildId([], 'child-01'), 'child-06');
-    expect(ids).toEqual(['child-01', 'child-06']);
-    const [kari] = migrateSponsorsChildIds([
-      {
-        id: 'sponsor-01',
-        navn: 'Kari',
-        epost: 'k@test.no',
-        telefon: '',
-        poststed: 'Bergen',
-        maanedsbelop: 350,
-        betalingsmetode: 'vipps',
-        betalingsstatus: 'aktiv',
-        startDato: '2025-01-01',
-        tildeltBarnIds: ids,
-      },
-    ]);
-    expect(childrenOfSponsor(INITIAL_CHILDREN, kari).map((c) => c.fornavn)).toEqual(
-      expect.arrayContaining(['Ephraim', 'Grace'])
+    const children = [
+      makeChild({ id: 'child-a', fornavn: 'Barn A' }),
+      makeChild({ id: 'child-b', fornavn: 'Barn B' }),
+      makeChild({ id: 'child-c', fornavn: 'Barn C' }),
+    ];
+    const ids = addChildId(addChildId([], 'child-a'), 'child-b');
+    expect(ids).toEqual(['child-a', 'child-b']);
+    const [sponsor] = migrateSponsorsChildIds([makeSponsor({ tildeltBarnIds: ids })]);
+    expect(childrenOfSponsor(children, sponsor).map((c) => c.fornavn)).toEqual(
+      expect.arrayContaining(['Barn A', 'Barn B'])
     );
-    expect(removeChildId(ids, 'child-01')).toEqual(['child-06']);
+    expect(childrenOfSponsor(children, sponsor).map((c) => c.fornavn)).not.toContain('Barn C');
+    expect(removeChildId(ids, 'child-a')).toEqual(['child-b']);
   });
 });

@@ -7,6 +7,9 @@ export interface SeedLock {
   seedVersion: string;
 }
 
+/** Versjonsmerke på importlåsen i databasen. */
+export const LIVE_LAUNCH_VERSION = '2026-10-15-live';
+
 export const SEED_LOCK_COLLECTION = 'system';
 export const SEED_LOCK_DOC_ID = 'seedLock';
 

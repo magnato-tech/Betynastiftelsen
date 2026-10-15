@@ -608,6 +608,12 @@ Arbeidsdokument - Versjon 1.63 - 15. oktober 2026
 15. oktober 2026, innholdet ligger paa betyna.no
 Det som er redigert ligger i nettleseren paa www.betyna.no (ikke paa localhost), og det er det som skal importeres til Firestore. Kunden valgte aa publisere innloggingskoden til betyna.no, logge inn der og importere derfra. Foerst legges Firebase-verdiene inn i Vercel og betyna.no godkjennes som domene i Firebase Authentication. Innlogging fungerer ikke i Cursors innebygde nettleser; bruk Chrome eller Edge.
 
+Arbeidsdokument - Versjon 1.66 - 15. oktober 2026
+
+15. oktober 2026, ingen innebygde data og automatisk lagring
+Kunden bestemte at ingen seed- eller mockdata skal ligge i loesningen: alt skal staa tomt til ekte data kommer inn. Det som ligger i databasen og vises paa nettsiden ble ikke endret. Appen har naa ingen innebygde barn, faddere, koordinatorer, betalinger, rapporter eller andre eksempler, og databasen er eneste kilde. Eldre innhold som laa lagret i nettleseren fjernes ved foerste oppstart. Knappen Nullstill data i visningsmodus er fjernet (den ville ellers tomme databasen), og det samme gjelder engangsknappen Bytt offentlig innhold til nyeste tekst fra versjon 1.65, som er brukt og ikke lenger trengs (den nyeste teksten ligger i databasen). Effekt-dashboardet for koordinator, som viste oppdiktede tall, og eksempelmalene for vitnesbyrd er fjernet. Eksempeldata for testene er flyttet til en liten testfil (src/test/testData.ts) som ikke foelger med appen, og testene er skrevet om til aa bruke den.
+Alt admin gjor lagres automatisk i databasen: endringer skrives etter under ett sekund, og det som slettes i admin slettes ogsaa i databasen. Bare det som er endret skrives. Appen viser om alt er lagret, om den lagrer, eller om noe feilet, og den proever paa nytt av seg selv. Nettleseren varsler hvis noen proever aa lukke siden midt i en lagring. Lagring slaas foerst paa etter at innholdet fra databasen er lest, slik at utdatert innhold aldri skriver over det som ligger i databasen, og aa fjerne hele en samling paa en gang stoppes som mulig feil. Offentlig innhold (forsidetekster, aksjoner, godkjente vitnesbyrd) leses uten innlogging, og siden viser Laster inntil det er lest. Gjenstaar: lagring for koordinator og fadder (kommer med innlogging for dem), brukerliste med roller, og tall og tekster i CMS som fortsatt er markert som foreloepige.
+
 Arbeidsdokument - Versjon 1.65 - 15. oktober 2026
 
 15. oktober 2026, riktig tekst paa nettsiden

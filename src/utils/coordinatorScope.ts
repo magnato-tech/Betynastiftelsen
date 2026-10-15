@@ -1,6 +1,4 @@
 import type { Child, Coordinator, Inquiry, Report } from '../types';
-import { CHILD_COORDINATOR_MAP } from '../data/simulationCoordinators';
-
 export type CoordinatorRegisterSortKey =
   | 'internKode'
   | 'fornavn'
@@ -13,13 +11,6 @@ export type CoordinatorRegisterSortKey =
   | 'status';
 
 export type CoordinatorRegisterSortDir = 'asc' | 'desc';
-
-export function migrateChildrenCoordinatorIds(children: Child[]): Child[] {
-  return children.map((c) => {
-    if (c.koordinatorId?.trim()) return c;
-    return { ...c, koordinatorId: CHILD_COORDINATOR_MAP[c.id] ?? 'coord-01' };
-  });
-}
 
 export function childrenForCoordinator(children: Child[], coordinatorId: string): Child[] {
   return children.filter((c) => c.koordinatorId === coordinatorId && c.status === 'aktiv');

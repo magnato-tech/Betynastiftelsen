@@ -16,8 +16,7 @@ import {
   SYSTEM_SEED_LOCK_DOC_ID,
 } from './firestoreProfile';
 import type { SeedLock } from './seedPolicy';
-import { createSeedLock } from './seedPolicy';
-import { LIVE_LAUNCH_VERSION } from './liveLaunchContent';
+import { LIVE_LAUNCH_VERSION, createSeedLock } from './seedPolicy';
 
 import type { AppDataSnapshot } from './appDataSnapshot';
 
@@ -200,39 +199,18 @@ export async function importBrowserSnapshotToFirestore(
   return { written, skippedLock: false };
 }
 
-/**
- * Engangshandling for admin: bytter det besøkende ser (forside-CMS, aksjoner, vitnesbyrd)
- * med lanseringsinnholdet i koden. Dokumenter med samme id overskrives helt.
- * Andre dokumenter (opprettet av admin) lar vi stå.
- */
-export async function replacePublicContentInFirestore(
-  db: Firestore,
-  content: Pick<AppDataSnapshot, 'cms' | 'campaigns' | 'testimonials'>
-): Promise<{ written: number }> {
-  await setDoc(doc(db, FIRESTORE_COLLECTIONS.cms, CMS_PUBLIC_DOC_ID), content.cms);
-  let written = 1;
-  const batch = writeBatch(db);
-  for (const item of content.campaigns) {
-    batch.set(doc(db, FIRESTORE_COLLECTIONS.campaigns, item.id), item);
-    written += 1;
-  }
-  for (const item of content.testimonials) {
-    batch.set(doc(db, FIRESTORE_COLLECTIONS.testimonials, item.id), item);
-    written += 1;
-  }
-  await batch.commit();
-  return { written };
-}
+export type DbChange =
+  | { kind: 'set'; collection: string; id: string; data: unknown }
+  | { kind: 'delete'; collection: string; id: string };
 
-export async function persistCollection<T extends { id: string }>(
-  db: Firestore,
-  collectionName: string,
-  items: T[]
-): Promise<void> {
+/** Skriver og sletter i grupper. Kaster feil videre slik at lagringen kan vise den og prøve igjen. */
+export async function commitChanges(db: Firestore, changes: DbChange[]): Promise<void> {
   let batch = writeBatch(db);
   let ops = 0;
-  for (const item of items) {
-    batch.set(doc(db, collectionName, item.id), item, { merge: true });
+  for (const ch of changes) {
+    const ref = doc(db, ch.collection, ch.id);
+    if (ch.kind === 'set') batch.set(ref, ch.data as Record<string, unknown>);
+    else batch.delete(ref);
     ops += 1;
     if (ops >= 400) {
       await batch.commit();
@@ -241,15 +219,4 @@ export async function persistCollection<T extends { id: string }>(
     }
   }
   if (ops > 0) await batch.commit();
-}
-
-export async function persistCms(db: Firestore, cms: AppDataSnapshot['cms']): Promise<void> {
-  await setDoc(doc(db, FIRESTORE_COLLECTIONS.cms, CMS_PUBLIC_DOC_ID), cms, { merge: true });
-}
-
-export async function persistEmailAutoSend(
-  db: Firestore,
-  prefs: AppDataSnapshot['emailAutoSend']
-): Promise<void> {
-  await setDoc(doc(db, FIRESTORE_COLLECTIONS.settings, SETTINGS_EMAIL_DOC_ID), prefs, { merge: true });
 }

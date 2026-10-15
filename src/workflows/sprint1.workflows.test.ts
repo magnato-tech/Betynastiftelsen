@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INITIAL_CHILDREN, INITIAL_FACTS } from '../data/initialData';
+import { makeChild, makeFact } from '../test/testData';
 import { seedStoryFromFacts } from '../utils/adminContentQueue';
 import { factsWaitingForStory } from '../utils/fieldFacts';
 
@@ -8,7 +8,7 @@ describe('Sprint 1 testsett (workflows)', () => {
   it.todo('KOORD-04: koordinator sender øyeblikk (ett faktum + dato) separat');
 
   it('ADM-05: admin skriver historien ut fra koordinatorens fakta', () => {
-    const fact = factsWaitingForStory(INITIAL_FACTS)[0];
+    const fact = factsWaitingForStory([makeFact({ fornavn: 'Barn A', trivsel: 'Trives godt i klassen og følger med.' })])[0];
     const draft = seedStoryFromFacts(fact);
     expect(draft).toContain(fact.fornavn);
     expect(draft).toContain(fact.trivsel);
@@ -16,7 +16,10 @@ describe('Sprint 1 testsett (workflows)', () => {
   });
 
   it('ADM-06: forhåndsvisning viser fornavn, skole, klassetrinn og historie — ikke intern kode', () => {
-    const child = INITIAL_CHILDREN.find((c) => c.id === 'child-01')!;
+    const child = makeChild({
+      internKode: 'INTERN-123',
+      bakgrunnskontekst: 'En kort og verdig beskrivelse av barnets situasjon.',
+    });
     const preview = {
       fornavn: child.fornavn,
       skole: child.skoleNavn,

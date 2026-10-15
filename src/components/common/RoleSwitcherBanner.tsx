@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
-import { Globe, Heart, Shield, MapPin, RefreshCw, Eye, AlertCircle } from 'lucide-react';
+import { Globe, Heart, Shield, MapPin, Eye, AlertCircle } from 'lucide-react';
 
 export const RoleSwitcherBanner: React.FC = () => {
   const {
@@ -13,7 +13,6 @@ export const RoleSwitcherBanner: React.FC = () => {
     coordinators,
     currentCoordinator,
     setCurrentCoordinatorId,
-    resetAllData,
     notifications,
     language,
   } = useApp();
@@ -26,13 +25,13 @@ export const RoleSwitcherBanner: React.FC = () => {
       if (roleId === 'coordinator') {
         return (
           (n.targetRole === 'coordinator' || n.targetRole === 'all') &&
-          (!n.recipientId || n.recipientId === (currentCoordinator?.id || 'coord-01'))
+          (!n.recipientId || n.recipientId === (currentCoordinator?.id || ''))
         );
       }
       if (roleId === 'sponsor') {
         return (
           (n.targetRole === 'sponsor' || n.targetRole === 'all') &&
-          (!n.recipientId || n.recipientId === (currentSponsor?.id || 'sponsor-01'))
+          (!n.recipientId || n.recipientId === (currentSponsor?.id || ''))
         );
       }
       return n.targetRole === 'all';
@@ -113,7 +112,7 @@ export const RoleSwitcherBanner: React.FC = () => {
           <div className="flex items-center gap-2 bg-stone-800/80 px-2 py-1 rounded-md border border-stone-700">
             <span className="text-stone-400">{connectedAsLabel}</span>
             <select
-              value={currentCoordinator?.id || 'coord-01'}
+              value={currentCoordinator?.id || ''}
               onChange={(e) => setCurrentCoordinatorId(e.target.value)}
               className="bg-stone-900 text-[#A3B18A] font-medium rounded px-2 py-0.5 border border-stone-700 text-xs focus:outline-hidden max-w-[220px]"
             >
@@ -130,7 +129,7 @@ export const RoleSwitcherBanner: React.FC = () => {
           <div className="flex items-center gap-2 bg-stone-800/80 px-2 py-1 rounded-md border border-stone-700">
             <span className="text-stone-400">Innlogget som fadder:</span>
             <select
-              value={currentSponsor?.id || 'sponsor-01'}
+              value={currentSponsor?.id || ''}
               onChange={(e) => setCurrentSponsorId(e.target.value)}
               className="bg-stone-900 text-[#A3B18A] font-medium rounded px-2 py-0.5 border border-stone-700 text-xs focus:outline-hidden"
             >
@@ -142,22 +141,6 @@ export const RoleSwitcherBanner: React.FC = () => {
             </select>
           </div>
         )}
-
-        {/* Reset helper */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (window.confirm('Tilbakestill visningsdata til lanseringsinnholdet som ligger på nettsiden nå? Dette er bare for visningsmodus, ikke produksjon.')) {
-                resetAllData();
-              }
-            }}
-            className="flex items-center gap-1 text-stone-400 hover:text-stone-200 transition-colors"
-            title="Nullstill mockdata til utgangspunktet"
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span>Nullstill data</span>
-          </button>
-        </div>
       </div>
     </aside>
   );

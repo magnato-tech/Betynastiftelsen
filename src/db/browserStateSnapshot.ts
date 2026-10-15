@@ -16,7 +16,7 @@ import type {
   AppNotification,
 } from '../types';
 import type { EmailAutoSendPrefs } from '../email/autoSendPrefs';
-import { liveLaunchContent } from './liveLaunchContent';
+import { EMPTY_APP_CONTENT } from './emptyContent';
 
 export const BROWSER_STORAGE_PREFIX = 'betyna_v1_';
 
@@ -35,22 +35,22 @@ import type { AppDataSnapshot } from './appDataSnapshot';
 
 export function readBrowserStateSnapshot(): AppDataSnapshot {
   return {
-    coordinators: liveLaunchContent.coordinators,
-    children: readJson<Child[]>('children') ?? liveLaunchContent.children,
-    sponsors: readJson<Sponsor[]>('sponsors') ?? liveLaunchContent.sponsors,
-    catalogPhotos: readJson<CatalogPhoto[]>('catalogPhotos') ?? liveLaunchContent.catalogPhotos,
-    facts: readJson<FieldFact[]>('fieldFacts') ?? liveLaunchContent.facts,
-    reports: readJson<Report[]>('reports') ?? liveLaunchContent.reports,
-    milestones: readJson<ChildMilestone[]>('milestones') ?? liveLaunchContent.milestones,
-    inquiries: readJson<Inquiry[]>('inquiries') ?? liveLaunchContent.inquiries,
-    payments: readJson<PaymentRecord[]>('payments') ?? liveLaunchContent.payments,
-    campaigns: readJson<Campaign[]>('campaigns') ?? liveLaunchContent.campaigns,
-    testimonials: readJson<AdultGraduateStory[]>('stories') ?? liveLaunchContent.testimonials,
-    notifications: readJson<AppNotification[]>('notifications') ?? liveLaunchContent.notifications,
-    auditLogs: readJson<AuditLogItem[]>('auditLogs') ?? liveLaunchContent.auditLogs,
-    cms: readJson<CmsContent>('cms') ?? liveLaunchContent.cms,
+    coordinators: EMPTY_APP_CONTENT.coordinators,
+    children: readJson<Child[]>('children') ?? EMPTY_APP_CONTENT.children,
+    sponsors: readJson<Sponsor[]>('sponsors') ?? EMPTY_APP_CONTENT.sponsors,
+    catalogPhotos: readJson<CatalogPhoto[]>('catalogPhotos') ?? EMPTY_APP_CONTENT.catalogPhotos,
+    facts: readJson<FieldFact[]>('fieldFacts') ?? EMPTY_APP_CONTENT.facts,
+    reports: readJson<Report[]>('reports') ?? EMPTY_APP_CONTENT.reports,
+    milestones: readJson<ChildMilestone[]>('milestones') ?? EMPTY_APP_CONTENT.milestones,
+    inquiries: readJson<Inquiry[]>('inquiries') ?? EMPTY_APP_CONTENT.inquiries,
+    payments: readJson<PaymentRecord[]>('payments') ?? EMPTY_APP_CONTENT.payments,
+    campaigns: readJson<Campaign[]>('campaigns') ?? EMPTY_APP_CONTENT.campaigns,
+    testimonials: readJson<AdultGraduateStory[]>('stories') ?? EMPTY_APP_CONTENT.testimonials,
+    notifications: readJson<AppNotification[]>('notifications') ?? EMPTY_APP_CONTENT.notifications,
+    auditLogs: readJson<AuditLogItem[]>('auditLogs') ?? EMPTY_APP_CONTENT.auditLogs,
+    cms: readJson<CmsContent>('cms') ?? EMPTY_APP_CONTENT.cms,
     emailOutbox: readJson<EmailOutboxItem[]>('emailOutbox') ?? [],
-    emailAutoSend: readJson<EmailAutoSendPrefs>('emailAutoSend') ?? liveLaunchContent.emailAutoSend,
+    emailAutoSend: readJson<EmailAutoSendPrefs>('emailAutoSend') ?? EMPTY_APP_CONTENT.emailAutoSend,
     language: readJson<string>('language') ?? 'no',
   };
 }

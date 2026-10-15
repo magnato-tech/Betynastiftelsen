@@ -64,7 +64,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
         'Bytt til Administrasjon (Kristiansand) i Visningsmodus.',
         'Åpne Barn & Faddere. Siden viser en barn-tabell og en faddertabell.',
         'Bruk plusstegnet for å legge til barn eller fadder. Koble dem i den lille boksen «Koble barn og fadder».',
-        'Koble en ventende fadder til et barn uten fadder (f.eks. Priscille).',
+        'Koble en ventende fadder til et barn uten fadder.',
       ],
       go: () => openAsRole('admin', 'tildeling'),
     },
@@ -84,7 +84,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       role: 'Fadder',
       title: 'Se barn, rapporter og betaling',
       steps: [
-        'Bytt til Fadderportal og velg «Kari & Lars Johansen» i nedtrekkslisten.',
+        'Bytt til Fadderportal og velg en fadder i nedtrekkslisten.',
         'Gå gjennom Barn, Tidslinje, Rapporter og Betalinger.',
       ],
       go: () => openAsRole('sponsor'),
@@ -94,7 +94,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       role: 'Koordinator',
       title: 'Logg inn som én av tre koordinatorer',
       steps: [
-        'Bytt til Koordinator (Kongo) og velg Jean-Baptiste, Dieudonné eller Brigitte i nedtrekkslisten.',
+        'Bytt til Koordinator (Kongo) og velg en koordinator i nedtrekkslisten.',
         'Bekreft at «Liste des élèves» kun viser barn knyttet til den koordinatoren (ca. 3–4 barn hver).',
         'Bytt koordinator og se at listen endres.',
       ],
@@ -332,7 +332,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
           <div className="bg-white rounded-xl border border-[#DFD9CB] p-6 space-y-2">
             <h3 className="text-lg font-serif font-bold text-stone-900">Scenarioer for manuell test</h3>
             <p className="text-sm text-stone-700 leading-relaxed">
-              Kjør én workflow om gangen. <strong>Nullstill data</strong> i visningsmodus laster lanseringsinnholdet på nytt (det som ligger på nettsiden). I produksjon finnes ikke knappen, og Firestore overskrives aldri av seed.
+              Kjør én workflow om gangen. Appen har ingen innebygde eksempeldata: alt innhold ligger i databasen, og alt du gjør lagres der automatisk.
               Automatiserte enhetstester: <code className="text-xs bg-stone-100 px-1 rounded">npm test</code> (fadder-metrics).
             </p>
             <p className="text-xs text-stone-600">

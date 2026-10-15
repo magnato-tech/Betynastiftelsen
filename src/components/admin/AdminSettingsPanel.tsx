@@ -19,7 +19,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
     firestoreAuthError,
     signInFirestoreGoogle,
     importBrowserToFirestore,
-    replacePublicContentInFirestore,
   } = useApp();
 
   return (
@@ -84,20 +83,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
                 className="px-4 py-2 bg-[#4D6B3E] text-white rounded-lg text-xs font-medium cursor-pointer disabled:opacity-40"
               >
                 Lagre nettleserinnhold i Firestore
-              </button>
-            )}
-            {firestoreBackendActive && (
-              <button
-                type="button"
-                onClick={() => {
-                  const ok = window.confirm(
-                    'Dette bytter forsidetekster (CMS), aksjoner og vitnesbyrd i databasen til den nyeste teksten i løsningen. Gamle tekster med samme id overskrives. Fortsette?'
-                  );
-                  if (ok) replacePublicContentInFirestore().catch(() => undefined);
-                }}
-                className="px-4 py-2 bg-amber-700 text-white rounded-lg text-xs font-medium cursor-pointer"
-              >
-                Bytt offentlig innhold til nyeste tekst
               </button>
             )}
           </div>

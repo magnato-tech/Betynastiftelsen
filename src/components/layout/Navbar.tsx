@@ -144,14 +144,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {t('nav.coordMilestones', 'Milepæler og tidslinje')}
               </button>
               <button
-                onClick={() => setActiveSection('impact')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'impact' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.coordImpact', 'Effekt og nøkkeltall')}
-              </button>
-              <button
                 onClick={() => setActiveSection('rapports')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   activeSection === 'rapports' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'

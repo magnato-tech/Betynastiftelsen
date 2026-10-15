@@ -167,7 +167,7 @@ export const VisualCard: React.FC<VisualCardProps> = ({
           <div className="w-12 h-12 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-[#4D6B3E] mb-3">
             <GraduationCap className="w-6 h-6" />
           </div>
-          <h4 className="text-lg font-serif font-bold text-stone-900">{title || 'Jean-Luc (24 år)'}</h4>
+          <h4 className="text-lg font-serif font-bold text-stone-900">{title}</h4>
           <p className="text-xs text-stone-600 mt-0.5 font-medium">{subtitle || 'Lærer i barneskolen, Brazzaville'}</p>
         </div>
       </div>

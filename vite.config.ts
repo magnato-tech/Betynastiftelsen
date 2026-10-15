@@ -9,13 +9,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), newsletterDevApi(env)],
     resolve: {
-      alias: [
-        { find: '@', replacement: path.resolve(__dirname, '.') },
-        {
-          find: '@betyna/seed',
-          replacement: path.resolve(__dirname, 'src/data/initialData.ts'),
-        },
-      ],
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
     },
     optimizeDeps: {
       include: ['react-is', 'recharts'],

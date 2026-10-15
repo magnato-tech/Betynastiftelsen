@@ -29,7 +29,6 @@ import {
   ChevronUp,
   ChevronDown,
 } from 'lucide-react';
-import { SocialImpactMetrics } from './SocialImpactMetrics';
 import { CoordinatorPhotoPanel } from './CoordinatorPhotoPanel';
 import { CoordinatorChildProfile } from './CoordinatorChildProfile';
 import {
@@ -39,7 +38,7 @@ import {
   type CoordinatorRegisterSortKey,
   type CoordinatorRegisterSortDir,
 } from '../../utils/coordinatorScope';
-import { coordinatorDisplayName } from '../../data/simulationCoordinators';
+import { coordinatorDisplayName } from '../../utils/coordinatorDisplay';
 import { getCoordinatorUi } from '../../locales/coordinatorUi';
 import {
   coordinatorChildProfileSection,
@@ -405,13 +404,6 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
         {/* Action quick links */}
         <div className="flex flex-wrap gap-2 text-xs">
           <button
-            onClick={() => setActiveSection('impact')}
-            className="px-4 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-          >
-            <TrendingUp className="w-4 h-4" />
-            <span>{ui.impact}</span>
-          </button>
-          <button
             onClick={() => {
               openAddMilestoneModal();
               setActiveSection('jalons');
@@ -549,28 +541,6 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 {ui.registerSub}
               </p>
             </div>
-          </div>
-
-          {/* Quick Metrics Strip on Eleves view */}
-          <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#A3B18A]/20 text-[#4D6B3E] flex items-center justify-center shrink-0">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-semibold text-stone-900">{ui.impactStripTitle}</span>
-                <span className="text-stone-600 ml-2">
-                  {ui.impactStripBody}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveSection('impact')}
-              className="text-[#4D6B3E] hover:text-[#3B522F] font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
-            >
-              <span>{ui.openImpact}</span>
-              <span aria-hidden="true">→</span>
-            </button>
           </div>
 
           {coordinatorChildren.length === 0 ? (
@@ -726,11 +696,6 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
             })}
           </div>
         </div>
-      )}
-
-      {/* TAB: SOCIAL IMPACT METRICS */}
-      {activeSection === 'impact' && (
-        <SocialImpactMetrics onNavigateToTab={(tab) => setActiveSection(tab)} />
       )}
 
       {/* 4. TAB: RAPPORTS ENVOYÉS & STATUTS */}
