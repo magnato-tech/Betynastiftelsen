@@ -602,3 +602,8 @@ Arbeidsdokument - Versjon 1.62 - 15. oktober 2026
 
 15. oktober 2026, plan for innlogging og valg av fadderlenke
 Planen for aa innfoere innlogging er fem steg: (0) faa Google-innlogging for administrator til aa virke, (1) roller styrer hva som vises og data lastes i to lag (offentlig og per rolle), (2) koordinator med Google, (3) fadder med engangslenke, (4) stram inn regler, fjern bootstrap og gaa live paa betyna.no. Ekte barneopplysninger tas ikke i bruk foer steg 4 er testet med administrator, koordinator og fadder. Kunden valgte at engangslenken til fadder sendes av Firebase Authentication (e-postlenke), ikke via Resend. Dette erstatter ikke tidligere beslutning om engangslenke uten passord; det presiserer avsender. Valget kan endres til Resend senere hvis avsender eller tekst blir et problem. Lenken med ?sponsor=id skal ikke lenger gi tilgang.
+
+Arbeidsdokument - Versjon 1.63 - 15. oktober 2026
+
+15. oktober 2026, innholdet ligger paa betyna.no
+Det som er redigert ligger i nettleseren paa www.betyna.no (ikke paa localhost), og det er det som skal importeres til Firestore. Kunden valgte aa publisere innloggingskoden til betyna.no, logge inn der og importere derfra. Foerst legges Firebase-verdiene inn i Vercel og betyna.no godkjennes som domene i Firebase Authentication. Innlogging fungerer ikke i Cursors innebygde nettleser; bruk Chrome eller Edge.
