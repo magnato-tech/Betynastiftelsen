@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isAdmin() {
+      return signedIn() && userDoc().role == 'admin';
+    }
+    function isCoordinator() {
+      return signedIn() && userDoc().role == 'coordinator';
+    }
+    function isSponsor() {
+      return signedIn() && userDoc().role == 'sponsor';
+    }
+    function ownCoordinator() {
+      return isCoordinator() && userDoc().coordinatorId == resource.data.koordinatorId;
+    }
+    function ownSponsorChild() {
+      return isSponsor() && resource.data.tildeltFadderId == userDoc().sponsorId;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    match /coordinators/{id} {
+      allow read: if isAdmin() || (isCoordinator() && userDoc().coordinatorId == id);
+      allow write: if isAdmin();
+    }
+
+    match /sponsors/{id} {
+      allow read: if isAdmin() || (isSponsor() && userDoc().sponsorId == id);
+      allow write: if isAdmin();
+    }
+
+    match /children/{id} {
+      allow read: if isAdmin() || ownCoordinator() || ownSponsorChild();
+      allow create, update: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin();
+    }
+
+    match /facts/{id} {
+      allow read: if isAdmin() || ownCoordinator();
+      allow create: if isAdmin() || isCoordinator();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /reports/{id} {
+      allow read: if isAdmin()
+        || ownCoordinator()
+        || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId
+            && resource.data.status == 'godkjent');
+      allow create: if isAdmin() || isCoordinator();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /milestones/{id} {
+      allow read: if isAdmin()
+        || ownCoordinator()
+        || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId);
+      allow create, update: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin();
+    }
+
+    match /inquiries/{id} {
+      allow read: if isAdmin()
+        || (isSponsor() && resource.data.fadderId == userDoc().sponsorId)
+        || ownCoordinator();
+      allow create: if isAdmin() || (isSponsor() && request.resource.data.fadderId == userDoc().sponsorId);
+      allow update: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{id} {
+      allow read: if isAdmin() || (isSponsor() && resource.data.fadderId == userDoc().sponsorId);
+      allow write: if isAdmin();
+    }
+
+    match /campaigns/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /testimonials/{id} {
+      allow read: if resource.data.godkjentAvAdmin == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{id} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.recipientId == userDoc().sponsorId)
+        || (signedIn() && resource.data.recipientId == userDoc().coordinatorId)
+        || (isAdmin() && resource.data.targetRole == 'admin');
+      allow write: if isAdmin() || signedIn();
+    }
+
+    match /auditLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /cms/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /newsletterLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /emailOutbox/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /catalogPhotos/{id} {
+      allow read: if isAdmin() || ownCoordinator();
+      allow create, update: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin();
+    }
+  }
+}

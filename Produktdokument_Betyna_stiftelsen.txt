@@ -1,0 +1,486 @@
+BETYNA
+Produktdokument
+Digital bistands- og fadderplattform
+
+Produktvisjon
+En trygg og tillitsvekkende plattform som f?lger barn i Kongo gjennom utdanningsl?pet, gj?r det enkelt for faddere i Norge ? f?lge opp barnet de st?tter, og hjelper Betyna stiftelsen med ? dokumentere reelle behov og resultater.
+
+Status: Arbeidsutkast. Fadderside, administratork? og koordinatorskjema er avklart 14. oktober 2026. Forsiden bruker gruppebildet kunden har levert. Tildeling, betalingsregistrering, sp?rsm?lsk? og resten av den offentlige siden er ikke tegnet ferdig.
+M?lgruppe: Stiftelsens ledelse, administrator, koordinatorer og utviklere.
+Viktig: Juridiske krav, ekte Vipps-integrasjon og automatisk bankavstemming er fortsatt ?pne beslutninger. Bel?p, innlogging og innholdsflyten for fadderen er besluttet.
+
+
+Innhold
+* 1. Sammendrag og m?l
+* 2. Bakgrunn og m?lgrupper
+* 3. Plattformens fire hoveddeler
+* 4. Brukerroller og tilgang
+* 5. Barnets profil og oppf?lging
+* 6. Fadderportal og sp?rsm?l
+* 7. ?konomi og betaling
+* 8. Historier og ekstraordin?re aksjoner
+* 9. Offentlig nettside
+* 10. Spr?k, oversettelse og AI
+* 11. Personvern, sikkerhet og godkjenning
+* 12. F?rste tegning og senere omfang
+* 13. Ikke-funksjonelle krav
+* 14. ?pne beslutninger
+* 15. Akseptansekriterier
+* 16. Sesjonslogg
+* Vedlegg A. Prompt for offentlig nettside
+
+1. Sammendrag og m?l
+Betyna stiftelsen er en nystartet stiftelse som samler inn st?tte i Norge og driver bistandsarbeid i Kongo. Kjernen er en fadderordning der en giver st?tter et bestemt barn fra barneskolen og gjennom utdanningsl?pet. Stiftelsen har allerede omtrent ti barn som mottar st?tte. L?sningen skal starte fra bunnen, uten migrering fra et eksisterende system.
+Plattformen skal kombinere personlig oppf?lging, rapportering til faddere, administrasjon av giverforhold og innbetalinger, rekruttering av nye faddere og innsamling til konkrete, ekstraordin?re behov.
+Viktigste bruker i f?rste tegning er den eksisterende fadderen. Faddersiden tegnes f?rst.
+
+Styrende prinsipp
+Koordinatoren registrerer fakta, rapport, bilde og ?yeblikk. Administratoren skriver historien, justerer den norske rapporten, formulerer ?yeblikket og publiserer. Fadderen ser bare publisert informasjon om barnet vedkommende er tildelt. Teksten skal kjennes som en rolig beskjed fra Betyna.
+
+Fakta, besluttet 14. oktober 2026
+Administratoren kan b?de rette og legge til fakta, ogs? opplysninger som ikke st?r i koordinatorens notater. Fadderen ser ikke notatene og ikke den franske originalen. Dette erstatter den tidligere regelen om at ingen opplysning skal legges til utover det som er registrert.
+
+M?l
+* Gi hvert barn en oppdatert og strukturert profil med skolegang og oppf?lging.
+* Gi hver fadder en rolig side om sitt barn, med rapport, betaling og mulighet til ? stille sp?rsm?l.
+* Gi administrator en k? der notater blir til teksten fadderen leser.
+* Gi koordinatoren i Kongo et franskspr?klig skjema for egne barn.
+* Rekruttere nye faddere og fortelle om dokumenterte resultater p? den offentlige nettsiden.
+* Gj?re det mulig ? presentere og finansiere konkrete ekstraordin?re behov gjennom egne aksjoner.
+
+2. Bakgrunn og m?lgrupper
+Geografi og spr?k
+* Innsamlingsarbeidet og administrasjonen foreg?r i Norge.
+* Bistandsarbeidet og registreringen av barn foreg?r i Kongo.
+* Unik modell: f?lge barnet til fullf?rt fagbrev eller utdanning og reell jobb, slik at det kan fors?rge familien ? ikke stoppe ved skolegang alene.
+* Forel?pig ikke stiftelse: liten organisasjon; revisor/regnskap som stiftelse krever ville tatt en stor del av ?rsbudsjettet. Stiftelse vurderes n?r volum og tid tilsier det.
+* Fadderordning: de fleste barn g?r p privatskole som koster penger. Ett barn er avhengig av sin fadder; ved brudd uten ny fadder kan barnet miste skoleplass. Betyna er lite og personlig, ikke massegiveri.
+* Geografisk: Republikken Kongo (Kongo-Brazzaville), ikke Den demokratiske republikken Kongo.
+* Arbeidet foreg?r i Brazzaville; ikke andre byer eller landsbygda.
+* Offentlig side: ?Profil & verdier? (Om Betyna) beskriver bistandsprofil og verdier; ?Fadderordningen? beskriver praksis; ??penhet? beskriver pengestr?m.
+* Offentlig nettside, fadderportal og administratorflate skal v?re p? norsk.
+* Koordinatorportalen skal v?re p? fransk, hele skjermen.
+* Rapporter og senere sp?rsm?l oversettes mellom fransk og norsk. Fadderen ser bare den norske teksten.
+
+M?lgrupper
+* Barn som f?r st?tte, og deres foresatte/omsorgspersoner.
+* Faddere i Norge som st?tter et bestemt barn. Dette er viktigste bruker n?.
+* Administrator i Norge med overordnet ansvar.
+* Koordinatorer i Kongo. Flere koordinatorer, hver med sine barn.
+* Potensielle faddere og andre bes?kende p? den offentlige nettsiden.
+* Givere som ?nsker ? bidra til ekstraordin?re aksjoner.
+
+3. Plattformens fire hoveddeler
+A. Koordinatorportal
+Franskspr?klig arbeidsflate. Koordinatoren ser bare sine egne barn, oppretter barn, sender fakta, rapport, ett bilde og ?yeblikk hver for seg, og ser status: ikke sendt, sendt eller publisert. Koordinatoren ser ikke den norske faddersiden og publiserer ikke selv.
+Elevlisten er et sorterbart register over tildelte barn (intern kode, fornavn, skole, klassetrinn, fadderstatus, f?dsels?r, rapporter, milep?ler, status). Klikk p? kolonnenavn veksler stigende/synkende. Meny og skjermtekst f?lger spr?kvelgeren (Bokm?l/fransk); rapport og fakta skrives fortsatt p? fransk.
+B. Fadderportal
+Norskspr?klig, innlogget side. ?n rolig side om det tildelte barnet. Fadderen skal ikke kunne kommunisere direkte med barnet.
+C. Administrasjon
+F?rste flate er en innholdsk?: skriv historie, godkjenn rapport, formuler ?yeblikk, og bilde. Tildeling av barn og manuell betalingsregistrering tegnes etterp?, og h?rer fortsatt til administrator.
+D. Offentlig nettside
+?pen nettside som forklarer form?let, bygger tillit, viser godkjente historier fra voksne tidligere mottakere, presenterer konkrete behov og lar interesserte melde seg som fadder. Ingen barn vises offentlig. Denne siden er ikke tegnet ferdig i sesjonen 14. oktober 2026.
+
+4. Brukerroller og tilgang
+Rolle	Kan gj?re	Skal ikke kunne
+Administrator i Norge	Skrive og publisere innhold til faddersiden, rette og legge til fakta, registrere samtykke til bilde, og senere tildele barn og registrere betaling.	La fadderen se upublisert innhold. Sikkerhet og logging avklares f?r ekte data tas i bruk.
+Koordinator i Kongo	Opprette barn, sende fakta, fransk rapport, ett bilde og ?yeblikk for sine egne barn, og senere svare p? sp?rsm?l p? fransk.	Se andre koordinatorers barn, publisere, se den norske faddersiden, eller administrere betaling.
+Fadder	Se sitt tildelte barn, godkjent historie, rapporter, ?yeblikk, egen betaling og stille sp?rsm?l.	Se andre barns data, etternavn, intern kode, notater, fransk original, eller kommunisere direkte med barnet.
+Offentlig bes?kende	Se offentlig informasjon, lese godkjente historier fra voksne tidligere mottakere, melde interesse og bidra til aksjoner.	Se private barneprofiler, navn, bilder eller historier om barn.
+
+Innlogging, besluttet 14. oktober 2026
+* Administrator og koordinator logger inn med Google.
+* Fadder logger inn med en engangslenke p? e-post, uten passord.
+* Serversiden m? likevel h?ndheve tilgang f?r ekte barneopplysninger tas i bruk. Det ble ikke tegnet i denne sesjonen.
+
+5. Barnets profil og oppf?lging
+B?de administrator og koordinator kan opprette et barn. Straks barnet er opprettet, legges det i administratorens k? som ?skriv historien?. Fadderen ser ingenting f?r fornavn, skole, klassetrinn og historien er publisert.
+
+Felt for administrator og koordinator
+* Fornavn, etternavn og intern kode. Etternavn og intern kode vises ikke til fadderen.
+* Skole og klassetrinn.
+* Trivsel og noen linjer om det som har skjedd.
+* Ett profilbilde.
+* Dato for opprettelse, innsending og publisering.
+* Status p? fakta, rapport, bilde og ?yeblikk: ikke sendt, sendt eller publisert.
+
+Faktaskjemaet koordinatoren sender
+Fornavn, skole, klassetrinn, trivsel og noen linjer om det som har skjedd. Ikke en ferdig historie.
+
+Det fadderen ser om barnet
+Fornavn, skole, klassetrinn, ett bilde n?r samtykke er registrert, og en lengre bakgrunnshistorie. Tomme felt skjules. ?n rolig setning sier at oppdatering kommer etter godkjenning, der det trengs.
+
+Helseopplysninger og andre s?rlig sensitive opplysninger skal ikke samles inn med mindre det er n?dvendig, lovlig og uttrykkelig avklart. Dataminimering skal v?re standard. F?dsels?r og interesser er ikke en del av faktaskjemaet n?.
+
+Historie, rapport og ?yeblikk
+* Historien skrives av administrator ut fra koordinatorens fakta, med fakta p? den ene siden og skrivefelt p? den andre. Administratoren kan rette og legge til fakta.
+* Rapporten skrives av koordinatoren som et fritt avsnitt p? fransk om skole og trivsel, n?r det finnes noe ? fortelle. Et norsk utkast ligger klart ved siden av den franske teksten. Administratoren kan justere den norske ordlyden s? den blir rolig og verdig, og deretter godkjenne. Faste halv?rsrapporter er ikke et krav.
+* Et ?yeblikk er ett faktum og datoen det skjedde, sendt av koordinatoren. Administratoren skriver setningen fadderen ser. Noen f? ?yeblikk vises under historien, uten egen tidslinje.
+* Koordinatoren kan ikke endre en sak som er sendt. En endring sendes som en ny sak.
+* Administratoren sender ikke saken tilbake. Det som skal rettes, rettes av administratoren.
+* Forh?ndsvisningen er hele faddersiden. Publisering viser innholdet med ?n gang, og saken forlater k?en.
+* Mens en ny sak venter, blir det som allerede er publisert, st?ende.
+* Noe som allerede st?r p? faddersiden, kan byttes. Fadderen ser bare den nye versjonen.
+
+Bilde og samtykke
+* Koordinatoren laster opp ett bilde.
+* Administratoren registrerer samtykket, ser bildet p? forh?ndsvisningen av hele faddersiden, og publiserer det eller lar det v?re ute.
+* Uten registrert samtykke publiseres ikke bildet.
+
+Koordinatorens personlige barneprofil, besluttet 15. oktober 2026
+* Naar koordinator klikker et barn i elevlisten (tabellrad), apnes barnets personlige profil (ikke et dodt kort).
+* Profilen viser identitet (fornavn, intern kode, skole, klasse, fadderstatus), katalogbilder merket med barnet, rapporter opprettet for barnet (status, dato, tittel), og milepaeler med tidslinje.
+* Milepaeler og tidslinje ligger paa profilen. Fanen Milepaeler hos koordinator er en velger inn til profilen, ikke en andre tidslinje.
+* Koordinatorhjemmet beholder elevlisten, alle rapporter samlet, sporsmal, fakta, ny rapport, ny elev, effekt og innsending av fadderportrett til Oslo.
+* Bildenkatalog: hvert bilde har barnIds[] (barnets id, intern kode eller fornavn). Ett bilde kan vises paa flere profiler. Er flere barn merket, vises bildet paa alle. Er tag et fornavn, vises bildet paa alle profiler med det navnet.
+* Fadderportrett (ett bilde per barn til faddersiden) er uendret. Katalogen er koordinatorens arkiv. Skolebilder i prototype, ikke klasse- eller bokinnsamling.
+
+6. Fadderportal og sp?rsm?l
+Faddersiden er ?n rolig side: varm, verdig, med mye luft og f? knapper.
+
+Oppbygning
+* ?verst: barnet, slik det er beskrevet i kapittel 5.
+* Under historien: noen f? godkjente ?yeblikk, hver som ?n setning og en dato.
+* Siste rapport er synlig. Eldre rapporter ligger bak en rolig lenke. P? rapporten st?r bare dato og teksten.
+* Under dette, tre rolige valg: rapporter, egne betalinger og et sp?rsm?l.
+* Sp?rsm?l er en stille lenke, ikke en stor knapp.
+
+Betaling p? siden
+Avtalt m?nedsbel?p, om siste betaling er registrert, og en enkel historikk. Bel?pet er 250 eller 350 kroner.
+
+Sp?rsm?l
+* Fadderen kan sende sp?rsm?l fra siden.
+* Etter sending vises en kort bekreftelse.
+* Svaret vises p? samme side n?r det er godkjent.
+* Tidligere sp?rsm?l og svar blir liggende, nyeste ?verst.
+* Sp?rsm?lsk?en hos administrator er ikke tegnet enn?.
+* N?r den tegnes: koordinatoren svarer p? fransk, et norsk utkast godkjennes av administrator, og fadderen ser bare det godkjente svaret.
+* Direkte meldinger mellom fadder og barn skal ikke finnes.
+
+N?r siden ?pnes og n?r den avsluttes
+* Fadderen f?r siden n?r fornavn, skole, klassetrinn og historien er godkjent.
+* Start med ett barn per fadder. Flere barn kan komme senere.
+* N?r barnets utdanning er avsluttet, blir siden en rolig avslutning. Historikken blir liggende for fadderen. Det er ingen automatisk kobling til et annet barn.
+
+7. ?konomi og betaling
+M?nedsbel?pet er besluttet som to faste niv?er: 250 kroner og 350 kroner.
+
+Neste versjon av betaling
+* Interesserte melder seg via skjema.
+* Administrator registrerer Vipps og bank manuelt.
+* Ekte Vipps-betaling og automatisk trekk er ikke en del av denne versjonen.
+* Automatisk trekk skal ikke sl?s p? f?r betalingsavtalen og den tekniske integrasjonen er bekreftet.
+* Tildeling av barn og betalingsflaten tegnes etter innholdsk?en.
+
+Krav som fortsatt gjelder
+* Registrere avtalt fadderbel?p.
+* Skille ordin?re fadderbidrag fra bidrag til ekstraordin?re aksjoner.
+* Unng? ? lagre kort- eller betalingshemmeligheter i egen database.
+* Knytte en registrert betaling til riktig fadder.
+
+Avslutning av fadderforhold
+N?r barnet avslutter utdanningen, avsluttes fadderforholdet p? faddersiden som en rolig avslutning. Historikken blir liggende for fadderen. Arkivering m? fortsatt v?re personvernmessig forsvarlig. Tilbud om ? st?tte et annet barn er ikke besluttet.
+
+8. Historier og ekstraordin?re aksjoner
+Kapittelet gjelder den offentlige siden og er ikke endret i sesjonen 14. oktober 2026, med ett unntak: private barnehistorier p? faddersiden f?lger kapittel 5 og 6. Offentlige vitnesbyrd er fortsatt bare fra voksne tidligere mottakere, etter dokumentert samtykke og administratorgodkjenning.
+
+Ekte historier p? den offentlige siden
+Historier skal alltid bygge p? virkelige personer, faktiske behov og kontrollerte opplysninger. Eksempel p? historietype: et barn som enn? ikke har f?tt begynne p? skolen og trenger st?tte for ? komme i gang med ? l?re ? lese, skrive og regne. Dette er en type historie, ikke en ferdig historie om et bestemt barn. Den konkrete publiseringen m? bygge p? faktiske forhold.
+* Administrator kontrollerer fakta, samtykke, spr?k og personvern f?r offentlig publisering.
+* AI kan foresl? oversettelse og spr?klig forbedring, men m? ikke legge til fakta, sitater, tall eller resultater i offentlige historier.
+* Historier skal fremstille mennesker med verdighet.
+
+Ekstraordin?re aksjoner
+Aksjonssiden skal gj?re det mulig ? samle inn penger til et avgrenset, konkret behov, for eksempel tre symaskiner til tre jenter.
+* Tittel, beskrivelse av behov, bilder med tillatelse, m?lbel?p, eventuell frist og status.
+* Bel?p innsamlet og gjenst?ende bel?p, n?r dataene er tilgjengelige og kontrollert.
+* Vipps- eller bankbasert bidrag etter valgt betalingsl?sning.
+* Administratorgodkjenning f?r publisering. Bildet p? hvert behovskort settes i Nettsideredigering (CMS), fanen Konkrete behov: last opp fra maskinen eller lim inn en bildeadresse.
+* Separat registrering og rapportering av aksjonsmidler og fadderbidrag.
+* Sluttrapport som forklarer hvordan midlene ble brukt, basert p? dokumenterte tall.
+Eksempelbel?p som 3 ? 3 000 kroner kan brukes i intern prototype eller planlegging, men skal ikke presenteres offentlig som et faktisk behov f?r det er bekreftet.
+
+9. Offentlig nettside
+Nettsiden skal bygge tillit, forklare arbeidet og gj?re det enkelt ? melde interesse for ? bli fadder. Anbefalt struktur, ikke tegnet ferdig:
+* Forside: form?l, hovedbudskap, dokumenterte resultater og tydelig ?Bli fadder?-handling.
+* Fadderordningen: hvordan st?tten f?lger barnet gjennom utdanningsl?pet og hvordan fadderen f?r rapporter.
+* Historier og resultater: godkjente vitnesbyrd fra voksne tidligere mottakere som har fullf?rt utdanning.
+* Om stiftelsen: form?l, verdier, arbeidsm?te, organisering og kontakt.
+* ?konomi og ?penhet: bare bekreftede tall og tilgjengelig rapportering.
+* Aksjoner: konkrete, godkjente behov og fremdrift i innsamlingen.
+* Kontakt: kontaktinformasjon og skjema.
+* Bli fadder: interesseskjema; administrator tildeler barnet manuelt.
+* Innlogging for eksisterende faddere, tydelig atskilt fra offentlig innhold.
+Forsiden viser gruppebildet kunden har levert, som forbilde. Bildet st?r ved siden av hovedbudskapet, uten tekst opp? ansiktene. Barnas navn, private profiler og historier skal ikke v?re offentlig tilgjengelige. Offentlige vitnesbyrd kan brukes fra voksne tidligere mottakere n?r informert, frivillig samtykke er dokumentert og publiseringen er godkjent.
+
+10. Spr?k, oversettelse og AI
+Spr?kkrav
+* Norsk: offentlig nettside, fadderside og administratorens k?.
+* Spr?kvelger p? offentlig nettside og i navigasjon: bokm?l og fransk. Ikke engelsk.
+* Fransk: hele koordinatorens skjerm.
+* Rapport og senere sp?rsm?l finnes p? fransk og norsk hos administrator.
+* Fadderen ser bare norsk tekst, som en beskjed fra Betyna.
+* Et norsk utkast ligger klart ved siden av den franske teksten. Administratoren justerer ordlyden f?r publisering.
+
+AI ? senere utvidelse
+* Foresl? oversettelser mellom norsk og fransk.
+* Forbedre grammatikk, klarhet og formell tone.
+* AI skal ikke ha ukontrollert tilgang til databasen eller selvstendig publiseringsrett.
+* AI-forslag skal godkjennes av administrator f?r publisering.
+* Sensitive personopplysninger skal ikke sendes til AI-tjenester uten vurdering av databehandling, avtaler og tilgangskontroller.
+* I offentlige historier skal AI ikke legge til fakta, sitater, tall eller resultater.
+
+11. Personvern, sikkerhet og godkjenning
+Innlogging
+* Administrator og koordinator: Google.
+* Fadder: engangslenke p? e-post.
+* Google-innlogging er ikke eneste sikkerhetstiltak. F?r ekte barneopplysninger tas i bruk, skal tilgang h?ndheves p? serversiden.
+* Fadder kan bare lese sitt tildelte barns private informasjon.
+* Koordinator kan bare se barn vedkommende er satt til.
+* Administrator har overordnet tilgang til innholdet.
+* Logg opprettelse, endring, publisering, tildeling og viktige ?konomihendelser n?r l?sningen tas i bruk med ekte data.
+* Dette produktdokumentet er ikke en juridisk vurdering.
+
+Godkjenningsflyt for innhold til fadderen
+1. Koordinatoren sender fakta, rapport, bilde eller ?yeblikk. Status blir ?sendt?.
+2. Saken ligger i k?en. Eldst venter ?verst.
+3. Administratoren skriver eller justerer teksten, kan rette og legge til fakta, og ser hele faddersiden.
+4. Administratoren publiserer. Saken forlater k?en. Status blir ?publisert?. Innholdet vises p? faddersiden med ?n gang.
+Administratoren avviser ikke og ber ikke koordinatoren sende p? nytt. Retting gj?res av administratoren.
+
+Personvern og samtykke
+* Samle inn minst mulig personopplysninger og bare det som er n?dvendig for form?let.
+* Samtykke til bildet registreres av administratoren. Uten samtykke publiseres ikke bildet.
+* Vurder s?rskilt vern av barns opplysninger, foresattes rolle, lagringstid og internasjonal behandling av data.
+* Avklar juridisk behandlingsgrunnlag, personvernerkl?ring, databehandleravtaler og krav til overf?ring av data mellom land f?r produksjonssetting.
+* Definer rutine for retting, sletting, arkivering og h?ndtering av innsynsforesp?rsler.
+
+12. F?rste tegning og senere omfang
+F?rste tegning, avklart 14. oktober 2026
+* Faddersiden, slik kapittel 6 beskriver den.
+* Administratorens innholdsk?, slik kapittel 5 og 11 beskriver den.
+* Koordinatorens skjema, slik kapittel 5 beskriver det.
+
+Tegnes etterp?, men h?rer med i l?sningen
+* Sp?rsm?lsk? hos administrator, med retningen i kapittel 6.
+* Tildeling av barn.
+* Manuell registrering av Vipps og bank.
+* Offentlig nettside, kapittel 9.
+* Interesseskjema for nye faddere.
+
+Senere
+* Ekte Vipps-integrasjon og automatisk bankavstemming.
+* E-postvarsler.
+* AI-st?ttet oversettelse og kvalitetssikring.
+* Flere barn per fadder.
+* Aksjoner utover det som allerede er beskrevet.
+* Eksport av ?konomi- og fadderoversikter.
+
+13. Ikke-funksjonelle krav
+* Responsiv og brukervennlig p? mobil, nettbrett og desktop.
+* Universell utforming: WCAG 2.2 AA som m?l.
+* God ytelse og optimaliserte bilder.
+* S?kbar, redigerbar offentlig innholdsl?sning med SEO-metadata og Open Graph-data.
+* Klare feilmeldinger og forst?elige statuser.
+* Sikker logging, backup og gjenoppretting f?r ekte data tas i bruk.
+* Ingen ekte barneopplysninger i utviklingsmilj? eller demonstrasjoner uten godkjent sikkerhetsoppsett.
+* Kildekode og datamodell skal kunne vedlikeholdes og videreutvikles uten ? v?re l?st til ?n AI-bygger.
+
+14. ?pne beslutninger
+Avklart 14. oktober 2026
+* Fadderbel?p: 250 eller 350 kroner per m?ned.
+* Innlogging: Google for administrator og koordinator. Engangslenke p? e-post for fadder.
+* Barnefelt: fornavn, etternavn og intern kode internt. Fadderen ser fornavn, skole, klassetrinn, ett bilde med samtykke, historie, rapporter og ?yeblikk.
+* Koordinatorer: flere, hver med sine barn.
+* Betaling i neste tegning: interesseskjema og manuell registrering. Ikke ekte Vipps enn?.
+* Koordinatorens personlige barneprofil: klikk paa barn aapner profil med milepaeler, rapporter og merkede katalogbilder (barnIds[]). Avklart 15. oktober 2026.
+* E-post: Resend til nyhetsbrev, henvendelser og systemmeldinger. Naar admin publiserer svar til fadder, koes systemmelding med lenke til faddersiden. Noekkel koples senere. Avklart 15. oktober 2026.
+
+Fortsatt ?pent
+* Vipps: om en senere versjon skal bruke Vipps Checkout eller en enklere donasjonsflyt.
+* Bank: om innbetalinger senere skal avstemmes automatisk.
+* Oevrige systemvarsler: automatikk for godkjent rapport, betaling og velkomst. Ekte engangslenke i sprint 5.
+* Offentlig side: detaljert innhold, kontakt og aksjoner er ikke tegnet.
+* Sp?rsm?lsk?, tildeling og betalingsflate: retning er satt, skjermene er ikke tegnet.
+* Flere barn per fadder: kan komme senere, ikke i f?rste tegning.
+* Teknologistack for produksjon.
+* Juridisk kontroll: stiftelsens oppsett, personvern, databehandleravtaler, lagring og eventuell grensekryssende databehandling.
+
+15. Akseptansekriterier
+* En fadder ser ?n rolig side om sitt barn, med fornavn, skole, klassetrinn, historie, siste rapport, eldre rapporter bak en lenke, noen ?yeblikk, betaling og et stille sp?rsm?l.
+* En fadder ser ikke etternavn, intern kode, notater, fransk tekst eller andre barns opplysninger.
+* Faddersiden vises f?rst n?r fornavn, skole, klassetrinn og historien er publisert. Bildet vises bare med samtykke registrert av administrator.
+* En koordinator ser bare sine egne barn, arbeider p? fransk, og kan sende fakta, rapport, ett bilde og ?yeblikk hver for seg.
+* En koordinator ser status ikke sendt, sendt eller publisert, og ser ikke den norske faddersiden.
+* B?de administrator og koordinator kan opprette et barn. Barnet g?r da i k?en som ?skriv historien?.
+* Administratoren ser en k? med eldste sak ?verst, forh?ndsviser hele faddersiden og publiserer med ?n gang.
+* Administratoren kan justere norsk ordlyd og kan b?de rette og legge til fakta.
+* En endring av publisert innhold erstatter det fadderen ser. Den forrige versjonen vises ikke.
+* Betalingsoversikten viser 250 eller 350 kroner, om siste betaling er registrert, og en enkel historikk.
+* N?r utdanningen er avsluttet, blir faddersiden en rolig avslutning, og historikken blir liggende.
+* Offentlige historier om barn publiseres ikke. Offentlige vitnesbyrd er fra voksne tidligere mottakere og krever godkjenning.
+* Sikkerhets- og tilgangstester er best?tt f?r ekte barneopplysninger tas i bruk.
+
+16. Sesjonslogg
+14. oktober 2026
+Kartlegging med kunden, med faddersiden som f?rste flate. Avklart: sidens oppbygning og tone, bel?p p? 250 og 350 kroner, innlogging, innholdsflyt mellom koordinator og administrator, k?, bilde og samtykke, og at administrator kan rette og legge til fakta. Tidligere regel om at ingen opplysning skal legges til, er erstattet. Sp?rsm?lsk?, tildeling, manuell betaling og offentlig side st?r igjen.
+
+14. oktober 2026, forsiden
+Kunden leverte gruppebildet som forbilde p? forsiden. Bildet vises ved siden av hovedbudskapet, uten m?rk hinne og uten tekst over ansiktene.
+
+Vedlegg A. Prompt for offentlig nettside
+F?lgende prompt kan brukes for ? lage den offentlige delen. Den offentlige nettsiden skal v?re en del av den st?rre plattformen, men ikke eksponere private barneprofiler.
+Du er en erfaren produktsjef, UX/UI-designer og senior webutvikler. Bygg den offentlige nettsiden for Betyna stiftelsen, en nystartet stiftelse som samler inn st?tte i Norge og arbeider med langsiktig utdanningsst?tte til barn i Kongo.
+
+M?l: bygge tillit, forklare fadderordningen, vise dokumenterte resultater og rekruttere faddere. Lag sider for Forside, Fadderordningen, Historier og resultater, Om stiftelsen, ?konomi og ?penhet, Aksjoner, Kontakt og Bli fadder. Fadderinteresse skal sendes til administrator; administrator tildeler barnet manuelt. Ikke la publikum velge eller s?ke i private barneprofiler.
+
+Design: varmt, moderne, profesjonelt og verdig; tydelig navigasjon og CTA; mobilvennlig; god lesbarhet; WCAG 2.2 AA som m?l; autentiske bilder bare n?r rettigheter og tillatelser er p? plass. Unng? stereotype eller manipulerende veldedighetsbilder.
+
+Sannhet og etikk p? den offentlige siden: offentlige historier m? bygge p? ekte personer og kontrollerte fakta. Ikke finn p? sitater, tall, resultater eller detaljer. Offentlige vitnesbyrd skal v?re fra voksne tidligere mottakere og publiseres f?rst etter dokumentert, frivillig og informert samtykke og administratorgodkjenning. Barnas personlige profiler, navn, bilder og historier er kun tilgjengelige for tildelt fadder etter innlogging. Teksten p? faddersiden f?lger kapittel 5 og 6 i produktdokumentet, der administrator kan rette og legge til fakta.
+
+Innhold: forklar hvordan st?tten f?lger barnet gjennom utdanningsl?pet, hvordan fadderen mottar godkjente rapporter, og hvordan ekstraordin?re aksjoner finansierer konkrete behov. Vis kun bekreftede bel?p og dokumenterte resultater. Skill fadderbidrag fra aksjonsbidrag. Ikke implementer ekte Vipps f?r leverand?r og integrasjon er avklart. Manuell registrering er besluttet for neste tegning.
+
+Teknisk: bruk gjenbrukbare komponenter, semantisk HTML, rask lasting, SEO-metadata, Open Graph og en struktur som kan kobles til resten av plattformen. Norsk er offentlig hovedspr?k. Koordinatorflaten er fransk. Lever sidestruktur, designkonsept, innholdsforslag, klikkbar prototype og liste over uavklarte forutsetninger. Ikke presenter antakelser som fakta.
+
+Neste anbefalte steg
+Tegn faddersiden, deretter administratorens innholdsk?, deretter koordinatorens skjema. Sp?rsm?lsk?, tildeling og manuell betaling kommer etter det.
+
+BETYNA STIFTELSEN  |  PRODUKTDOKUMENT
+
+Arbeidsdokument ? Versjon 1.19 ? 14. oktober 2026
+
+14. oktober 2026, behov
+Administrator kan selv legge bilde p? kortene under Konkrete behov, i CMS-fanen med samme navn.
+
+14. oktober 2026, ny fadder
+Administrator legger til en ny fadder under Barn og Faddere. Barnet kobles i neste steg og tildeles ikke automatisk. Bel?pet er 250 eller 350 kroner, og betalingen er Vipps eller bank.
+
+14. oktober 2026, nye faddere
+Under Barn og Faddere viser administratoren hvem som er registrert de siste 30 dagene, med navn, startdato, bel?p og om et barn er koblet.
+
+14. oktober 2026, drift til n?
+Arbeidet de siste ti ?rene har v?rt frivillig, uten regnskap, uten revisjon og uten registrert stiftelse. ?rsbudsjettet er om lag 30-35 000 kroner. Ti faddere som betaler 3 500 kroner hver, gir 35 000 kroner, og hele bel?pet g?r til prosjektet. Revisjon, regnskap og drift er ikke dekket av fadderpengene. Siden beskriver en stiftelse med revidert regnskap. Det er maalbildet, ikke slik arbeidet har v?rt drevet.
+
+14. oktober 2026, resultater
+Kunden opplyser at 15 barn har f?tt skolegang i 10-15 ?r, med utdanning i ulike fag, inkludert bachelor, fagutdanning, lege og jordmor. Pengene har v?rt de om lag 35 000 kronene i ?ret, frivillig arbeid, uten regnskap, revisjon og stiftelse. Dette er ikke tallene som st?r p? nettsiden. Offentlige historier krever fortsatt dokumentert samtykke fra voksne tidligere mottakere.
+
+14. oktober 2026, revisor og budsjett
+Fadderpengene, 35 000 kroner i ?ret, skal g? til skolegangen. En revisor skal ikke betales av den potten. Plikten gjelder f?rst hvis arbeidet registreres som stiftelse. Inntil da finnes ingen faktura og ingen konkurs.
+
+14. oktober 2026, medisin
+De 35 000 kronene i ?ret g?r ogs? til medisin n?r barna er syke. Sykdom og d?dsfall skal ikke brukes som tekst p? den offentlige siden.
+
+14. oktober 2026, l?ftet
+Det blir ingen stiftelse og ingen revisor. Det henger sammen med l?ftet om at bidraget g?r uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for ? fullf?re skolegangen. Teksten p? siden er rettet der den lovet revisjon etter stiftelsesloven.
+
+14. oktober 2026, domene
+Kunden har registrert betyna.no hos Uniweb. Nettsiden kj?rer enn? bare lokalt. Den skal legges ut uten ? ta av fadderpengene.
+
+14. oktober 2026, domenekostnad
+betyna.no koster 240 kroner i ?ret. Det betales av egen lomme, ikke av fadderpengene.
+
+14. oktober 2026, publisert
+Den ?pne siden er lagt ut p? en midlertidig gratis adresse, uten ? bruke fadderpengene. Menyen sier Betyna. Tallene er 15 barn, 10 faddere, 35 000 kroner og 0 kroner i l?nn. Oppdigtede historier, eksempelaksjoner og falsk telefon er ikke med. P?meldingsskjemaet sier at avtalen gj?res direkte, fordi skjemaet ikke lagrer noe hos Betyna. betyna.no peker ikke dit f?r DNS settes hos Uniweb.
+
+14. oktober 2026, adresse
+Den offentlige adressen er betyna.no. Siden ligger p? Vercel, som er gratis, s? fadderpengene ikke brukes. Domenet blir st?ende hos Uniweb. Den lange midlertidige adressen er ikke adressen folk skal bruke.
+
+14. oktober 2026, Vercel
+Siden ligger p? kundens Vercel-konto som prosjektet betyna, uten GitHub. betyna.no er koblet til prosjektet, men DNS hos Uniweb peker enn? ikke dit. Domenet blir hos Uniweb.
+
+14. oktober 2026, feil opplasting
+Kunden vil at siden lastes opp fra GitHub, slik de andre prosjektene p? Vercel gj?r. Direkte opplasting til Vercel-kontoen var feil. Kontoen skal ikke brukes herfra. Prosjektet betyna som ble opprettet slik, er ikke den vedtatte m?ten ? publisere.
+
+14. oktober 2026, navn
+Prosjektet skal ikke hete stiftelse. Det offentlige navnet er Betyna, og nettadressen er betyna.no. Kunden importerer selv fra GitHub-repoet Betynastiftelsen til Vercel.
+
+14. oktober 2026, opprydding
+Direkteopplastingen til Vercel-prosjektet betyna var feil og skal ryddes bort. Kunden importerer selv fra GitHub. Repoet Betynastiftelsen har enn? den gamle teksten, der Betyna kalles en stiftelse. Den rettede teksten ligger bare lokalt. betyna.no skal ikke peke dit f?r den teksten er inne i repoet.
+
+14. oktober 2026, GitHub main
+Den rettede offentlige siden er committet og pushet til magnato-tech/Betynastiftelsen p? main (f0cf65c). Vercel bygger derfra.
+15. oktober 2026, spr?kvelger
+Spr?kvelgeren p? offentlig nettside er norsk og fransk (ikke engelsk). Franske strenger ligger i oversettelsesfilen. Tidligere engelskvalg i nettleseren migreres til fransk.
+15. oktober 2026, geografi
+Arbeidet skjer i Kongo-Brazzaville (Republikken Kongo), ikke i Den demokratiske republikken Kongo. Tekst, oversettelser og prototype-data er justert (kun Brazzaville ? skoletilbudet er best i hovedstaden, ikke p? landsbygda).
+15. oktober 2026, Brazzaville
+Alt feltarbeid og skoletilbud er i Brazzaville. Pointe-Noire, Dolisie og landsby er fjernet fra tekst og prototype.
+15. oktober 2026, hele l?pet
+Betyna f?lger barnet til fagbrev/utdanning og jobb som fors?rger. Budskap p? nettside og i CMS oppdatert; skolegang alene er ikke m?let.
+15. oktober 2026, fadderavhengighet
+Avklart budskap om privatskole, personlig fadderansvar og ?rlighet om konsekvens ved opph?r uten ny fadder. Offentlig fadderseksjon utvidet.
+15. oktober 2026, profil p? nettsiden
+Verdier og profil som bistandsorganisasjon er samlet under Profil & verdier, med lenker til fadderordning og ?penhet.
+15. oktober 2026, ikke stiftelse enn?
+Avklart at Betyna forel?pig ikke er stiftelse for ? unng? revisor-kostnad som ville ta stor del av budsjettet; plan om stiftelse ved gradvis vekst. Tekst under ?penhet p? nettsiden.
+
+15. oktober 2026, test og simulering
+Workflows, simuleringsfaddere med relative datoer (7/30 dager), admin fadderliste, vitest for metrics, Workflows og hjelp i admin. Nettside-interesse uten auto-tildeling barn.
+15. oktober 2026, tre koordinatorer
+Tre feltkoordinatorer i Brazzaville med eget elevsnitt i prototype (visningsmodus). Barn har koordinatorId. Koordinator sender rapport og skolefoto til godkjenning i Oslo f?r fadder ser innhold. Se docs/COORDINATOR_WORKFLOW.md.
+
+Arbeidsdokument - Versjon 1.27 - 15. oktober 2026
+
+15. oktober 2026, fadderordning tekst
+Avsnitt om avhengighet p? offentlig side er omformulert: ?rlig om stabil st?tte og ?n fadder/ett barn, uten konkret eksempel om utvisning fra skole (for skremmende i rekruttering). Gjelder norsk og fransk p? Fadderordningen.
+
+Arbeidsdokument - Versjon 1.28 - 15. oktober 2026
+
+15. oktober 2026, sprinter og arbeidsdeling
+Produktsjef (Grok, vanlig) lager plan og sprinter. Composer koder (vanlig, ikke fast). Gjeldende sprintplan: docs/SPRINTER.md. Sprint 1 er innholdskoe (fakta, historie, oyeblikk, forhandsvis fadderside) mot kapittel 5 og 11. Sprint 2 faddersiden kapittel 6. Sprint 3 sporsmalskoe og tildeling. Sprint 4 offentlig side ferdig. Sprint 5 innlogging og serverside. Senere: Vipps, e-post, AI.
+
+Arbeidsdokument - Versjon 1.29 - 15. oktober 2026
+
+15. oktober 2026, testsett og nyhetsbrev
+Hver sprint har et testsett som folger workflow og sjekker at rollen kan gjore handlingen (docs/TESTSETT.md, npm test). Sprint 0 kjorer mot seed; sprint 1-5 er todo til de er kodet.
+Admin skal kunne sende nyhetsbrev pa e-post via Resend. Skjerm Nyhetsbrev, POST /api/newsletter. Nokkel og avsender settes i Vercel/.env senere samme dag, ikke i koden (docs/RESEND.md).
+
+Arbeidsdokument - Versjon 1.30 - 15. oktober 2026
+
+15. oktober 2026, aksjoner knyttet til barn
+Vi samler ikke inn til boker for skoleklasser. Alle ekstraordinere aksjoner er knyttet til barn i fadderordningen. Gjeldende innsamling: tre symaskiner til tre jenter (en maskin per barn). Klasseaksjon for laereboker er fjernet.
+
+Arbeidsdokument - Versjon 1.31 - 15. oktober 2026
+
+15. oktober 2026, Firestore-profil
+Datamodellen i TypeScript er mappet til Firestore-samlinger, regler og indekser (docs/FIRESTORE.md). Klar for innlegging. SDK og ekte innlogging kommer i sprint 5. Bilder i Storage, ikke som data-URL i dokumenter.
+
+Arbeidsdokument - Versjon 1.32 - 15. oktober 2026
+
+15. oktober 2026, n?kkeltall p? forsiden
+Offentlig faktab?nd viser ikke lederl?nn og ikke oppm?te (kan ikke m?les). Grunnskole droppes som eget tall. Fire felt: barn med skolegang, fullf?rt videreg?ende, fagbrev (m?tier), bachelor.
+
+Arbeidsdokument - Versjon 1.33 - 15. oktober 2026
+
+15. oktober 2026, n?kkeltall som mock
+Inntil bekreftede antall finnes, vises forel?pige prototyptall: 15 barn med skolegang, 8 videreg?ende, 4 fagbrev (m?tier), 2 bachelor. Undertittel merkes ?Forel?pige tall (prototype)?. Byttes i CMS f?r lansering.
+
+Arbeidsdokument - Versjon 1.34 - 15. oktober 2026
+
+15. oktober 2026, koordinator og Bokm?l
+Koordinatorportalen f?lger spr?kvelgeren (Bokm?l/fransk). Visningsmodus tvinger ikke lenger fransk. Feltkoordinator skriver fortsatt rapport og fakta p? fransk; meny og skjermtekst bytter spr?k.
+
+Arbeidsdokument - Versjon 1.35 - 15. oktober 2026
+
+15. oktober 2026, sorterbart elevregister
+Koordinatorens elevliste viser et sorterbart tabellregister over tildelte barn (ikke kort). Jean-Baptiste Mukeba (coord-01) har fire aktive barn i seed (Ephraim, Dorcas, Samuel, Miriam). Eldre prototype-data i localStorage uten koordinatorId fylles fra CHILD_COORDINATOR_MAP. Tom liste vises som tomtilstand; bytte av koordinator i visningsmodus viser den koordinatorens barn.
+
+15. oktober 2026, spr?kvelger p? koordinator
+Bokm?l og fransk bytter koordinatortekst via samme spr?kfelt. Uten fransk brukes norsk. Gamle elevdata uten koordinatorId f?r tildeling fra kartet, s? listen ikke st?r tom.
+
+Arbeidsdokument - Versjon 1.36 - 15. oktober 2026
+
+15. oktober 2026, koordinator barneprofil
+Klikk paa barn i elevlisten aapner personlig profil. Milepaeler og tidslinje er flyttet dit. Rapporter filtreres per barn. Katalogbilder merkes med ett eller flere barn (barnIds); delte bilder vises paa alle merket profiler. Plan: docs/COORDINATOR_CHILD_PROFILE.md.
+
+Arbeidsdokument - Versjon 1.37 - 15. oktober 2026
+
+15. oktober 2026, Resend og e-postk?
+Resend er e-postleverand?r. Admin har skjerm for henvendelser, systemmeldinger og nyhetsbrev. Publiser svar til fadder sender (koer) systemmelding med lenke til Sp?rsm?l & svar. N?kkel settes senere i Vercel/.env. Se docs/RESEND.md.
+
+Arbeidsdokument - Versjon 1.38 - 15. oktober 2026
+
+15. oktober 2026, Resend inn i loesningen
+GET/POST /api/email, vercel.json, status i admin, send paa nytt fra koen. Noekkel kun i .env/Vercel. docs/RESEND.md.
+
+Arbeidsdokument - Versjon 1.39 - 15. oktober 2026

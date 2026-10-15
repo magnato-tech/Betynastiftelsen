@@ -1,0 +1,40 @@
+import React from 'react';
+import { SponsorPortal } from '../components/sponsor/SponsorPortal';
+import { CoordinatorPortal } from '../components/coordinator/CoordinatorPortal';
+import { AdminPortal } from '../components/admin/AdminPortal';
+import { useApp } from '../context/AppContext';
+
+interface DevPortalsProps {
+  role: string;
+  activeSection: string;
+  setActiveSection: (sec: string) => void;
+}
+
+export const DevPortals: React.FC<DevPortalsProps> = ({
+  role,
+  activeSection,
+  setActiveSection,
+}) => {
+  const { language } = useApp();
+
+  if (role === 'sponsor') {
+    return (
+      <SponsorPortal activeSection={activeSection} setActiveSection={setActiveSection} />
+    );
+  }
+  if (role === 'coordinator') {
+    return (
+      <CoordinatorPortal
+        key={language}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+      />
+    );
+  }
+  if (role === 'admin') {
+    return (
+      <AdminPortal activeSection={activeSection} setActiveSection={setActiveSection} />
+    );
+  }
+  return null;
+};
