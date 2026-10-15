@@ -18,7 +18,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
     firestoreImportMessage,
     firestoreAuthError,
     signInFirestoreGoogle,
-    signInFirestoreGoogleRedirect,
     importBrowserToFirestore,
   } = useApp();
 
@@ -68,22 +67,13 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
           </div>
           <div className="flex flex-wrap gap-2">
             {!firestoreUserEmail && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => signInFirestoreGoogleRedirect().catch(() => undefined)}
-                  className="px-4 py-2 bg-stone-900 text-white rounded-lg text-xs font-medium cursor-pointer"
-                >
-                  Logg inn med Google
-                </button>
-                <button
-                  type="button"
-                  onClick={() => signInFirestoreGoogle().catch(() => undefined)}
-                  className="px-4 py-2 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-medium cursor-pointer"
-                >
-                  Logg inn med popup
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => signInFirestoreGoogle().catch(() => undefined)}
+                className="px-4 py-2 bg-stone-900 text-white rounded-lg text-xs font-medium cursor-pointer"
+              >
+                Logg inn med Google
+              </button>
             )}
             {!firestoreBackendActive && (
               <button
@@ -98,8 +88,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
           </div>
           {!firestoreUserEmail && (
             <p className="text-[11px] text-stone-500 leading-relaxed">
-              Bruk den svarte knappen. Hele siden går til Google og kommer tilbake hit. Bruk Chrome eller Edge, ikke
-              en innebygd nettleser. «Logg inn med popup» er reserve hvis den første ikke virker.
+              Et lite Google-vindu åpnes. Velg konto og godta. Bruk Chrome eller Edge, ikke en innebygd nettleser. Hvis
+              nettleseren blokkerer vinduet, tillat popup for denne siden og prøv igjen.
             </p>
           )}
         </div>
