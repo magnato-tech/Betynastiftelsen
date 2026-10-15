@@ -65,11 +65,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
                 {firestoreAuthError}
               </p>
             )}
-            {window.location.hostname !== 'localhost' && (
-              <p className="text-xs text-red-900 mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                Du er på {window.location.host}. Innlogging virker bare på http://localhost:3000.
-              </p>
-            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {!firestoreUserEmail && (
@@ -103,8 +98,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
           </div>
           {!firestoreUserEmail && (
             <p className="text-[11px] text-stone-500 leading-relaxed">
-              Bruk den svarte knappen. Hele siden går til Google og kommer tilbake hit. Ikke bruk «Logg inn med popup»
-              — den er blokkert i denne nettleseren.
+              Bruk den svarte knappen. Hele siden går til Google og kommer tilbake hit. Bruk Chrome eller Edge, ikke
+              en innebygd nettleser. «Logg inn med popup» er reserve hvis den første ikke virker.
             </p>
           )}
         </div>
