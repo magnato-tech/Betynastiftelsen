@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../config/firebase';
 import { saveWebsiteSponsor } from '../../db/firestoreData';
@@ -19,9 +19,9 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
   embedded = false,
   containerId = 'bli-fadder',
 }) => {
-  const { registerNewSponsorInterest, setRole, setCurrentSponsorId, firestoreBackendActive } = useApp();
+  const { registerNewSponsorInterest, setRole, setCurrentSponsorId, firestoreEnabled } = useApp();
 
-  const [step, setStep] = useState<'choose' | 'form' | 'success'>(embedded ? 'choose' : 'form');
+  const [step, setStep] = useState<'choose' | 'form' | 'success'>('choose');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [navn, setNavn] = useState('');
@@ -33,6 +33,13 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
   const [metode, setMetode] = useState<'vipps' | 'avtalegiro' | 'bank'>('vipps');
   const [samtykke, setSamtykke] = useState(false);
   const [newSponsorId, setNewSponsorId] = useState<string>('');
+
+  useEffect(() => {
+    if (embedded || !isOpen) return;
+    setStep('choose');
+    setSaveError(null);
+    setSaving(false);
+  }, [isOpen, embedded]);
 
   if (!embedded && !isOpen) return null;
 
@@ -55,7 +62,7 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
     setSaving(true);
     try {
       const createdId = registerNewSponsorInterest(payload);
-      if (db && !firestoreBackendActive) {
+      if (db && firestoreEnabled) {
         await saveWebsiteSponsor(db, createdId, payload);
       }
       setNewSponsorId(createdId);
