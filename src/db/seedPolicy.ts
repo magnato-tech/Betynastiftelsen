@@ -1,4 +1,6 @@
 import type { CmsContent } from '../types';
+import { DEFAULT_HERO_LAYOUT } from '../utils/heroLayout';
+import { DEFAULT_TESTIMONIALS_SECTION } from '../utils/testimonials';
 
 /** Lås etter første (og eneste) import. Finnes den, skal seed aldri kjøre igjen. */
 export interface SeedLock {
@@ -22,6 +24,7 @@ export const EMPTY_CMS_CONTENT: CmsContent = {
     secondaryButtonText: '',
     backgroundPreset: 'pattern',
     scrimOpacity: 70,
+    ...DEFAULT_HERO_LAYOUT,
   },
   steps: [],
   aboutCards: [],
@@ -33,6 +36,7 @@ export const EMPTY_CMS_CONTENT: CmsContent = {
     backgroundPreset: 'pattern',
     scrimOpacity: 75,
   },
+  testimonialsSection: DEFAULT_TESTIMONIALS_SECTION,
 };
 
 /**

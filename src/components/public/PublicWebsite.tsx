@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
+import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
+import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
+import { isFrontPageTestimonial, withTestimonialsSectionDefaults } from '../../utils/testimonials';
+import { TestimonialStoryCard } from './TestimonialStoryCard';
 import {
   GraduationCap,
   BookOpen,
   ShieldCheck,
   Heart,
   Users,
-  CheckCircle2,
   ArrowRight,
   TrendingUp,
   FileCheck,
@@ -23,12 +26,11 @@ interface PublicWebsiteProps {
 }
 
 export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
-  onOpenSponsorModal,
   onOpenDonateModal,
   activeSection,
   setActiveSection,
 }) => {
-  const { campaigns, stories, childrenList, sponsors, cmsContent, language, t } = useApp();
+  const { campaigns, stories, childrenList, cmsContent, language, t } = useApp();
 
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');
@@ -36,104 +38,134 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const heroKicker = language === 'fr' ? t('hero.kicker', cmsContent.hero.kicker) : cmsContent.hero.kicker;
   const heroTitle = language === 'fr' ? t('hero.title', cmsContent.hero.title) : cmsContent.hero.title;
   const heroSubtitle = language === 'fr' ? t('hero.subtitle', cmsContent.hero.subtitle) : cmsContent.hero.subtitle;
-  const heroPrimaryBtn = language === 'fr' ? t('hero.primaryButton', cmsContent.hero.primaryButtonText) : cmsContent.hero.primaryButtonText;
-  const heroSecondaryBtn = language === 'fr' ? t('hero.secondaryButton', cmsContent.hero.secondaryButtonText) : cmsContent.hero.secondaryButtonText;
+  const heroConfig = withHeroLayoutDefaults(cmsContent.hero);
+  const heroHeightVh = getHeroHeightVh(heroConfig);
+  const heroObjectPosition = getHeroObjectPosition(heroConfig);
+  const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
+  const frontPageStories = stories.filter(isFrontPageTestimonial);
+  const testimonialGridClass =
+    testimonialsSection.gridColumns === 2
+      ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
+
   const heroImageUrl = cmsContent.hero.backgroundImageUrl?.trim() || 'IMG_1194.jpg';
   const heroImageSrc =
     heroImageUrl.startsWith('http://') || heroImageUrl.startsWith('https://') || heroImageUrl.startsWith('data:') || heroImageUrl.startsWith('/')
       ? heroImageUrl
       : `/${heroImageUrl}`;
 
+  const [sponsorshipDetailsOpen, setSponsorshipDetailsOpen] = useState(false);
+
   React.useEffect(() => {
     if (activeSection === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+    if (activeSection === 'bli-fadder') {
+      document.getElementById('bli-fadder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
     document.getElementById(activeSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [activeSection]);
+
+  const heroHeadline = (
+    <>
+      <p className="text-xs font-semibold tracking-widest uppercase text-[#4D6B3E]">{heroKicker}</p>
+      <h1 className="mt-3 text-3xl sm:text-4xl font-serif font-bold text-[#3C3C3C] leading-[1.15] text-balance">
+        {heroTitle}
+      </h1>
+      <p className="mt-3 text-base text-stone-700 leading-relaxed">{heroSubtitle}</p>
+    </>
+  );
+
+  const heroImage = (
+    <div
+      className="relative w-full overflow-hidden bg-[#F6F4ED] rounded-none lg:rounded-none"
+      style={{ height: `${heroHeightVh}vh`, maxHeight: '92vh' }}
+    >
+      <img
+        src={heroImageSrc}
+        alt="Betyna sammen med barn i Kongo"
+        className="absolute inset-0 h-full w-full object-cover"
+        style={{ objectPosition: heroObjectPosition }}
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-20 pb-16">
       {/* 1. HERO SECTION */}
-      <section id="home" className="max-w-7xl mx-auto px-6 pt-6 scroll-mt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-[#4D6B3E]">
-              <span>{heroKicker}</span>
+      <section id="home" className="scroll-mt-24">
+        {/* Mobil: løfte, skjema, deretter bilde (runde 1) */}
+        <div className="lg:hidden space-y-5 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center">{heroHeadline}</div>
+          {heroConfig.showCtaCard && (
+            <div className="max-w-[22rem] mx-auto w-full">
+              <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#3C3C3C] leading-[1.15] text-balance">
-              {heroTitle}
-            </h1>
-            <p className="text-base sm:text-lg text-stone-700 font-sans leading-relaxed">
-              {heroSubtitle}
+          )}
+          {heroImage}
+        </div>
+
+        {/* Stor skjerm: bilde med overlappende CTA, deretter løfte */}
+        <div className="hidden lg:block">
+          {heroImage}
+          {heroConfig.showCtaCard && (
+            <div
+              className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6"
+              style={{ marginTop: `-${heroConfig.ctaOverlapPx}px` }}
+            >
+              <div className="w-full max-w-[22rem]">
+                <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
+              </div>
+            </div>
+          )}
+          <div
+            className="max-w-3xl mx-auto px-6 mb-4 text-center"
+            style={{ marginTop: heroConfig.showCtaCard ? '1.5rem' : '2rem' }}
+          >
+            {heroHeadline}
+          </div>
+        </div>
+      </section>
+
+      {/* Vitnesbyrd: CMS-tekst + kort i rutenett (runde 3) */}
+      {testimonialsSection.enabled !== false && (
+        <section id="historier" className="max-w-7xl mx-auto px-6 scroll-mt-24">
+          <div className="max-w-2xl mb-8">
+            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
+              {language === 'fr'
+                ? t('testimonials.kicker', testimonialsSection.kicker)
+                : testimonialsSection.kicker}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
+              {language === 'fr'
+                ? t('testimonials.title', testimonialsSection.title)
+                : testimonialsSection.title}
+            </h2>
+            <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
+              {language === 'fr'
+                ? t('testimonials.subtitle', testimonialsSection.subtitle)
+                : testimonialsSection.subtitle}
             </p>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <button
-                onClick={onOpenSponsorModal}
-                className="px-6 py-3.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>{heroPrimaryBtn}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setActiveSection('fadderordningen')}
-                className="px-5 py-3.5 bg-white hover:bg-[#EBE7DC] text-[#3C3C3C] font-medium rounded-lg text-sm transition-all border border-[#DFD9CB] flex items-center justify-center cursor-pointer"
-              >
-                {heroSecondaryBtn}
-              </button>
+          {frontPageStories.length > 0 ? (
+            <div className={testimonialGridClass}>
+              {frontPageStories.map((story) => (
+                <TestimonialStoryCard key={story.id} story={story} />
+              ))}
             </div>
-
-            {/* Clean unboxed proof metadata */}
-            <div className="flex flex-wrap items-center gap-6 pt-4 text-xs text-stone-600 border-t border-[#DFD9CB]">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>{t('hero.proof1', 'Pengene går uavkortet')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                <span>{t('hero.proof2', 'Null kommersielle mellomledd')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-[#4D6B3E]" />
-                <span>{t('hero.proof3', 'Verdighet foran klikkagn')}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-6">
-            <figure className="overflow-hidden rounded-2xl border border-[#DFD9CB] bg-stone-200 shadow-sm">
-              <img
-                src={heroImageSrc}
-                alt="Betyna sammen med barn i Kongo"
-                className="w-full aspect-[3/4] object-cover object-[center_30%]"
-              />
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. OPERATIONAL EVIDENCE / KEY METRICS STRIP */}
-      <section className="bg-[#EBE7DC]/50 border-y border-[#DFD9CB] py-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {cmsContent.kpiStats.map((kpi, idx) => {
-              const label = language === 'fr' ? t(`kpi.kpi${idx + 1}_label`, kpi.label) : kpi.label;
-              const sublabel = language === 'fr' ? t(`kpi.kpi${idx + 1}_sublabel`, kpi.sublabel) : kpi.sublabel;
-              const value = language === 'fr' ? t(`kpi.kpi${idx + 1}_value`, kpi.value) : kpi.value;
-              return (
-                <div key={kpi.id} className="space-y-1">
-                  <div className="text-3xl font-serif font-bold text-stone-900 font-mono tabular-nums">
-                    {value}
-                  </div>
-                  <p className="text-xs text-stone-600 uppercase tracking-wider font-medium">{label}</p>
-                  <p className="text-xs text-stone-500">{sublabel}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+          ) : (
+            <p className="text-sm text-stone-600 bg-white/80 border border-[#DFD9CB] rounded-xl p-6">
+              {t(
+                'testimonials.empty',
+                'Godkjente vitnesbyrd med bilde legges ut her etter hvert som samtykke er på plass.'
+              )}
+            </p>
+          )}
+        </section>
+      )}
 
       {/* 3. FADDERORDNINGEN (Slik fungerer det) */}
       <section id="fadderordningen" className="max-w-7xl mx-auto px-6 scroll-mt-24">
@@ -182,345 +214,85 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           })}
         </div>
 
-        <div className="mt-10 bg-[#F6F4ED] border border-[#DFD9CB] rounded-xl p-6 md:p-8 space-y-4">
-          <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-900">
-            {t('sponsorship.realityTitle', 'Privatskole — og du betyr en forskjell')}
-          </h3>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.realityParagraph1',
-              'De fleste barn i Kongo går på privatskole som koster penger. Er du med som fadder, er ett barn helt avhengig av deg — ikke av en stor, anonym giverpool.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.realityParagraph2',
-              'Vi er en liten organisasjon. Skoleplassen for barnet du følger, henger på at støtten er stabil over tid. Derfor er vi tydelige på én fadder og ett barn: du er ikke én i mengden, og det du bidrar med, merkes i hverdagen på skolen.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.realityParagraph3',
-              'For det ene barnet kan det bety alt. For den som utdanner seg til jordmor, sykepleier eller lege, kan det bety et langt liv i tjeneste for andre.'
-            )}
-          </p>
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[
+            {
+              icon: Heart,
+              title: t('sponsorship.card1Title', 'Ett barn — din fadder'),
+              desc: t(
+                'sponsorship.card1Desc',
+                'Du støtter ett navn og ett liv. Ikke en anonym giverpool. Skoleplassen henger på at du er med over tid.'
+              ),
+            },
+            {
+              icon: Users,
+              title: t('sponsorship.card2Title', 'Pengene til familien'),
+              desc: t(
+                'sponsorship.card2Desc',
+                'Bidraget går til omsorgspersoner som betaler skole, uniform, mat og medisin — slik det fungerer lokalt i Kongo.'
+              ),
+            },
+            {
+              icon: GraduationCap,
+              title: t('sponsorship.card3Title', 'Hele veien til jobb'),
+              desc: t(
+                'sponsorship.card3Desc',
+                'Vi følger barnet til fagbrev, utdanning og en reell jobb — slik at det kan forsørge sin familie.'
+              ),
+            },
+          ].map((card) => (
+            <div
+              key={card.title}
+              className="bg-white p-5 rounded-xl border border-[#DFD9CB] shadow-xs space-y-2"
+            >
+              <card.icon className="w-5 h-5 text-[#4D6B3E]" />
+              <h3 className="text-base font-serif font-bold text-stone-900">{card.title}</h3>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-6 bg-white border border-[#DFD9CB] rounded-xl p-6 md:p-8 space-y-4 shadow-xs">
-          <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-900">
-            {t('sponsorship.moneyFlowTitle', 'Pengene frem — via familien som bærer ansvaret')}
-          </h3>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.moneyFlowParagraph1',
-              'Vi sørger for at pengene kommer frem til barnet som trenger det. Barnet får ikke pengene selv — de går til omsorgspersoner i familien som bruker dem til skole, mat, uniform og det som trengs.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.moneyFlowParagraph2',
-              'I Kongo tar ikke det offentlige hånd om barn som mister mor eller far, eller som ikke har råd til skole. Storfamilien overtar ansvaret. Som fadder støtter du det systemet som faktisk fungerer.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.moneyFlowParagraph3',
-              'Vi har ikke tro på barnehjem — det er et fremmedelement i denne kulturen. Vi tror på å støtte storfamilien når de trår til, med vår hjelp. Ofte trengs det ikke så mye før barna får skolegang, uniform, sekk og medisiner.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.moneyFlowParagraph4',
-              'En liten andel av det som kommer inn settes av til det ekstra: når noen blir syke eller må på sykehus. Malaria dreper mange barn i Kongo — med litt å gå på kan vi sende ekstra med kort varsel når et barn trenger det.'
-            )}
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed font-sans">
-            {t(
-              'sponsorship.moneyFlowParagraph5',
-              'Én gang i året er det skolestart. Sekker og utstyr varer omtrent et år, så vi setter av til det. Ønsker fadderen å gi et ekstraordinært beløp — ved sykdom, skolestart, bursdag eller jul — er det alltid velkomment, men helt frivillig.'
-            )}
-          </p>
-        </div>
-
-        {/* CMS-Configurable CTA Banner */}
-        {(() => {
-          const defaultCta = {
-            title: language === 'fr' ? t('cta.title') : 'Ønsker du å vite mer om fadderansvaret?',
-            subtitle: language === 'fr' ? t('cta.subtitle') : 'Fadderbeløpet er 250 eller 350 kr/mnd og går uavkortet til det barnet trenger for å fullføre fagbrev eller utdanning — helt til det kan forsørge sin familie.',
-            buttonText: language === 'fr' ? t('cta.primaryButton') : 'Meld interesse som fadder',
-            backgroundImageUrl: '',
-            scrimOpacity: 75,
-          };
-          const rawCta = cmsContent.ctaBanner;
-          const cta = rawCta
-            ? {
-                ...rawCta,
-                title: language === 'fr' ? t('cta.title', rawCta.title) : rawCta.title,
-                subtitle: language === 'fr' ? t('cta.subtitle', rawCta.subtitle) : rawCta.subtitle,
-                buttonText: language === 'fr' ? t('cta.primaryButton', rawCta.buttonText) : rawCta.buttonText,
-              }
-            : defaultCta;
-
-          return (
-            <div id="cta" className="relative overflow-hidden mt-8 p-6 sm:p-8 rounded-xl border border-[#DFD9CB] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#EBE7DC]/60 scroll-mt-24">
-              {cta.backgroundImageUrl && (
-                <>
-                  <img
-                    src={cta.backgroundImageUrl}
-                    alt="CTA banner"
-                    referrerPolicy="no-referrer"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div
-                    className="absolute inset-0 bg-stone-950/75"
-                    style={{ opacity: (cta.scrimOpacity || 75) / 100 }}
-                  />
-                </>
-              )}
-              <div className={`relative space-y-1 ${cta.backgroundImageUrl ? 'text-white' : 'text-stone-900'}`}>
-                <h4 className="text-base sm:text-lg font-serif font-bold">
-                  {cta.title}
-                </h4>
-                <p className={`text-xs sm:text-sm max-w-2xl ${cta.backgroundImageUrl ? 'text-stone-200' : 'text-stone-600'}`}>
-                  {cta.subtitle}
-                </p>
-              </div>
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setSponsorshipDetailsOpen((open) => !open)}
+            className="text-sm font-medium text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
+          >
+            {sponsorshipDetailsOpen
+              ? t('sponsorship.hideDetails', 'Skjul detaljer')
+              : t('sponsorship.showDetails', 'Les mer om hvordan fadderordningen virker')}
+          </button>
+          {sponsorshipDetailsOpen && (
+            <div className="mt-4 space-y-4 text-sm text-stone-700 leading-relaxed font-sans">
+              <p>
+                {t(
+                  'sponsorship.realityParagraph1',
+                  'De fleste barn i Kongo går på privatskole som koster penger. Er du med som fadder, er ett barn helt avhengig av deg — ikke av en stor, anonym giverpool.'
+                )}
+              </p>
+              <p>
+                {t(
+                  'sponsorship.moneyFlowParagraph1',
+                  'Vi sørger for at pengene kommer frem til barnet som trenger det. Barnet får ikke pengene selv — de går til omsorgspersoner i familien som bruker dem til skole, mat, uniform og det som trengs.'
+                )}
+              </p>
+              <p>
+                {t(
+                  'sponsorship.moneyFlowParagraph3',
+                  'Vi har ikke tro på barnehjem — det er et fremmedelement i denne kulturen. Vi tror på å støtte storfamilien når de trår til, med vår hjelp.'
+                )}
+              </p>
               <button
-                onClick={onOpenSponsorModal}
-                className="relative px-5 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium text-xs rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0 shadow-xs"
+                type="button"
+                onClick={() => setActiveSection('apenhet')}
+                className="text-xs font-medium text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
               >
-                {cta.buttonText}
+                {t('sponsorship.linkApenhet', 'Slik pengene brukes')} →
               </button>
             </div>
-          );
-        })()}
-      </section>
-
-      {/* 4. HISTORIER OG DOKUMENTERTE RESULTATER (Faddere, elever og mottakere) */}
-      <section id="historier" className="max-w-7xl mx-auto px-6 scroll-mt-24">
-        <div className="max-w-2xl mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
-            {t('testimonials.kicker', 'Dokumenterte resultater')}
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
-            {t('testimonials.title', 'Ekte vitnesbyrd fra faddere, elever og voksne mottakere')}
-          </h2>
-          <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            15 barn har fulgt hele løpet i 10–15 år — til fagbrev, utdanning og jobb. Enkeltnavn og historier legges ut først når samtykke er dokumentert.
-          </p>
-        </div>
-
-        {import.meta.env.DEV && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stories
-            .filter((s) => s.godkjentAvAdmin !== false && s.fremhevetPaaForside !== false)
-            .map((story) => {
-              const category = story.category || 'graduate';
-              const resolvedPhoto = story.bildeUrl
-                ? story.bildeUrl.startsWith('http') || story.bildeUrl.startsWith('data:') || story.bildeUrl.startsWith('/')
-                  ? story.bildeUrl
-                  : `/${story.bildeUrl}`
-                : undefined;
-
-              return (
-                <article
-                  key={story.id}
-                  className="bg-white p-6 rounded-xl border border-[#DFD9CB] shadow-xs flex flex-col justify-between space-y-5"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span className="inline-flex items-center gap-1 font-medium">
-                        {category === 'donor' && (
-                          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
-                            {t('testimonials.badgeDonor', 'Fadder i Norge')}
-                          </span>
-                        )}
-                        {category === 'child' && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                            {t('testimonials.badgeChild', 'Elev / Yrkesopplæring')}
-                          </span>
-                        )}
-                        {category === 'graduate' && (
-                          <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 font-semibold border border-stone-200">
-                            {t('testimonials.badgeGraduate', 'Fullført')} {story.aarFullfort ? `(${story.aarFullfort})` : ''}
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-emerald-700 font-medium flex items-center gap-1 text-[11px]">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>{t('testimonials.verifiedConsent', 'Verifisert samtykke')}</span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3.5">
-                      {resolvedPhoto ? (
-                        <div className="w-14 h-14 rounded-full overflow-hidden bg-stone-800 shrink-0 border border-[#4D6B3E]/40 shadow-xs">
-                          <img
-                            src={resolvedPhoto}
-                            alt={story.navn}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-[#A3B18A]/25 text-[#4D6B3E] font-serif font-bold flex items-center justify-center shrink-0 text-base shadow-xs">
-                          {story.navn.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-base font-serif font-bold text-stone-900 leading-snug">{story.navn}</h3>
-                        <p className="text-xs text-[#4D6B3E] font-medium mt-0.5">{story.rolle || story.naavaerendeYrke}</p>
-                        {story.sted && <p className="text-[11px] text-stone-500">{story.sted}</p>}
-                      </div>
-                    </div>
-
-                    <blockquote className="text-xs sm:text-sm text-stone-700 italic border-l-2 border-[#4D6B3E] pl-3.5 py-1 leading-relaxed font-serif">
-                      «{story.historie}»
-                    </blockquote>
-
-                    {story.utdanningslop && (
-                      <div className="text-xs text-stone-600 space-y-0.5 pt-2 border-t border-stone-100">
-                        <p className="font-semibold text-stone-800 text-[11px] uppercase tracking-wider">
-                          {category === 'donor' ? t('testimonials.purpose', 'Bidragsformål:') : t('testimonials.education', 'Opplæringsløp:')}
-                        </p>
-                        <p className="line-clamp-2">{story.utdanningslop}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2 text-[11px] text-stone-500 flex items-center gap-1.5 border-t border-stone-100">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{t('testimonials.archived', 'Arkivert og godkjent i stiftelsens register')}</span>
-                  </div>
-                </article>
-              );
-            })}
-        </div>
-        )}
-      </section>
-
-      {/* 5. EKSTRAORDINÆRE AKSJONER */}
-      {campaigns.length > 0 && (
-      <section id="aksjoner" className="max-w-7xl mx-auto px-6 scroll-mt-24">
-        <div className="max-w-2xl mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">{t('campaigns.kicker', 'Konkrete behov')}</span>
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
-            {t('campaigns.title', 'Ekstraordinære innsamlingsaksjoner')}
-          </h2>
-          <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
-            {t(
-              'campaigns.subtitle',
-              'Ekstra innsamling er alltid knyttet til barn i fadderordningen — ikke til skoleklasser eller felles bøker. Nå samler vi inn til symaskiner, én maskin per jente.'
-            )}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {campaigns.map((camp) => {
-            const pct = Math.min(100, Math.round((camp.innsamletBelop / camp.maalbelop) * 100));
-            const isCompleted = camp.status === 'fullfort';
-
-            return (
-              <div
-                key={camp.id}
-                className={`bg-white p-7 rounded-xl border ${
-                  isCompleted ? 'border-emerald-200' : 'border-stone-200'
-                } shadow-xs flex flex-col justify-between space-y-6`}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-500 uppercase tracking-wider font-medium">{camp.enhetBeskrivelse}</span>
-                    <span
-                      className={`font-semibold ${
-                        isCompleted ? 'text-emerald-700' : 'text-[#4D6B3E]'
-                      }`}
-                    >
-                      {isCompleted ? 'Mål oppnådd (Fullført)' : 'Aktiv aksjon'}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-serif font-bold text-stone-900">{camp.tittel}</h3>
-                  {camp.barnIds?.length > 0 && (
-                    <p className="text-xs text-[#4D6B3E] font-medium">
-                      Knyttet til{' '}
-                      {camp.barnIds
-                        .map((id) => childrenList.find((c) => c.id === id)?.fornavn)
-                        .filter(Boolean)
-                        .join(', ')}
-                    </p>
-                  )}
-
-                  {camp.bildeUrl && (
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden bg-stone-100 border border-stone-200">
-                      <img
-                        src={
-                          camp.bildeUrl.startsWith('http') ||
-                          camp.bildeUrl.startsWith('data:') ||
-                          camp.bildeUrl.startsWith('/')
-                            ? camp.bildeUrl
-                            : `/${camp.bildeUrl}`
-                        }
-                        alt={camp.tittel}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover object-[center_20%]"
-                      />
-                    </div>
-                  )}
-
-                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans">{camp.beskrivelse}</p>
-
-                  {/* Progress bar */}
-                  <div className="space-y-2 pt-2">
-                    <div className="flex items-center justify-between text-xs font-mono tabular-nums">
-                      <span className="font-semibold text-stone-900">
-                        {camp.innsamletBelop.toLocaleString('no-NO')} kr innsamlet
-                      </span>
-                      <span className="text-stone-500">Mål: {camp.maalbelop.toLocaleString('no-NO')} kr ({pct}%)</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                      <div
-                        className={`h-full transition-all duration-500 ${
-                          isCompleted ? 'bg-emerald-600' : 'bg-[#4D6B3E]'
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span>{camp.antallGivere} givere har bidratt</span>
-                      {!isCompleted && <span>Gjenstår: {(camp.maalbelop - camp.innsamletBelop).toLocaleString('no-NO')} kr</span>}
-                    </div>
-                  </div>
-
-                  {camp.sluttrapport && (
-                    <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg text-xs text-emerald-900 space-y-1">
-                      <p className="font-semibold flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Offisiell sluttrapport:</span>
-                      </p>
-                      <p className="leading-relaxed">{camp.sluttrapport}</p>
-                    </div>
-                  )}
-                </div>
-
-                {!isCompleted ? (
-                  <button
-                    onClick={() => onOpenDonateModal(camp)}
-                    className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                  >
-                    <span>Støtt denne aksjonen</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <div className="text-center py-2 text-xs text-stone-500 font-medium">
-                    Takk til alle som bidro til å realisere dette behovet!
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          )}
         </div>
       </section>
-      )}
 
       {/* 6. PROFIL & VERDIER (bistandsorganisasjon) — nav: Om Betyna */}
       <section id="om-oss" className="max-w-7xl mx-auto px-6 scroll-mt-24">
@@ -632,7 +404,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               )}
             </p>
             <p className="text-sm text-stone-600 mt-2 leading-relaxed">
-              Ti faddere à 3 500 kroner i året gir 35 000 kroner til ett barns løp. Ingen lønn tas ut i Betyna.
+              Ti faddere à 3 500 kroner i året gir 35 000 kroner til ett barns løp. Ingen lønn tas ut i Betyna.{' '}
+              {t(
+                'transparency.legalFormShort',
+                'Vi er foreløpig ikke stiftelse — med vilje — så mer av det som kommer inn kan gå til barna.'
+              )}
             </p>
           </div>
 
@@ -672,23 +448,88 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-stone-100 max-w-3xl space-y-3">
-            <h3 className="text-base font-serif font-bold text-stone-900">
-              {t('transparency.legalFormTitle', 'Foreløpig ikke stiftelse — med vilje')}
-            </h3>
-            <p className="text-sm text-stone-700 leading-relaxed font-sans">
+        </div>
+      </section>
+
+      {/* EKSTRAORDINÆRE AKSJONER — kompakt, etter tillitsseksjonen (runde 2) */}
+      {activeCampaigns.length > 0 && (
+        <section id="aksjoner" className="max-w-7xl mx-auto px-6 scroll-mt-24">
+          <div className="max-w-2xl mb-6">
+            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
+              {t('campaigns.kicker', 'Konkrete behov')}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900 mt-2">
+              {t('campaigns.titleShort', 'Vil du gi ekstra til ett konkret behov?')}
+            </h2>
+            <p className="text-sm text-stone-600 mt-2 leading-relaxed">
               {t(
-                'transparency.legalFormParagraph1',
-                'Vi er en veldig liten organisasjon. For at pengene skal gå uavkortet til barna, har vi foreløpig ikke råd til å etablere oss som stiftelse. Det ville krevd revisor og annen formell ramme som i praksis kunne kostet en stor del av hele årsbudsjettet.'
-              )}
-            </p>
-            <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              {t(
-                'transparency.legalFormParagraph2',
-                'Dersom vi vokser gradvis og tiden er inne, vil vi etablere stiftelse — og da må også revisor, regnskap og det formelle være på plass. Inntil da prioriterer vi barna foran byråkrati.'
+                'campaigns.subtitleShort',
+                'Månedlig fadder er hovedveien. Aksjoner er for deg som vil bidra en gang til noe spesifikt — alltid knyttet til barn i ordningen.'
               )}
             </p>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {activeCampaigns.map((camp) => {
+              const pct = Math.min(100, Math.round((camp.innsamletBelop / camp.maalbelop) * 100));
+              return (
+                <div
+                  key={camp.id}
+                  className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs flex flex-col justify-between gap-4"
+                >
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-serif font-bold text-stone-900">{camp.tittel}</h3>
+                    <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{camp.beskrivelse}</p>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[11px] font-mono tabular-nums text-stone-600">
+                        <span>{camp.innsamletBelop.toLocaleString('no-NO')} kr</span>
+                        <span>{pct}% av {camp.maalbelop.toLocaleString('no-NO')} kr</span>
+                      </div>
+                      <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+                        <div className="h-full bg-[#4D6B3E]" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenDonateModal(camp)}
+                    className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-[#3C3C3C] font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Støtt denne aksjonen</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          {completedCampaigns.length > 0 && (
+            <p className="text-xs text-stone-500 mt-4">
+              {completedCampaigns.length} fullført aksjon{completedCampaigns.length > 1 ? 'er' : ''} er dokumentert i arkivet.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Ny sjanse til å melde seg (runde 2) */}
+      <section className="max-w-7xl mx-auto px-6 scroll-mt-24">
+        <div className="max-w-3xl mx-auto text-center space-y-3">
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
+            {t('sponsorClosing.title', 'Klar til å bli fadder for ett barn?')}
+          </h2>
+          <p className="text-sm text-stone-600 leading-relaxed">
+            {t(
+              'sponsorClosing.subtitle',
+              '250 eller 350 kroner i måneden. Du blir registrert nå — vi kobler deg til ett barn og setter opp trekket. Du kan avslutte når som helst.'
+            )}
+          </p>
+        </div>
+        <div className="max-w-[22rem] mx-auto mt-6 w-full">
+          <BecomeSponsorModal
+            isOpen
+            onClose={() => undefined}
+            embedded
+            containerId="bli-fadder-bunn"
+          />
         </div>
       </section>
     </div>

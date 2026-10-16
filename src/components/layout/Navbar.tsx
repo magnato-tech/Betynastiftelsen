@@ -276,7 +276,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {role === 'public' ? (
             <button
-              onClick={onOpenSponsorModal}
+              onClick={() => setActiveSection('bli-fadder')}
               className="px-4 py-2 text-xs font-semibold text-white bg-[#4D6B3E] hover:bg-[#3B522F] rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-xs cursor-pointer"
             >
               {t('nav.becomeSponsor', 'Bli fadder')}

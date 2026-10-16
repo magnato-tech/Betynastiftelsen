@@ -199,6 +199,33 @@ export async function importBrowserSnapshotToFirestore(
   return { written, skippedLock: false };
 }
 
+/** Påmelding fra forsiden. Ett nytt fadder-dokument, uten barn og uten betaling. */
+export async function saveWebsiteSponsor(
+  db: Firestore,
+  id: string,
+  data: {
+    navn: string;
+    epost: string;
+    telefon: string;
+    poststed: string;
+    maanedsbelop: number;
+    betalingsmetode: 'vipps' | 'avtalegiro' | 'bank';
+  }
+): Promise<void> {
+  await setDoc(doc(db, FIRESTORE_COLLECTIONS.sponsors, id), {
+    navn: data.navn.trim(),
+    epost: data.epost.trim(),
+    telefon: data.telefon.trim(),
+    poststed: data.poststed.trim(),
+    maanedsbelop: data.maanedsbelop,
+    betalingsmetode: data.betalingsmetode,
+    betalingsstatus: 'aktiv',
+    startDato: new Date().toISOString().slice(0, 10),
+    tildeltBarnIds: [],
+    registrertKilde: 'nettside',
+  });
+}
+
 export type DbChange =
   | { kind: 'set'; collection: string; id: string; data: unknown }
   | { kind: 'delete'; collection: string; id: string };

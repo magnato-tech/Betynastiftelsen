@@ -173,7 +173,12 @@ export interface AdultGraduateStory {
   samtykkeDokumentert: boolean;
   godkjentAvAdmin: boolean;
   aarFullfort?: number;
+  /** Hovedbilde / fadderportrett / voksenbilde (bakoverkompatibilitet). */
   bildeUrl?: string;
+  /** Barndomsbilde for «da og nå»-kort (fullførte mottakere). */
+  barneBildeUrl?: string;
+  /** Voksenbilde for «da og nå»-kort. */
+  voksenBildeUrl?: string;
   fremhevetPaaForside?: boolean;
   opprettetDato?: string;
 }
@@ -241,6 +246,8 @@ export interface AppNotification {
   actionSection?: string;
 }
 
+export type CmsHeroHeight = 'compact' | 'medium' | 'tall' | 'custom';
+
 export interface CmsHero {
   kicker: string;
   title: string;
@@ -250,6 +257,17 @@ export interface CmsHero {
   backgroundImageUrl?: string;
   backgroundPreset: 'pattern' | 'classroom' | 'workshop' | 'custom';
   scrimOpacity: number; // 20 - 90 %
+  /** Synlig høyde på forsiden (vh). */
+  heroHeight?: CmsHeroHeight;
+  /** Brukes når heroHeight er custom (28–92 vh). */
+  heroHeightCustomVh?: number;
+  /** Fokuspunkt for object-cover (0–100 %). */
+  focalPointX?: number;
+  focalPointY?: number;
+  /** Fadder-CTA over hero med overlapp nedover. */
+  showCtaCard?: boolean;
+  /** Piksel som CTA-kortet trekkes opp over bunnkanten (typisk 120–220). */
+  ctaOverlapPx?: number;
 }
 
 export interface CmsStep {
@@ -284,12 +302,22 @@ export interface CmsCtaBanner {
   scrimOpacity?: number;
 }
 
+export interface CmsTestimonialsSection {
+  enabled?: boolean;
+  kicker: string;
+  title: string;
+  subtitle: string;
+  /** 2 eller 3 kolonner i rutenettet på forsiden. */
+  gridColumns?: 2 | 3;
+}
+
 export interface CmsContent {
   hero: CmsHero;
   steps: CmsStep[];
   aboutCards: CmsPrincipleCard[];
   kpiStats: CmsKpiStat[];
   ctaBanner?: CmsCtaBanner;
+  testimonialsSection?: CmsTestimonialsSection;
 }
 
 export type EmailKind = 'newsletter' | 'inquiry' | 'system';

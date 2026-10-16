@@ -56,7 +56,22 @@ service cloud.firestore {
 
     match /sponsors/{id} {
       allow read: if canAdminWrite() || (isSponsor() && userDoc().sponsorId == id);
-      allow write: if canAdminWrite();
+      allow create: if canAdminWrite() || (
+        request.resource.data.registrertKilde == 'nettside'
+        && request.resource.data.navn is string
+        && request.resource.data.navn.size() >= 2
+        && request.resource.data.navn.size() <= 80
+        && request.resource.data.epost is string
+        && request.resource.data.epost.matches('.+@.+\\..+')
+        && request.resource.data.maanedsbelop is number
+        && request.resource.data.maanedsbelop >= 100
+        && request.resource.data.maanedsbelop <= 20000
+        && request.resource.data.tildeltBarnIds is list
+        && request.resource.data.tildeltBarnIds.size() == 0
+        && request.resource.data.betalingsmetode in ['vipps', 'avtalegiro', 'bank']
+        && request.resource.data.betalingsstatus == 'aktiv'
+      );
+      allow update, delete: if canAdminWrite();
     }
 
     match /children/{id} {

@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
 import { CmsLivePreview } from './CmsLivePreview';
-import { AdultGraduateStory, Campaign, CmsContent, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
+import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
+import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
 import {
   Layout,
   Layers,
@@ -460,6 +461,118 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   onChange={handleHeroBackgroundChange}
                 />
               </div>
+
+              <div className="pt-4 border-t border-stone-200 space-y-4">
+                <div>
+                  <h4 className="text-sm font-serif font-bold text-stone-900">Utforming på forsiden</h4>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Høyde, beskjæring (fokuspunkt) og fadder-CTA som ligger delvis over bildet.
+                  </p>
+                </div>
+
+                {(() => {
+                  const layout = withHeroLayoutDefaults(cmsContent.hero);
+                  const setLayout = (patch: Partial<CmsContent['hero']>) => {
+                    updateCmsSection('hero', { ...cmsContent.hero, ...patch });
+                    showNotification('Hero-utforming oppdatert!');
+                  };
+                  const heightOptions: { value: CmsHeroHeight; label: string }[] = [
+                    { value: 'compact', label: 'Lav (ca. 42 vh)' },
+                    { value: 'medium', label: 'Middels (ca. 58 vh)' },
+                    { value: 'tall', label: 'Høy (ca. 72 vh)' },
+                    { value: 'custom', label: 'Egendefinert (vh)' },
+                  ];
+                  return (
+                    <>
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-700 mb-1">Hero-høyde</label>
+                        <select
+                          value={layout.heroHeight}
+                          onChange={(e) => setLayout({ heroHeight: e.target.value as CmsHeroHeight })}
+                          className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
+                        >
+                          {heightOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {layout.heroHeight === 'custom' && (
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            Egendefinert høyde: {layout.heroHeightCustomVh} vh
+                          </label>
+                          <input
+                            type="range"
+                            min={28}
+                            max={92}
+                            value={layout.heroHeightCustomVh}
+                            onChange={(e) => setLayout({ heroHeightCustomVh: Number(e.target.value) })}
+                            className="w-full accent-[#4D6B3E]"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            Fokus horisontalt: {layout.focalPointX}%
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            value={layout.focalPointX}
+                            onChange={(e) => setLayout({ focalPointX: Number(e.target.value) })}
+                            className="w-full accent-[#4D6B3E]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            Fokus vertikalt: {layout.focalPointY}%
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            value={layout.focalPointY}
+                            onChange={(e) => setLayout({ focalPointY: Number(e.target.value) })}
+                            className="w-full accent-[#4D6B3E]"
+                          />
+                          <p className="text-[10px] text-stone-500 mt-1">Lavere verdi viser mer av toppen (ansikter).</p>
+                        </div>
+                      </div>
+
+                      <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={layout.showCtaCard}
+                          onChange={(e) => setLayout({ showCtaCard: e.target.checked })}
+                          className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                        />
+                        Vis fadder-CTA over hero-bildet
+                      </label>
+
+                      {layout.showCtaCard && (
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            CTA overlapp oppover: {layout.ctaOverlapPx} px
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={280}
+                            step={4}
+                            value={layout.ctaOverlapPx}
+                            onChange={(e) => setLayout({ ctaOverlapPx: Number(e.target.value) })}
+                            className="w-full accent-[#4D6B3E]"
+                          />
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
 
@@ -473,13 +586,17 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               <span className="text-[11px] text-emerald-700 font-medium">Oppdateres direkte</span>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white aspect-[4/3] shadow-md flex flex-col justify-end p-6">
+            <div
+              className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white shadow-md"
+              style={{ height: `${Math.min(320, (getHeroHeightVh(cmsContent.hero) / 100) * 280)}px` }}
+            >
               {cmsContent.hero.backgroundImageUrl ? (
                 <img
                   src={cmsContent.hero.backgroundImageUrl}
                   alt="Bakgrunn forhåndsvisning"
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 w-full h-full object-cover"
+                  style={{ objectPosition: getHeroObjectPosition(cmsContent.hero) }}
                 />
               ) : (
                 <div className="absolute inset-0 opacity-25">
@@ -497,30 +614,22 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
 
               {/* Scrim Overlay */}
               <div
-                className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/80 to-stone-900/40"
+                className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/50 to-transparent pointer-events-none"
                 style={{ opacity: (cmsContent.hero.scrimOpacity || 75) / 100 }}
               />
 
-              <div className="relative space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#A3B18A]">
-                  {cmsContent.hero.kicker}
-                </span>
-                <h3 className="text-lg font-serif font-bold text-white leading-tight">
-                  {cmsContent.hero.title}
-                </h3>
-                <p className="text-[11px] text-stone-300 line-clamp-3 leading-relaxed">
-                  {cmsContent.hero.subtitle}
-                </p>
-                <div className="flex gap-2 pt-1">
-                  <span className="px-3 py-1 bg-[#4D6B3E] text-white text-[10px] font-semibold rounded-md">
-                    {cmsContent.hero.primaryButtonText}
-                  </span>
-                  <span className="px-3 py-1 bg-white/20 text-white text-[10px] font-medium rounded-md border border-white/30">
-                    {cmsContent.hero.secondaryButtonText}
-                  </span>
+              {withHeroLayoutDefaults(cmsContent.hero).showCtaCard && (
+                <div
+                  className="absolute left-4 right-4 z-10 rounded-lg border border-white/20 bg-white/95 text-stone-900 px-3 py-2 text-[10px] font-semibold shadow-lg"
+                  style={{ bottom: `${withHeroLayoutDefaults(cmsContent.hero).ctaOverlapPx * 0.35}px` }}
+                >
+                  Fadder-CTA (forhåndsvisning)
                 </div>
-              </div>
+              )}
             </div>
+            <p className="text-[11px] text-stone-500">
+              Tekst og knapper under hero styres separat på forsiden. Juster fokus for ansikter og føtter.
+            </p>
           </div>
           )}
         </div>

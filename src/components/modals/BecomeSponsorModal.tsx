@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, CheckCircle, ShieldCheck } from 'lucide-react';
+import { db } from '../../config/firebase';
+import { saveWebsiteSponsor } from '../../db/firestoreData';
+import { X, CheckCircle } from 'lucide-react';
 
 interface BecomeSponsorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Står synlig på forsiden. Ingen ekstra klikk for å åpne skjemaet. */
+  embedded?: boolean;
+  /** Anker for menyen «Bli fadder». Standard er toppen av forsiden. */
+  containerId?: string;
 }
 
-export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, onClose }) => {
-  const { registerNewSponsorInterest, setRole, setCurrentSponsorId } = useApp();
+export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
+  isOpen,
+  onClose,
+  embedded = false,
+  containerId = 'bli-fadder',
+}) => {
+  const { registerNewSponsorInterest, setRole, setCurrentSponsorId, firestoreBackendActive } = useApp();
 
-  const [step, setStep] = useState<'form' | 'success'>('form');
+  const [step, setStep] = useState<'choose' | 'form' | 'success'>(embedded ? 'choose' : 'form');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [navn, setNavn] = useState('');
   const [epost, setEpost] = useState('');
   const [telefon, setTelefon] = useState('');
@@ -18,23 +31,40 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
   const [belop, setBelop] = useState<number>(350);
   const [customBelop, setCustomBelop] = useState<string>('');
   const [metode, setMetode] = useState<'vipps' | 'avtalegiro' | 'bank'>('vipps');
+  const [samtykke, setSamtykke] = useState(false);
   const [newSponsorId, setNewSponsorId] = useState<string>('');
 
-  if (!isOpen) return null;
+  if (!embedded && !isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalBelop = belop === 0 ? parseInt(customBelop) || 250 : belop;
-    const createdId = registerNewSponsorInterest({
+    setSaveError(null);
+    if (!samtykke) {
+      setSaveError('Kryss av for at Betyna kan lagre opplysningene dine.');
+      return;
+    }
+    const finalBelop = belop === 0 ? parseInt(customBelop, 10) || 250 : belop;
+    const payload = {
       navn,
       epost,
       telefon,
       poststed,
       maanedsbelop: finalBelop,
       betalingsmetode: metode,
-    });
-    setNewSponsorId(createdId);
-    setStep('success');
+    };
+    setSaving(true);
+    try {
+      const createdId = registerNewSponsorInterest(payload);
+      if (db && !firestoreBackendActive) {
+        await saveWebsiteSponsor(db, createdId, payload);
+      }
+      setNewSponsorId(createdId);
+      setStep('success');
+    } catch {
+      setSaveError('Kunne ikke lagre påmeldingen. Prøv igjen.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleOpenSponsorPortal = () => {
@@ -46,38 +76,64 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
     setStep('form');
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs">
-      <div className="bg-[#F6F4ED] border border-[#DFD9CB] rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 text-stone-400 hover:text-[#3C3C3C] transition-colors rounded-lg hover:bg-stone-200/60 cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {import.meta.env.PROD ? (
-          <div className="space-y-4 pr-6">
-            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Bli fadder</span>
-            <h3 className="text-2xl font-serif font-bold text-[#3C3C3C]">Avtalen gjøres direkte</h3>
-            <p className="text-sm text-stone-700 leading-relaxed">
-              Skjemaet på denne siden lagrer ikke påmeldingen. Fadderbeløpet er 3 500 kroner i året, eller 250 eller 350 kroner i måneden, og går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen.
-            </p>
+  const body = (
+      <>
+        {step === 'choose' ? (
+          <div className="space-y-3">
+            <h2 className="text-lg font-serif font-bold text-[#3C3C3C] leading-snug">Støtt et barn</h2>
+            <p className="text-xs text-stone-600 leading-relaxed">250 eller 350 kroner i måneden, hele veien til jobb.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[250, 350].map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => { setBelop(amount); setCustomBelop(''); }}
+                  className={`py-2 text-sm rounded-lg border font-medium cursor-pointer ${belop === amount ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]' : 'bg-white text-stone-800 border-stone-300'}`}
+                >
+                  {amount} kr
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setBelop(0)}
+                className={`py-2 text-sm rounded-lg border font-medium cursor-pointer ${belop === 0 ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]' : 'bg-white text-stone-800 border-stone-300'}`}
+              >
+                Valgfritt
+              </button>
+            </div>
+            {belop === 0 && (
+              <input
+                type="number"
+                min="100"
+                placeholder="Valgfritt beløp"
+                value={customBelop}
+                onChange={(e) => setCustomBelop(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm"
+              />
+            )}
             <button
               type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg text-sm transition-colors cursor-pointer"
+              onClick={() => { setMetode('vipps'); setStep('form'); }}
+              className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-semibold rounded-full text-sm cursor-pointer"
             >
-              Lukk
+              Gi hver måned med Vipps
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMetode('avtalegiro'); setStep('form'); }}
+              className="w-full text-xs text-stone-600 underline cursor-pointer"
+            >
+              AvtaleGiro eller bank
             </button>
           </div>
         ) : step === 'form' ? (
           <div>
-            <div className="mb-6">
+            <div className="mb-4">
               <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">Bli fast fadder</span>
-              <h3 className="text-2xl font-serif font-bold text-[#3C3C3C] mt-1">Støtt et barn gjennom utdanningsløpet</h3>
+              <h2 className="text-xl font-serif font-bold text-[#3C3C3C] mt-1 lg:hidden">Vi følger barnet til fagbrev og jobb</h2>
+              <h3 className="text-xl font-serif font-bold text-[#3C3C3C] mt-1 hidden lg:block">Støtt et barn gjennom utdanningsløpet</h3>
               <p className="text-xs text-stone-600 mt-2 leading-relaxed font-sans">
-                Bidraget går uavkortet til skolepenger, medisiner, skoleutstyr, mat, husleie og annet som trengs for å fullføre skolegangen. Administrator tildeler barn manuelt. Du kan støtte mer enn ett barn på samme avtale.
+                250 eller 350 kroner i måneden følger ett barn helt til jobb. Du blir registrert nå. Vi kobler deg til ett barn og setter opp det månedlige trekket. Du kan avslutte når som helst.
               </p>
             </div>
 
@@ -144,7 +200,7 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
               {/* Betalingsmåte */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#3C3C3C] mb-2">
-                  Foretrukket betalingsmetode
+                  Ønsket måte å betale på
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <button
@@ -156,7 +212,7 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
                         : 'bg-white text-stone-700 border-stone-300 hover:border-stone-400'
                     }`}
                   >
-                    Vipps Fast
+                    Vipps
                   </button>
                   <button
                     type="button"
@@ -181,6 +237,9 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
                     Bankkonto
                   </button>
                 </div>
+                <p className="text-[11px] text-stone-500 mt-2 leading-relaxed">
+                  Vipps-trekket starter når avtalen er godkjent i Vipps. Inntil da lagrer vi ønsket.
+                </p>
               </div>
 
               {/* Personopplysninger */}
@@ -208,9 +267,12 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-stone-700 mb-1">Telefon</label>
+                  <label className="block text-xs font-medium text-stone-700 mb-1">
+                    Mobilnummer {metode === 'vipps' ? '*' : ''}
+                  </label>
                   <input
                     type="tel"
+                    required={metode === 'vipps'}
                     value={telefon}
                     onChange={(e) => setTelefon(e.target.value)}
                     placeholder="+47 900 00 000"
@@ -230,18 +292,29 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
               </div>
 
               {/* Sikkerhetsgaranti */}
-              <div className="p-3 bg-stone-100 rounded-lg border border-stone-200 text-xs text-stone-600 flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>
-                  Trygg registrering. Ingen kredittkort lagres lokalt. Du kan når som helst endre eller avslutte avtalen uten bindingstid.
-                </span>
-              </div>
+              <label className="flex items-start gap-2.5 text-xs text-stone-700 leading-relaxed cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={samtykke}
+                  onChange={(e) => setSamtykke(e.target.checked)}
+                  className="mt-0.5"
+                  required
+                />
+                <span>Jeg godtar at Betyna lagrer navn, e-post og telefon for å følge opp fadderavtalen.</span>
+              </label>
+
+              {saveError && <p className="text-sm text-red-800">{saveError}</p>}
+
+              <p className="text-[11px] text-stone-500 leading-relaxed text-center">
+                Vi er bevisst en liten organisasjon, så mer går til barnet. Avtalen er like ekte.
+              </p>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg text-sm transition-colors shadow-xs cursor-pointer"
+                disabled={saving}
+                className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-medium rounded-lg text-sm transition-colors shadow-xs cursor-pointer disabled:opacity-60"
               >
-                Fullfør fadderavtale
+                {saving ? 'Lagrer …' : 'Meld meg som fadder'}
               </button>
             </form>
           </div>
@@ -252,8 +325,9 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
             </div>
             <h3 className="text-2xl font-serif font-bold text-[#3C3C3C]">Hjertelig takk, {navn}!</h3>
             <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-sans">
-              Din fadderavtale er nå registrert i systemet. Administrator i Kristiansand har automatisk tildelt et barn som ventet på fadder. Du kan nå åpne fadderportalen for å se barnets profil og skolegang.
+              Du er registrert. Vi kobler deg til ett barn og tar kontakt for å sette opp det månedlige trekket. Ingenting er trukket ennå.
             </p>
+            {!embedded && (
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handleOpenSponsorPortal}
@@ -268,8 +342,30 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({ isOpen, 
                 Lukk
               </button>
             </div>
+            )}
           </div>
         )}
+      </>
+  );
+
+  if (embedded) {
+    return (
+      <div id={containerId} className="bg-white rounded-2xl p-5 shadow-lg scroll-mt-24">
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs">
+      <div className="bg-[#F6F4ED] border border-[#DFD9CB] rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 p-1.5 text-stone-400 hover:text-[#3C3C3C] transition-colors rounded-lg hover:bg-stone-200/60 cursor-pointer"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        {body}
       </div>
     </div>
   );

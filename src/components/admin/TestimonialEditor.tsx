@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { AdultGraduateStory, TestimonialCategory } from '../../types';
+import { AdultGraduateStory, CmsTestimonialsSection, TestimonialCategory } from '../../types';
+import { isFrontPageTestimonial, withTestimonialsSectionDefaults } from '../../utils/testimonials';
+import { TestimonialStoryCard } from '../public/TestimonialStoryCard';
 import {
   Quote,
   Plus,
@@ -30,7 +32,9 @@ interface TestimonialEditorProps {
 }
 
 export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPublicSite }) => {
-  const { stories, addStory, updateStory, deleteStory } = useApp();
+  const { stories, addStory, updateStory, deleteStory, cmsContent, updateCmsSection } = useApp();
+  const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
+  const frontPagePreview = stories.filter(isFrontPageTestimonial);
 
   const [activeCategory, setActiveCategory] = useState<TestimonialCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,6 +53,8 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
   const [formText, setFormText] = useState('');
   const [formEdu, setFormEdu] = useState('');
   const [formImageUrl, setFormImageUrl] = useState('');
+  const [formBarneBildeUrl, setFormBarneBildeUrl] = useState('');
+  const [formVoksenBildeUrl, setFormVoksenBildeUrl] = useState('');
   const [formConsent, setFormConsent] = useState(true);
   const [formApproved, setFormApproved] = useState(true);
   const [formFeatured, setFormFeatured] = useState(true);
@@ -109,6 +115,8 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setFormText('');
     setFormEdu('');
     setFormImageUrl('');
+    setFormBarneBildeUrl('');
+    setFormVoksenBildeUrl('');
     setFormConsent(true);
     setFormApproved(true);
     setFormFeatured(true);
@@ -135,6 +143,8 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setFormText(st.historie);
     setFormEdu(st.utdanningslop || '');
     setFormImageUrl(st.bildeUrl || '');
+    setFormBarneBildeUrl(st.barneBildeUrl || '');
+    setFormVoksenBildeUrl(st.voksenBildeUrl || st.bildeUrl || '');
     setFormConsent(st.samtykkeDokumentert);
     setFormApproved(st.godkjentAvAdmin);
     setFormFeatured(st.fremhevetPaaForside ?? true);
@@ -168,9 +178,46 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     reader.readAsDataURL(file);
   };
 
+  const patchTestimonialsSection = (patch: Partial<CmsTestimonialsSection>) => {
+    updateCmsSection('testimonialsSection', {
+      ...testimonialsSection,
+      ...patch,
+    });
+    setToastMessage('Seksjonstekst for vitnesbyrd oppdatert.');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const readImageFile = (file: File, onDone: (dataUrl: string) => void) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Vennligst velg en gyldig bildefil (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Bildet er større enn 5 MB. Vennligst velg en mindre fil.');
+      return;
+    }
+    setUploadError(null);
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => {
+      const dataUrl = loadEvent.target?.result as string;
+      onDone(dataUrl);
+    };
+    reader.onerror = () => setUploadError('Kunne ikke lese bildefilen.');
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formText.trim()) return;
+
+    const voksenUrl = (formVoksenBildeUrl || formImageUrl).trim() || undefined;
+    const barneUrl = formCategory === 'graduate' ? formBarneBildeUrl.trim() || undefined : undefined;
+    const primaryUrl = voksenUrl || barneUrl;
+
+    if (formCategory !== 'child' && formApproved && formFeatured && !primaryUrl) {
+      setUploadError('Legg inn minst ett bilde for å vise kortet på forsiden.');
+      return;
+    }
 
     const payload: Partial<AdultGraduateStory> = {
       category: formCategory,
@@ -182,7 +229,9 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       utdanningslop: formEdu.trim() || undefined,
       historie: formText.trim(),
       aarFullfort: typeof formYear === 'number' ? formYear : new Date().getFullYear(),
-      bildeUrl: formImageUrl.trim() || undefined,
+      bildeUrl: primaryUrl,
+      barneBildeUrl: barneUrl,
+      voksenBildeUrl: voksenUrl,
       samtykkeDokumentert: formConsent,
       godkjentAvAdmin: formApproved,
       fremhevetPaaForside: formFeatured,
@@ -250,6 +299,84 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
 
   return (
     <div className="space-y-8">
+      {/* CMS: seksjon på forsiden */}
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-stone-200 shadow-xs space-y-5">
+        <div>
+          <h3 className="text-base font-serif font-bold text-stone-900">Ekte vitnesbyrd på forsiden</h3>
+          <p className="text-xs text-stone-600 mt-1 max-w-2xl">
+            Rediger overskrift og rutenett. Kortene under bygges fra godkjente vitnesbyrd med bilde nedenfor — voksne
+            mottakere og faddere. Barn i løpet (kategori barn) vises ikke offentlig.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={testimonialsSection.enabled !== false}
+            onChange={(e) => patchTestimonialsSection({ enabled: e.target.checked })}
+            className="rounded border-stone-300 text-[#4D6B3E]"
+          />
+          Vis seksjonen på forsiden
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking</label>
+            <input
+              type="text"
+              value={testimonialsSection.kicker}
+              onChange={(e) => patchTestimonialsSection({ kicker: e.target.value })}
+              className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">Kolonner i rutenett</label>
+            <select
+              value={testimonialsSection.gridColumns ?? 3}
+              onChange={(e) =>
+                patchTestimonialsSection({ gridColumns: Number(e.target.value) as 2 | 3 })
+              }
+              className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs"
+            >
+              <option value={2}>2 kolonner (bredere kort)</option>
+              <option value={3}>3 kolonner (standard)</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-stone-700 mb-1">Overskrift</label>
+            <input
+              type="text"
+              value={testimonialsSection.title}
+              onChange={(e) => patchTestimonialsSection({ title: e.target.value })}
+              className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-serif font-bold"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-stone-700 mb-1">Ingress</label>
+            <textarea
+              rows={2}
+              value={testimonialsSection.subtitle}
+              onChange={(e) => patchTestimonialsSection({ subtitle: e.target.value })}
+              className="w-full p-3 bg-stone-50 border border-stone-300 rounded-lg text-xs resize-none"
+            />
+          </div>
+        </div>
+        {frontPagePreview.length > 0 && (
+          <div className="pt-4 border-t border-stone-100 space-y-3">
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Forhåndsvisning av rutenett ({frontPagePreview.length} kort)
+            </p>
+            <div
+              className={`grid gap-4 ${
+                testimonialsSection.gridColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              }`}
+            >
+              {frontPagePreview.slice(0, testimonialsSection.gridColumns === 2 ? 4 : 3).map((story) => (
+                <TestimonialStoryCard key={story.id} story={story} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* 1. Header & Quick Controls */}
       <div className="bg-white p-6 md:p-8 rounded-2xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-1">
@@ -603,6 +730,15 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                     <span>Fullført elev</span>
                   </button>
                 </div>
+                {formCategory === 'child' && (
+                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>
+                      Vitnesbyrd i kategorien barn/ungdom lagres internt, men vises ikke på den offentlige forsiden.
+                      Bruk «Fullført elev» eller fadder for salgskort med bilde.
+                    </span>
+                  </p>
+                )}
               </div>
 
               {/* Name & Role */}
@@ -832,6 +968,73 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   </div>
                 )}
               </div>
+
+              {formCategory === 'graduate' && (
+                <div className="p-4 bg-[#F6F4ED] rounded-xl border border-[#DFD9CB] space-y-4">
+                  <p className="text-xs font-semibold text-stone-800">Da og nå — to bilder på kortet (anbefalt)</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-stone-700">Barndomsbilde</label>
+                      {formBarneBildeUrl && (
+                        <img
+                          src={formBarneBildeUrl}
+                          alt="Barndom"
+                          className="w-full h-24 object-cover rounded-lg border border-stone-200"
+                        />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) readImageFile(file, setFormBarneBildeUrl);
+                        }}
+                        className="text-[11px] w-full"
+                      />
+                      <input
+                        type="text"
+                        placeholder="URL eller filnavn"
+                        value={formBarneBildeUrl}
+                        onChange={(e) => setFormBarneBildeUrl(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-stone-700">Voksenbilde</label>
+                      {(formVoksenBildeUrl || formImageUrl) && (
+                        <img
+                          src={formVoksenBildeUrl || formImageUrl}
+                          alt="Voksen"
+                          className="w-full h-24 object-cover rounded-lg border border-stone-200"
+                        />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file)
+                            readImageFile(file, (url) => {
+                              setFormVoksenBildeUrl(url);
+                              setFormImageUrl(url);
+                            });
+                        }}
+                        className="text-[11px] w-full"
+                      />
+                      <input
+                        type="text"
+                        placeholder="URL eller filnavn"
+                        value={formVoksenBildeUrl || formImageUrl}
+                        onChange={(e) => {
+                          setFormVoksenBildeUrl(e.target.value);
+                          setFormImageUrl(e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Consent & Visibility Toggles */}
               <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200/80 space-y-2">

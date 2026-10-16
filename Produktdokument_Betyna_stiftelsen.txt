@@ -195,7 +195,7 @@ Aksjonssiden skal gj?re det mulig ? samle inn penger til et avgrenset, konkret b
 * Tittel, beskrivelse av behov, bilder med tillatelse, m?lbel?p, eventuell frist og status.
 * Bel?p innsamlet og gjenst?ende bel?p, n?r dataene er tilgjengelige og kontrollert.
 * Vipps- eller bankbasert bidrag etter valgt betalingsl?sning.
-* Administratorgodkjenning f?r publisering. Aksjoner, vitnesbyrd og forsidetekst redigeres i ?n CMS-fane. Under Aksjoner settes tittel, beskrivelse, m?lbel?p, barn, status, sluttrapport og bilde. Innsamlet bel?p kommer fra gaver.
+* Administratorgodkjenning f?r publisering. Aksjoner, vitnesbyrd og forsidetekst redigeres i ?n CMS-fane. Under Vitnesbyrd redigeres seksjonstekst p? forsiden (toppmerking, overskrift, ingress, 2 eller 3 kolonner), og enkeltkort med historie, samtykke og bilde; fullf?rte mottakere kan ha barne- og voksenbilde (da og naa). Under Aksjoner settes tittel, beskrivelse, m?lbel?p, barn, status, sluttrapport og bilde. Innsamlet bel?p kommer fra gaver.
 * Separat registrering og rapportering av aksjonsmidler og fadderbidrag.
 * Sluttrapport som forklarer hvordan midlene ble brukt, basert p? dokumenterte tall.
 Eksempelbel?p som 3 ? 3 000 kroner kan brukes i intern prototype eller planlegging, men skal ikke presenteres offentlig som et faktisk behov f?r det er bekreftet.
@@ -211,7 +211,7 @@ Nettsiden skal bygge tillit, forklare arbeidet og gj?re det enkelt ? melde inter
 * Kontakt: kontaktinformasjon og skjema.
 * Bli fadder: interesseskjema; administrator tildeler barnet manuelt.
 * Innlogging for eksisterende faddere, tydelig atskilt fra offentlig innhold.
-Forsiden viser gruppebildet kunden har levert, som forbilde. Bildet st?r ved siden av hovedbudskapet, uten tekst opp? ansiktene. Barnas navn, private profiler og historier skal ikke v?re offentlig tilgjengelige. Offentlige vitnesbyrd kan brukes fra voksne tidligere mottakere n?r informert, frivillig samtykke er dokumentert og publiseringen er godkjent.
+Forsiden viser gruppebildet kunden har levert som hero-bilde. Administrator velger i CMS (Hovedbanner) synlig hoyde (lav, middels, hoy eller egendefinert vh), fokuspunkt for beskjaring (horisontalt og vertikalt i prosent), om fadder-CTA skal ligge oppaa bildet, og hvor mange piksler kortet skal overlappe nedover bildkanten. Tekst under hero kan redigeres som tidligere. Barnas navn, private profiler og historier skal ikke v?re offentlig tilgjengelige. Offentlige vitnesbyrd kan brukes fra voksne tidligere mottakere n?r informert, frivillig samtykke er dokumentert og publiseringen er godkjent.
 
 10. Spr?k, oversettelse og AI
 Spr?kkrav
@@ -623,6 +623,52 @@ Importen i Firestore tok med en eldre tekstutgave fra administratorens nettleser
 Administrator logget inn med Google paa www.betyna.no (popup i Chrome) og importerte innholdet fra nettleseren: 91 dokumenter ble lagret i Firestore (prosjekt betyna-23040), og importen er laast med system/seedLock. Innlogging via sidebytte (redirect) fungerte ikke fordi Chrome blokkerer lagring paa tvers av adresser; popup er derfor eneste innloggingsknapp. Gjenstaar: besoekende som ikke er innlogget leser fortsatt ikke fra Firestore (offentlig innhold maa leses uten innlogging), roller og brukerliste, og koordinator og fadder. Ekte barneopplysninger tas ikke i bruk foer innlogging og regler er testet for alle roller.
 
 Arbeidsdokument - Versjon 1.67 - 16. oktober 2026
+
+Arbeidsdokument - Versjon 1.68 - 16. oktober 2026
+
+16. oktober 2026, fadderkortet staar paa forsiden
+Kunden vil at paaameldingsskjemaet skal ligge synlig oeverst paa forsiden, uten at man foerst maa trykke Bli fadder. Kortet staar til hoeyre for hovedteksten. Knappen Bli fadder i menyen scroller til kortet.
+
+16. oktober 2026, bli-fadder-skjemaet lagrer
+Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten felter. Skjemaet (navn, e-post, telefon, poststed, beloep, oensket betalingsmaate) vises ogsaa i produksjon og lagrer en fadder i databasen uten barn. Ingenting trekkes. Admin kobler barn etterpaa. Regelen for sponsors tillater opprettelse fra nettsiden, ikke endring eller sletting.
+
+16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
+Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
+
+Arbeidsdokument - Versjon 1.75 - 16. oktober 2026
+
+16. oktober 2026, runde 3 vitnesbyrd og CMS-rutenett
+CMS-fanen Vitnesbyrd har egen seksjonsredigering (toppmerking, overskrift, ingress, 2 eller 3 kolonner, av/paa). Admin oppretter kort med historie, samtykke og bilde. Fullfoerte mottakere kan ha barnebilde og voksenbilde (da og naa). Forsiden viser bare godkjente kort med bilde fra faddere og voksne mottakere, ikke barn som fortsatt er i lopet. Kort uten bilde vises ikke.
+
+Arbeidsdokument - Versjon 1.74 - 16. oktober 2026
+
+16. oktober 2026, runde 2 av forsiden som salgspitch
+Etter runde 1 (tydelig skjema, ingen prototype-tall, mobil med tekst og skjema foer bilde) er runde 2 gjennomfoert: den lange brosjyren om privatskole og pengestrom er byttet med tre korte kort og valgfri Les mer. Ekstraordin?re aksjoner ligger lavere, med mindre kort og sekundaer budskap. Samme paameldingsskjema gjentas nederst. Stiftelse-teksten er kuttet til en rolig setning ved aapenhet og ved skjemaet.
+
+Arbeidsdokument - Versjon 1.73 - 16. oktober 2026
+
+16. oktober 2026, CMS for hero-bilde og fadder-CTA
+Kunden avklarte at hardkodet beskjaring av gruppebildet ikke fungerer: ulike motiver trenger ulik hoyde og fokuspunkt. I CMS-fanen Hovedbanner kan admin sette hero-hoyde, justere fokuspunkt med skyvere, laste opp eller velge bilde, og styre fadder-CTA som ligger delvis over bunnen av bildet (som Plan og Redd Barna). Forsiden bruker object-cover med disse verdiene. Tidligere regel om bilde ved siden av hovedbudskap uten beskjaring er erstattet.
+
+Arbeidsdokument - Versjon 1.72 - 16. oktober 2026
+
+16. oktober 2026, giverkort opp? bildet
+Kunden viste hvordan Redd Barna, Fattigdomsbekjemper og Plan legger et kompakt giverkort opp? et stort bilde. Forsiden bruker samme grep: gruppebildet fyller toppen, paaameldingskortet ligger opp? til venstre, og loefteteksten staar paa bildet til hoeyre. Betynas egne beloep og tekst beholdes.
+
+Arbeidsdokument - Versjon 1.71 - 16. oktober 2026
+
+16. oktober 2026, runde 1 av forsiden som salgspitch
+Kunden godkjente runde 1. Prototype-tallene er tatt bort fra forsiden. Skjemaet sier at man blir registrert, kobles til ett barn, og at det maanedlige trekket settes opp. Betalingsvalgene heter oensket maate aa betale paa. Vipps-trekket starter foerst naar avtalen er godkjent. Paamelding krever kryss for at navn, e-post og telefon kan lagres. Paa mobil kommer tekst og skjema foer bildet.
+
+Arbeidsdokument - Versjon 1.70 - 16. oktober 2026
+
+16. oktober 2026, faste Vipps-trekk for fadderbidrag
+Kunden vil at maanedlig fadderstoette skal trekkes automatisk med Vipps. En vanlig Vipps-betaling er ikke nok. Loesningen skal bruke Vipps faste betalinger: fadderen godkjenner avtalen en gang i Vipps-appen, deretter trekker Betyna 250 eller 350 kroner hver maaned til avtalen stoppes. AvtaleGiro og bank blir vaerende som alternativ for dem som ikke bruker Vipps. Tidligere avklaring om at ekte Vipps og automatisk trekk ikke hoerer til denne versjonen, er erstattet av denne beslutningen. Integrasjonen bygges naar Vipps-avtalen med faste betalinger og noeklene til testmiljoeet er paa plass. Kortnummer og Vipps-noekler lagres ikke i nettleseren.
+
+Arbeidsdokument - Versjon 1.69 - 16. oktober 2026
+
+16. oktober 2026, personlige vitnesbyrd er salgsargumentet
+Kunden er uenig i aa dempe personlige historier paa forsiden. Det sterkeste argumentet for aa bli fadder er vitnesbyrd fra mennesker Betyna hjalp som barn, og som naa er voksne. De kan selv godkjenne publisering, med baade barnebilde og voksenbilde. Kort paa forsiden skal kunne vise begge bildene og deres egne ord. Barn som fortsatt er i lopet, ligger i fadderportalen, ikke som aapne salgskort.
 
 16. oktober 2026, innlogging paa den offentlige siden
 Kunden pekte paa at innlogging ikke kan ligge bare inne i admin: da ma man inn i admin for aa logge inn, og inn i admin kommer man ikke uten aa vaere innlogget. Knappen Logg inn staar naa paa den offentlige siden, ved siden av Bli fadder. Etter Google-innlogging aapnes portalen som rollen tilsier. Visningsmodus kan fortsatt brukes etterpaa. Lagring av nettleserinnhold til databasen blir vaerende under Innstillinger.
