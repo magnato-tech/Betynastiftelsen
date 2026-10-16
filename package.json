@@ -11,6 +11,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:rules": "npx firebase-tools emulators:exec --only firestore,storage --project demo-betyna \"npx vitest run -c vitest.rules.config.ts\"",
+    "test:e2e": "playwright test",
+    "test:all": "npm run lint && npm test && npm run test:rules && npm run test:e2e",
     "test:sprint0": "vitest run src/workflows/sprint0.workflows.test.ts",
     "firebase:deploy-rules": "npx firebase-tools deploy --only firestore --project betyna-23040",
     "emulators": "npx firebase-tools emulators:start --only firestore,storage"
@@ -32,12 +35,17 @@
     "vite": "^8.3.0"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@playwright/test": "^1.64.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.28.2",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
