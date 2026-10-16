@@ -14,7 +14,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
   setActiveSection,
 }) => {
-  const { role, setRole, t, campaigns, language } = useApp();
+  const {
+    role,
+    setRole,
+    t,
+    campaigns,
+    language,
+    firestoreEnabled,
+    firestoreUserEmail,
+    firestoreAuthError,
+    signInFirestoreGoogle,
+  } = useApp();
 
   return (
     <header className="bg-[#F6F4ED]/95 backdrop-blur-md sticky top-0 z-30 border-b border-[#DFD9CB]">
@@ -254,6 +264,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {role !== 'public' && <NotificationCenter onNavigateSection={setActiveSection} />}
 
+          {role === 'public' && firestoreEnabled && !firestoreUserEmail && (
+            <button
+              type="button"
+              onClick={() => signInFirestoreGoogle().catch(() => undefined)}
+              className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              Logg inn
+            </button>
+          )}
+
           {role === 'public' ? (
             <button
               onClick={onOpenSponsorModal}
@@ -271,6 +291,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+      {role === 'public' && firestoreAuthError && (
+        <p className="max-w-7xl mx-auto px-6 pb-3 text-xs text-red-900">{firestoreAuthError}</p>
+      )}
     </header>
   );
 };

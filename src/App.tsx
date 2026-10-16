@@ -85,7 +85,7 @@ const MainLayout: React.FC = () => {
           />
         )}
 
-        {prototypeRoleSwitcherEnabled && role !== 'public' && (
+        {role !== 'public' && (
           <DevPortals
             role={role}
             activeSection={activeSection}

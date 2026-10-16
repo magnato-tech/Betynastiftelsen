@@ -621,3 +621,8 @@ Importen i Firestore tok med en eldre tekstutgave fra administratorens nettleser
 
 15. oktober 2026, foerste import gjennomfoert
 Administrator logget inn med Google paa www.betyna.no (popup i Chrome) og importerte innholdet fra nettleseren: 91 dokumenter ble lagret i Firestore (prosjekt betyna-23040), og importen er laast med system/seedLock. Innlogging via sidebytte (redirect) fungerte ikke fordi Chrome blokkerer lagring paa tvers av adresser; popup er derfor eneste innloggingsknapp. Gjenstaar: besoekende som ikke er innlogget leser fortsatt ikke fra Firestore (offentlig innhold maa leses uten innlogging), roller og brukerliste, og koordinator og fadder. Ekte barneopplysninger tas ikke i bruk foer innlogging og regler er testet for alle roller.
+
+Arbeidsdokument - Versjon 1.67 - 16. oktober 2026
+
+16. oktober 2026, innlogging paa den offentlige siden
+Kunden pekte paa at innlogging ikke kan ligge bare inne i admin: da ma man inn i admin for aa logge inn, og inn i admin kommer man ikke uten aa vaere innlogget. Knappen Logg inn staar naa paa den offentlige siden, ved siden av Bli fadder. Etter Google-innlogging aapnes portalen som rollen tilsier. Visningsmodus kan fortsatt brukes etterpaa. Lagring av nettleserinnhold til databasen blir vaerende under Innstillinger.

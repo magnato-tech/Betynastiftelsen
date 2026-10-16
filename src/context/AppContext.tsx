@@ -42,7 +42,6 @@ import {
 } from '../db/seedPolicy';
 import { firestoreEnabled as firestoreConfigured } from '../config/firebase';
 import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
-import { prototypeRoleSwitcherEnabled } from '../config/prototypeAccess';
 import type { AppDataSnapshot } from '../db/firestoreData';
 import { buildFieldFact } from '../utils/fieldFacts';
 import { postBetynaEmail } from '../email/client';
@@ -330,7 +329,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     const profile = firestore.firestoreUserProfile;
-    if (!profile || prototypeRoleSwitcherEnabled) return;
+    if (!profile) return;
     setRoleState(profile.role);
     if (profile.role === 'sponsor' && profile.sponsorId) {
       setCurrentSponsorId(profile.sponsorId);
