@@ -45,6 +45,8 @@ import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
 import type { AppDataSnapshot } from '../db/firestoreData';
 import type { FirestoreUser } from '../db/firestoreProfile';
 import { consumePortalIntent, markPortalIntent } from '../utils/portalIntent';
+import { canOpenPortalRole } from '../utils/portalRoles';
+import { prototypeRoleSwitcherEnabled } from '../config/prototypeAccess';
 import { buildFieldFact } from '../utils/fieldFacts';
 import { postBetynaEmail } from '../email/client';
 
@@ -163,9 +165,13 @@ interface AppContextType {
   firestoreEnabled: boolean;
   firestoreBackendActive: boolean;
   firestoreUserEmail: string | null;
+  firestoreUserProfile: FirestoreUser | null;
+  firestoreProfileLoading: boolean;
+  firestoreAccessMessage: string | null;
   firestoreImportMessage: string | null;
   firestoreAuthError: string | null;
   signInFirestoreGoogle: () => Promise<void>;
+  sendFirestoreEmailSignInLink: (email: string) => Promise<void>;
   signInFirestoreGoogleRedirect: () => Promise<void>;
   /** Bytt til innlogget rolle (admin/koordinator/fadder). Returnerer false hvis profil mangler. */
   enterPortalFromProfile: () => boolean;
@@ -323,7 +329,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setEmailOutbox(h.emailOutbox ?? []);
       if (h.cms) setCmsContent(h.cms);
       if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
-      firestore.confirmHydrated(h);
+      firestore.confirmHydrated(h, {
+        enableSave: firestore.firestoreUserProfile?.role === 'admin',
+      });
     } else {
       if (h.cms) setCmsContent(h.cms);
       if (h.campaigns) setCampaigns(migrateCampaigns(h.campaigns));
@@ -356,6 +364,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!profile || !consumePortalIntent()) return;
     applyFirestoreProfileToRole(profile);
   }, [applyFirestoreProfileToRole, firestore.firestoreUserProfile]);
+
+  useEffect(() => {
+    const profile = firestore.firestoreUserProfile;
+    if (!profile || profile.role === 'admin') return;
+    if (profile.role === 'sponsor' && profile.sponsorId) {
+      setCurrentSponsorId(profile.sponsorId);
+    }
+    if (profile.role === 'coordinator' && profile.coordinatorId) {
+      setCurrentCoordinatorId(profile.coordinatorId);
+    }
+  }, [firestore.firestoreUserProfile]);
 
   const buildDataSnapshot = useCallback((): AppDataSnapshot => ({
     coordinators,
@@ -523,6 +542,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setRole = (newRole: UserRole) => {
+    const profile = firestore.firestoreUserProfile;
+    if (profile) {
+      if (!canOpenPortalRole(profile, newRole)) return;
+    } else if (!prototypeRoleSwitcherEnabled && newRole !== 'public') {
+      return;
+    }
     setRoleState(newRole);
   };
 
@@ -1567,9 +1592,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         firestoreEnabled: firestore.firestoreEnabled,
         firestoreBackendActive: firestore.backendActive,
         firestoreUserEmail: firestore.firebaseUser?.email ?? null,
+        firestoreUserProfile: firestore.firestoreUserProfile,
+        firestoreProfileLoading: firestore.firestoreProfileLoading,
+        firestoreAccessMessage: firestore.firestoreAccessMessage,
         firestoreImportMessage: firestore.importMessage,
         firestoreAuthError: firestore.authError,
         signInFirestoreGoogle: firestore.signInWithGoogle,
+        sendFirestoreEmailSignInLink: firestore.sendEmailSignInLink,
         signInFirestoreGoogleRedirect: firestore.signInWithGoogleRedirect,
         enterPortalFromProfile,
         importBrowserToFirestore: async () => {

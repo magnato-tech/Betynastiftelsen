@@ -2,8 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
+  isSignInWithEmailLink,
   onAuthStateChanged,
+  sendSignInLinkToEmail,
   setPersistence,
+  signInWithEmailLink,
   signInWithPopup,
   signInWithRedirect,
   type User,
@@ -20,6 +23,7 @@ import {
   commitChanges,
   importBrowserSnapshotToFirestore,
   loadAllFromFirestore,
+  loadPortalFromFirestore,
   loadPublicFromFirestore,
   type DbChange,
 } from './firestoreData';
@@ -88,6 +92,7 @@ const SYNCED_LISTS: { key: ListKey; collection: string }[] = [
 
 const SAVE_DELAY_MS = 600;
 const RETRY_DELAY_MS = 8000;
+const EMAIL_FOR_SIGN_IN_KEY = 'betyna_email_for_sign_in';
 
 function formatSaveError(err: unknown): string {
   const code = (err as { code?: string })?.code ?? '';
@@ -115,6 +120,8 @@ export function useFirestoreAppSync() {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(() => readStoredAuthError());
   const [firestoreUserProfile, setFirestoreUserProfile] = useState<FirestoreUser | null>(null);
+  const [firestoreProfileLoading, setFirestoreProfileLoading] = useState(false);
+  const [firestoreAccessMessage, setFirestoreAccessMessage] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'idle', lastSavedAt: null, error: null });
   const snapshotRef = useRef<(() => AppDataSnapshot) | null>(null);
 
@@ -140,6 +147,22 @@ export function useFirestoreAppSync() {
     void completeFirebaseAuthRedirect(auth).catch((err) =>
       setAuthError(formatFirebaseAuthError(err))
     );
+    void (async () => {
+      if (!isSignInWithEmailLink(auth, window.location.href)) return;
+      try {
+        const email = window.localStorage.getItem(EMAIL_FOR_SIGN_IN_KEY);
+        if (!email) {
+          setAuthError('Åpne innloggingslenken i samme nettleser, eller be om ny lenke.');
+          return;
+        }
+        await signInWithEmailLink(auth, email, window.location.href);
+        window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);
+        clearStoredAuthError();
+        setAuthError(null);
+      } catch (err) {
+        setAuthError(formatFirebaseAuthError(err));
+      }
+    })();
     return () => unsubscribe();
   }, []);
 
@@ -147,9 +170,13 @@ export function useFirestoreAppSync() {
     const email = firebaseUser?.email;
     if (!db || !firebaseUser?.uid || !email) {
       setFirestoreUserProfile(null);
+      setFirestoreProfileLoading(false);
+      setFirestoreAccessMessage(null);
       return;
     }
     let cancelled = false;
+    setFirestoreProfileLoading(true);
+    setFirestoreAccessMessage(null);
     (async () => {
       try {
         const profile = await ensureFirestoreUserOnLogin(
@@ -158,9 +185,20 @@ export function useFirestoreAppSync() {
           email,
           firebaseUser.displayName
         );
-        if (!cancelled) setFirestoreUserProfile(profile);
-      } catch {
-        if (!cancelled) setFirestoreUserProfile(null);
+        if (cancelled) return;
+        setFirestoreUserProfile(profile);
+        if (!profile) {
+          setFirestoreAccessMessage(
+            'Denne Google-kontoen finnes ikke i userDirectory og er ikke satt opp som administrator. Be en eksisterende admin legge inn e-posten din i Firestore, eller logg inn med en admin-konto.'
+          );
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setFirestoreUserProfile(null);
+          setFirestoreAccessMessage(formatFirebaseAuthError(err));
+        }
+      } finally {
+        if (!cancelled) setFirestoreProfileLoading(false);
       }
     })();
     return () => {
@@ -189,7 +227,7 @@ export function useFirestoreAppSync() {
     };
   }, []);
 
-  /** Lag 2: alt innhold, bare for innlogget administrator (reglene avgjør). */
+  /** Lag 2: alt innhold etter at users/{uid} finnes (admin får full lasting). */
   useEffect(() => {
     if (!db || !firestoreEnabled || !authReady) return;
     if (!firebaseUser) {
@@ -198,28 +236,47 @@ export function useFirestoreAppSync() {
       setBackendActive(false);
       return;
     }
+    if (firestoreProfileLoading || !firestoreUserProfile) return;
+    const portalRole = firestoreUserProfile.role;
+    if (portalRole !== 'admin' && portalRole !== 'coordinator' && portalRole !== 'sponsor') {
+      fullLoadedRef.current = false;
+      readyRef.current = false;
+      setBackendActive(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
-        const data = await loadAllFromFirestore(db);
+        const data =
+          portalRole === 'admin'
+            ? await loadAllFromFirestore(db)
+            : await loadPortalFromFirestore(db, firestoreUserProfile);
         if (!cancelled && data) {
           fullLoadedRef.current = true;
           setHydration({ data, full: true });
+        } else if (!cancelled && portalRole === 'admin') {
+          setFirestoreAccessMessage(
+            (prev) =>
+              prev ??
+              'Kunne ikke laste administrasjonsdata. Sjekk at system/seedLock finnes i Firestore og at reglene er deployet.'
+          );
         }
-      } catch {
-        /* innlogget uten admin-rett: får bare det offentlige laget */
+      } catch (err) {
+        if (!cancelled) {
+          setFirestoreAccessMessage(formatSaveError(err));
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [authReady, firebaseUser?.uid]);
+  }, [authReady, firebaseUser?.uid, firestoreUserProfile, firestoreProfileLoading]);
 
   /**
    * Kalles av appen etter at full lasting er satt inn i tilstanden.
    * Først da vet vi hva som ligger i databasen, og lagring slås på.
    */
-  const confirmHydrated = useCallback((data: FirestoreHydration) => {
+  const confirmHydrated = useCallback((data: FirestoreHydration, options?: { enableSave?: boolean }) => {
     const baselines: Partial<Record<ListKey, Baseline>> = {};
     for (const { key } of SYNCED_LISTS) {
       baselines[key] = baselineOf((data[key] ?? []) as { id: string }[]);
@@ -230,8 +287,9 @@ export function useFirestoreAppSync() {
     // Tilstanden i appen før denne lastingen er utdatert og må aldri lagres.
     latestRef.current = null;
     dirtyRef.current = false;
-    readyRef.current = true;
-    setBackendActive(true);
+    const enableSave = options?.enableSave ?? true;
+    readyRef.current = enableSave;
+    setBackendActive(enableSave);
   }, []);
 
   /** Regner ut endringer mot det som ligger i databasen. */
@@ -364,6 +422,19 @@ export function useFirestoreAppSync() {
     }
   }, [prepareGoogleSignIn]);
 
+  const sendEmailSignInLink = useCallback(async (email: string) => {
+    if (!auth) throw new Error('Firestore er ikke konfigurert');
+    setAuthError(null);
+    await prepareGoogleSignIn();
+    const trimmed = email.trim().toLowerCase();
+    const actionCodeSettings = {
+      url: window.location.href.split('?')[0].split('#')[0],
+      handleCodeInApp: true,
+    };
+    await sendSignInLinkToEmail(auth, trimmed, actionCodeSettings);
+    window.localStorage.setItem(EMAIL_FOR_SIGN_IN_KEY, trimmed);
+  }, [prepareGoogleSignIn]);
+
   const signInWithGoogleRedirect = useCallback(async () => {
     if (!auth) throw new Error('Firestore er ikke konfigurert');
     setAuthError(null);
@@ -413,6 +484,8 @@ export function useFirestoreAppSync() {
     firestoreEnabled,
     firebaseUser,
     firestoreUserProfile,
+    firestoreProfileLoading,
+    firestoreAccessMessage,
     backendActive,
     hydration,
     confirmHydrated,
@@ -421,6 +494,7 @@ export function useFirestoreAppSync() {
     authError,
     saveStatus,
     signInWithGoogle,
+    sendEmailSignInLink,
     signInWithGoogleRedirect,
     importBrowserToFirestore,
     registerSnapshotProvider,

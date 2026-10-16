@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
+import { PortalRoleBar } from './components/common/PortalRoleBar';
 import { SaveStatusPill } from './components/common/SaveStatusPill';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -20,7 +21,7 @@ import { readCmsPreviewFlags } from './utils/cmsPreview';
 import { markPortalIntent } from './utils/portalIntent';
 
 const MainLayout: React.FC = () => {
-  const { role, setRole, setCurrentSponsorId, firestoreLoading } = useApp();
+  const { role, setRole, setCurrentSponsorId, firestoreLoading, firestoreUserProfile } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
@@ -68,7 +69,10 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
       <SaveStatusPill />
       {/* 1. Persistent Role Switcher Ribbon for immediate testing */}
-      {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
+      {firestoreUserProfile && <PortalRoleBar />}
+      {prototypeRoleSwitcherEnabled && !previewFlags.preview && !firestoreUserProfile && (
+        <RoleSwitcherBanner />
+      )}
 
       {/* 2. Top Bar complying with strict 1-row 3-zone contract */}
       <Navbar

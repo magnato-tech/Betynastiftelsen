@@ -4,24 +4,27 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+    function authEmailLower() {
+      return request.auth.token.email.lower();
+    }
     function userDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
     function bootstrapAdmin() {
       return signedIn() && (
-        request.auth.token.email == 'magnar.totland@gmail.com' ||
-        request.auth.token.email == 'totland.s@gmail.com'
+        authEmailLower() == 'magnar.totland@gmail.com' ||
+        authEmailLower() == 'totland.s@gmail.com'
       );
     }
     function directoryInvite() {
       return signedIn()
-        && exists(/databases/$(database)/documents/userDirectory/$(request.auth.token.email));
+        && exists(/databases/$(database)/documents/userDirectory/$(authEmailLower()));
     }
     function isAdmin() {
       return signedIn() && userDoc().role == 'admin';
     }
     function canAdminWrite() {
-      return isAdmin() || bootstrapAdmin();
+      return bootstrapAdmin() || isAdmin();
     }
     function isCoordinator() {
       return signedIn() && userDoc().role == 'coordinator';
@@ -37,7 +40,7 @@ service cloud.firestore {
     }
 
     match /userDirectory/{emailId} {
-      allow read: if signedIn() && request.auth.token.email == emailId;
+      allow read: if signedIn() && authEmailLower() == emailId;
       allow write: if canAdminWrite();
     }
 

@@ -24,6 +24,8 @@ export function useFakeSync() {
     firestoreEnabled: false,
     firebaseUser: null,
     firestoreUserProfile: null,
+    firestoreProfileLoading: false,
+    firestoreAccessMessage: null,
     backendActive,
     hydration,
     confirmHydrated: (data: unknown) => {
@@ -35,6 +37,7 @@ export function useFakeSync() {
     authError: null,
     saveStatus: { state: 'idle' as const, lastSavedAt: null, error: null },
     signInWithGoogle: async () => undefined,
+    sendEmailSignInLink: async () => undefined,
     signInWithGoogleRedirect: async () => undefined,
     importBrowserToFirestore: async () => undefined,
     registerSnapshotProvider: () => undefined,

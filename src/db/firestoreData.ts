@@ -19,6 +19,7 @@ import type { SeedLock } from './seedPolicy';
 import { LIVE_LAUNCH_VERSION, createSeedLock } from './seedPolicy';
 
 import type { AppDataSnapshot } from './appDataSnapshot';
+import type { FirestoreUser } from './firestoreProfile';
 
 export type { AppDataSnapshot };
 
@@ -132,6 +133,72 @@ export async function loadAllFromFirestore(db: Firestore): Promise<Partial<AppDa
       ? (emailSnap.data() as AppDataSnapshot['emailAutoSend'])
       : undefined,
   };
+}
+
+/** Koordinator/fadder: les det Firestore-reglene tillater (filtrert per dokument). Admin bruker loadAllFromFirestore. */
+export async function loadPortalFromFirestore(
+  db: Firestore,
+  profile: FirestoreUser
+): Promise<Partial<AppDataSnapshot>> {
+  const loadList = async <T extends { id: string }>(name: string): Promise<T[]> => {
+    const snap = await getDocs(collection(db, name));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as T);
+  };
+
+  const publicPart = await loadPublicFromFirestore(db);
+  const emptyLists: Partial<AppDataSnapshot> = {
+    coordinators: [],
+    sponsors: [],
+    children: [],
+    catalogPhotos: [],
+    facts: [],
+    reports: [],
+    milestones: [],
+    inquiries: [],
+    payments: [],
+    notifications: [],
+    auditLogs: [],
+    emailOutbox: [],
+  };
+
+  if (profile.role === 'coordinator' && profile.coordinatorId) {
+    const coordSnap = await getDoc(doc(db, FIRESTORE_COLLECTIONS.coordinators, profile.coordinatorId));
+    const coordinators = coordSnap.exists()
+      ? [{ id: coordSnap.id, ...coordSnap.data() } as AppDataSnapshot['coordinators'][number]]
+      : [];
+    return {
+      ...emptyLists,
+      ...publicPart,
+      coordinators,
+      children: await loadList(FIRESTORE_COLLECTIONS.children),
+      catalogPhotos: await loadList(FIRESTORE_COLLECTIONS.catalogPhotos),
+      facts: await loadList(FIRESTORE_COLLECTIONS.facts),
+      reports: await loadList(FIRESTORE_COLLECTIONS.reports),
+      milestones: await loadList(FIRESTORE_COLLECTIONS.milestones),
+      inquiries: await loadList(FIRESTORE_COLLECTIONS.inquiries),
+      notifications: await loadList(FIRESTORE_COLLECTIONS.notifications),
+    };
+  }
+
+  if (profile.role === 'sponsor' && profile.sponsorId) {
+    const sponsorSnap = await getDoc(doc(db, FIRESTORE_COLLECTIONS.sponsors, profile.sponsorId));
+    const sponsors = sponsorSnap.exists()
+      ? [{ id: sponsorSnap.id, ...sponsorSnap.data() } as AppDataSnapshot['sponsors'][number]]
+      : [];
+    return {
+      ...emptyLists,
+      ...publicPart,
+      sponsors,
+      children: await loadList(FIRESTORE_COLLECTIONS.children),
+      reports: await loadList(FIRESTORE_COLLECTIONS.reports),
+      milestones: await loadList(FIRESTORE_COLLECTIONS.milestones),
+      inquiries: await loadList(FIRESTORE_COLLECTIONS.inquiries),
+      payments: await loadList(FIRESTORE_COLLECTIONS.payments),
+      notifications: await loadList(FIRESTORE_COLLECTIONS.notifications),
+    };
+  }
+
+  return { ...emptyLists, ...publicPart };
 }
 
 /** Første import: det som ligger i nettleseren nå. Oppretter bare nye id-er. */

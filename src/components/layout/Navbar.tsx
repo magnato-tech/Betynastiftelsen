@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { PortalLoginModal } from '../auth/PortalLoginModal';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
@@ -22,10 +23,30 @@ export const Navbar: React.FC<NavbarProps> = ({
     language,
     firestoreEnabled,
     firestoreUserEmail,
+    firestoreUserProfile,
+    firestoreProfileLoading,
+    firestoreAccessMessage,
     firestoreAuthError,
-    signInFirestoreGoogle,
     enterPortalFromProfile,
   } = useApp();
+
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  const handleOpenLogin = () => {
+    if (!firestoreEnabled) return;
+    enterPortalFromProfile();
+    setLoginOpen(true);
+  };
+
+  const handleEnterPortal = () => {
+    enterPortalFromProfile();
+    setLoginOpen(false);
+  };
+
+  const loginNavClass =
+    'transition-colors whitespace-nowrap shrink-0 cursor-pointer text-[#4D6B3E] font-semibold hover:text-[#3B522F]';
+  const loginButtonClass =
+    'px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
     <header className="bg-[#F6F4ED]/95 backdrop-blur-md sticky top-0 z-30 border-b border-[#DFD9CB]">
@@ -87,6 +108,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {t('nav.transparency', 'Åpenhet')}
               </button>
+              <span className="text-[#DFD9CB] select-none" aria-hidden>|</span>
+              {firestoreProfileLoading && (
+                <span className="text-xs text-stone-500 whitespace-nowrap">Logger inn …</span>
+              )}
+              {!firestoreProfileLoading && !firestoreUserProfile && (
+                <button
+                  type="button"
+                  onClick={handleOpenLogin}
+                  disabled={!firestoreEnabled}
+                  title={firestoreEnabled ? undefined : 'Firestore er ikke aktivert i dette miljøet'}
+                  className={loginNavClass}
+                >
+                  {t('nav.login', 'Logg inn')}
+                </button>
+              )}
+              {!firestoreProfileLoading && firestoreUserProfile && (
+                <button type="button" onClick={handleEnterPortal} className={loginNavClass}>
+                  {t('nav.enterPortal', 'Gå til administrasjon')}
+                </button>
+              )}
             </>
           )}
 
@@ -266,28 +307,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {role !== 'public' && <NotificationCenter onNavigateSection={setActiveSection} />}
 
-          {role === 'public' && firestoreEnabled && !firestoreUserEmail && (
+          {role === 'public' && firestoreProfileLoading && (
+            <span className="text-xs text-stone-500 whitespace-nowrap md:hidden">Logger inn …</span>
+          )}
+
+          {role === 'public' && !firestoreProfileLoading && !firestoreUserProfile && (
             <button
               type="button"
-              onClick={() => {
-                enterPortalFromProfile();
-                signInFirestoreGoogle()
-                  .then(() => enterPortalFromProfile())
-                  .catch(() => undefined);
-              }}
-              className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={handleOpenLogin}
+              disabled={!firestoreEnabled}
+              title={firestoreEnabled ? undefined : 'Firestore er ikke aktivert i dette miljøet'}
+              className={`${loginButtonClass} md:hidden`}
             >
-              Logg inn
+              {t('nav.login', 'Logg inn')}
             </button>
           )}
 
-          {role === 'public' && firestoreEnabled && firestoreUserEmail && (
+          {role === 'public' && !firestoreProfileLoading && firestoreUserProfile && (
             <button
               type="button"
-              onClick={() => enterPortalFromProfile()}
-              className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={handleEnterPortal}
+              className={`${loginButtonClass} md:hidden`}
             >
-              {t('nav.enterPortal', 'Gå til administrasjon')}
+              {t('nav.enterPortal', 'Administrasjon')}
             </button>
           )}
 
@@ -309,9 +351,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
-      {role === 'public' && firestoreAuthError && (
-        <p className="max-w-7xl mx-auto px-6 pb-3 text-xs text-red-900">{firestoreAuthError}</p>
+      {role === 'public' && (firestoreAuthError || firestoreAccessMessage) && (
+        <p className="max-w-7xl mx-auto px-6 pb-3 text-xs text-red-900">
+          {firestoreAuthError || firestoreAccessMessage}
+        </p>
       )}
+      <PortalLoginModal
+        isOpen={loginOpen}
+        onClose={() => {
+          setLoginOpen(false);
+          enterPortalFromProfile();
+        }}
+      />
     </header>
   );
 };

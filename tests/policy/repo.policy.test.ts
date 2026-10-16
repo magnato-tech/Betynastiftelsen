@@ -131,10 +131,17 @@ describe('farlige API-er i appkoden', () => {
     expect(grep(/console\.log\([^)]*(epost|email|telefon|fornavn|etternavn)/i)).toEqual([]);
   });
   it('localStorage brukes bare av kjente filer', () => {
-    expect(grep(/localStorage\./).sort()).toEqual(['src/context/AppContext.tsx', 'src/db/browserStateSnapshot.ts'].sort());
+    expect(grep(/localStorage\./).sort()).toEqual(
+      ['src/context/AppContext.tsx', 'src/db/browserStateSnapshot.ts', 'src/db/useFirestoreAppSync.ts'].sort()
+    );
   });
   it('sessionStorage brukes bare til navigasjon og innloggingsfeil', () => {
-    expect(grep(/sessionStorage\./).sort()).toEqual(['src/App.tsx', 'src/db/firebaseAuthRedirect.ts', 'src/db/useFirestoreAppSync.ts']);
+    expect(grep(/sessionStorage\./).sort()).toEqual([
+      'src/App.tsx',
+      'src/db/firebaseAuthRedirect.ts',
+      'src/db/useFirestoreAppSync.ts',
+      'src/utils/portalIntent.ts',
+    ]);
   });
   it('indexedDB brukes ikke', () => {
     expect(grep(/indexedDB/)).toEqual([]);

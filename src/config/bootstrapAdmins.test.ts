@@ -29,7 +29,7 @@ describe('bootstrapAdmins', () => {
 
   it('adressene i appen er identiske med dem i firestore.rules (ingen avvik mellom UI og regler)', () => {
     const rules = readFileSync('firestore.rules', 'utf8');
-    const inRules = [...rules.matchAll(/request\.auth\.token\.email == '([^']+)'/g)].map((m) => m[1]).sort();
+    const inRules = [...rules.matchAll(/authEmailLower\(\) == '([^']+)'/g)].map((m) => m[1]).sort();
     expect(inRules).toEqual([...BOOTSTRAP_ADMIN_EMAILS].sort());
   });
 });
