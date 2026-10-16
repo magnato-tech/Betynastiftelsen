@@ -43,6 +43,8 @@ import {
 import { firestoreEnabled as firestoreConfigured } from '../config/firebase';
 import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
 import type { AppDataSnapshot } from '../db/firestoreData';
+import type { FirestoreUser } from '../db/firestoreProfile';
+import { consumePortalIntent, markPortalIntent } from '../utils/portalIntent';
 import { buildFieldFact } from '../utils/fieldFacts';
 import { postBetynaEmail } from '../email/client';
 
@@ -165,6 +167,8 @@ interface AppContextType {
   firestoreAuthError: string | null;
   signInFirestoreGoogle: () => Promise<void>;
   signInFirestoreGoogleRedirect: () => Promise<void>;
+  /** Bytt til innlogget rolle (admin/koordinator/fadder). Returnerer false hvis profil mangler. */
+  enterPortalFromProfile: () => boolean;
   importBrowserToFirestore: () => Promise<void>;
   /** Offentlig innhold er ikke lest fra databasen ennå. */
   firestoreLoading: boolean;
@@ -327,9 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [firestore.hydration]);
 
-  useEffect(() => {
-    const profile = firestore.firestoreUserProfile;
-    if (!profile) return;
+  const applyFirestoreProfileToRole = useCallback((profile: FirestoreUser) => {
     setRoleState(profile.role);
     if (profile.role === 'sponsor' && profile.sponsorId) {
       setCurrentSponsorId(profile.sponsorId);
@@ -337,7 +339,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (profile.role === 'coordinator' && profile.coordinatorId) {
       setCurrentCoordinatorId(profile.coordinatorId);
     }
-  }, [firestore.firestoreUserProfile]);
+  }, []);
+
+  const enterPortalFromProfile = useCallback((): boolean => {
+    const profile = firestore.firestoreUserProfile;
+    if (!profile) {
+      markPortalIntent();
+      return false;
+    }
+    applyFirestoreProfileToRole(profile);
+    return true;
+  }, [applyFirestoreProfileToRole, firestore.firestoreUserProfile]);
+
+  useEffect(() => {
+    const profile = firestore.firestoreUserProfile;
+    if (!profile || !consumePortalIntent()) return;
+    applyFirestoreProfileToRole(profile);
+  }, [applyFirestoreProfileToRole, firestore.firestoreUserProfile]);
 
   const buildDataSnapshot = useCallback((): AppDataSnapshot => ({
     coordinators,
@@ -1553,6 +1571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         firestoreAuthError: firestore.authError,
         signInFirestoreGoogle: firestore.signInWithGoogle,
         signInFirestoreGoogleRedirect: firestore.signInWithGoogleRedirect,
+        enterPortalFromProfile,
         importBrowserToFirestore: async () => {
           await firestore.importBrowserToFirestore();
         },

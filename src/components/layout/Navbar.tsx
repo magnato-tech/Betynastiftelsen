@@ -24,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     firestoreUserEmail,
     firestoreAuthError,
     signInFirestoreGoogle,
+    enterPortalFromProfile,
   } = useApp();
 
   return (
@@ -32,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Zone 1: Single text element wordmark */}
         <button
           onClick={() => {
+            setRole('public');
             setActiveSection('home');
           }}
           className="text-xl font-bold tracking-tight text-[#3C3C3C] whitespace-nowrap shrink-0 font-serif text-left hover:text-[#4D6B3E] transition-colors cursor-pointer"
@@ -267,10 +269,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           {role === 'public' && firestoreEnabled && !firestoreUserEmail && (
             <button
               type="button"
-              onClick={() => signInFirestoreGoogle().catch(() => undefined)}
+              onClick={() => {
+                enterPortalFromProfile();
+                signInFirestoreGoogle()
+                  .then(() => enterPortalFromProfile())
+                  .catch(() => undefined);
+              }}
               className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Logg inn
+            </button>
+          )}
+
+          {role === 'public' && firestoreEnabled && firestoreUserEmail && (
+            <button
+              type="button"
+              onClick={() => enterPortalFromProfile()}
+              className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              {t('nav.enterPortal', 'Gå til administrasjon')}
             </button>
           )}
 

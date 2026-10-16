@@ -17,6 +17,7 @@ import { Campaign } from './types';
 import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 import { parseSponsorPortalLink } from './email/sponsorPortalLink';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
+import { markPortalIntent } from './utils/portalIntent';
 
 const MainLayout: React.FC = () => {
   const { role, setRole, setCurrentSponsorId, firestoreLoading } = useApp();
@@ -29,11 +30,9 @@ const MainLayout: React.FC = () => {
     try {
       if (sessionStorage.getItem('betyna_return_to') === 'admin:innstillinger') {
         sessionStorage.removeItem('betyna_return_to');
-        if (prototypeRoleSwitcherEnabled) {
-          setRole('admin');
-          setActiveSection('innstillinger');
-          return;
-        }
+        markPortalIntent();
+        setActiveSection('innstillinger');
+        return;
       }
     } catch {
       /* ignore */
@@ -47,10 +46,14 @@ const MainLayout: React.FC = () => {
       return () => window.removeEventListener('hashchange', onHash);
     }
     const parsed = parseSponsorPortalLink(window.location.search);
-    if (!parsed) return;
-    setRole('sponsor');
-    setCurrentSponsorId(parsed.sponsorId);
-    setActiveSection(parsed.section);
+    if (parsed) {
+      setRole('sponsor');
+      setCurrentSponsorId(parsed.sponsorId);
+      setActiveSection(parsed.section);
+      return;
+    }
+    setRole('public');
+    setActiveSection('home');
   }, [previewFlags.preview, setRole, setCurrentSponsorId]);
 
   if (firestoreLoading) {
