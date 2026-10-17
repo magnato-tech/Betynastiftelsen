@@ -216,15 +216,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'godkjenning' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Godkjenningskø
+                Godkjenning
               </button>
               <button
-                onClick={() => setActiveSection('tildeling')}
+                onClick={() => setActiveSection('barn')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'tildeling' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  activeSection === 'barn' || activeSection === 'tildeling'
+                    ? 'text-[#4D6B3E] font-semibold'
+                    : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Barn & Faddere
+                Barn
+              </button>
+              <button
+                onClick={() => setActiveSection('brukere')}
+                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeSection === 'brukere' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                }`}
+              >
+                Brukere
               </button>
               <button
                 onClick={() => setActiveSection('sporsmaal')}
@@ -232,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'sporsmaal' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Spørsmålsflyt
+                Spørsmål
               </button>
               <button
                 onClick={() => setActiveSection('okonomi')}
@@ -240,7 +250,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   activeSection === 'okonomi' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Økonomi & avstemming
+                Økonomi
               </button>
               <button
                 onClick={() => setActiveSection('cms')}
@@ -262,15 +272,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Revisjonslogg
-              </button>
-              <button
-                onClick={() => setActiveSection('nyhetsbrev')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'nyhetsbrev' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                E-post
+                Logg
               </button>
               <button
                 onClick={() => setActiveSection('innstillinger')}

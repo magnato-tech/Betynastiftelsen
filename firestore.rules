@@ -40,7 +40,7 @@ service cloud.firestore {
     }
 
     match /userDirectory/{emailId} {
-      allow read: if signedIn() && authEmailLower() == emailId;
+      allow read: if signedIn() && (authEmailLower() == emailId || canAdminWrite());
       allow write: if canAdminWrite();
     }
 

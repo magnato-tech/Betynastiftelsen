@@ -6,10 +6,20 @@ import {
   type FirestoreUser,
   type FirestoreUserDirectoryEntry,
 } from './firestoreProfile';
+import {
+  canLoginWithDirectoryStatus,
+  normalizeUserDirectoryStatus,
+} from './userDirectoryStatus';
 
 export function emailToDirectoryDocId(email: string): string {
   return email.trim().toLowerCase();
 }
+
+export type FirestoreLoginDeniedReason = 'unknown' | 'sperret';
+
+export type EnsureFirestoreUserResult =
+  | { ok: true; profile: FirestoreUser }
+  | { ok: false; reason: FirestoreLoginDeniedReason };
 
 /** Oppretter `users/{uid}` fra `userDirectory` eller bootstrap-admin ved første innlogging. */
 export async function ensureFirestoreUserOnLogin(
@@ -17,14 +27,25 @@ export async function ensureFirestoreUserOnLogin(
   uid: string,
   email: string,
   displayName?: string | null
-): Promise<FirestoreUser | null> {
+): Promise<EnsureFirestoreUserResult> {
+  const directoryId = emailToDirectoryDocId(email);
   const userRef = doc(db, FIRESTORE_COLLECTIONS.users, uid);
   const existing = await getDoc(userRef);
   if (existing.exists()) {
-    return existing.data() as FirestoreUser;
+    const profile = existing.data() as FirestoreUser;
+    const dirSnap = await getDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, directoryId));
+    if (dirSnap.exists()) {
+      const entry = dirSnap.data() as FirestoreUserDirectoryEntry;
+      const status = normalizeUserDirectoryStatus(entry.status);
+      if (!canLoginWithDirectoryStatus(status)) {
+        return { ok: false, reason: 'sperret' };
+      }
+    } else if (!isBootstrapAdminEmail(email)) {
+      return { ok: false, reason: 'unknown' };
+    }
+    return { ok: true, profile };
   }
 
-  const directoryId = emailToDirectoryDocId(email);
   const dirSnap = await getDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, directoryId));
   let entry: FirestoreUserDirectoryEntry | null = null;
   if (dirSnap.exists()) {
@@ -33,10 +54,16 @@ export async function ensureFirestoreUserOnLogin(
     entry = {
       email: directoryId,
       role: 'admin',
+      status: 'aktiv',
       displayName: displayName?.trim() || directoryId.split('@')[0],
     };
   } else {
-    return null;
+    return { ok: false, reason: 'unknown' };
+  }
+
+  const status = normalizeUserDirectoryStatus(entry.status);
+  if (!canLoginWithDirectoryStatus(status)) {
+    return { ok: false, reason: 'sperret' };
   }
 
   const profile: FirestoreUser = {
@@ -50,7 +77,16 @@ export async function ensureFirestoreUserOnLogin(
   };
 
   await setDoc(userRef, profile, { merge: true });
-  return profile;
+
+  if (status === 'invitert') {
+    await setDoc(
+      doc(db, FIRESTORE_COLLECTIONS.userDirectory, directoryId),
+      { status: 'aktiv' },
+      { merge: true }
+    );
+  }
+
+  return { ok: true, profile };
 }
 
 export async function fetchFirestoreUser(

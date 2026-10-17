@@ -1,28 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link2, Plus, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { childNamesOfSponsor } from '../../utils/sponsorChildren';
+import { AdminOverlayModal } from './AdminOverlayModal';
 
-export const AdminPeoplePanel: React.FC = () => {
+export interface AdminPeoplePanelProps {
+  focusChildId?: string | null;
+  onClearChildFocus?: () => void;
+  onOpenSponsorByEmail?: (email: string) => void;
+}
+
+export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
+  focusChildId,
+  onClearChildFocus,
+  onOpenSponsorByEmail,
+}) => {
   const {
     childrenList,
     sponsors,
     coordinators,
     addChild,
-    addSponsor,
     assignSponsorToChild,
     endSponsorship,
   } = useApp();
 
-  const [showAddSponsor, setShowAddSponsor] = useState(false);
   const [showAddChild, setShowAddChild] = useState(false);
-  const [sponsorNavn, setSponsorNavn] = useState('');
-  const [sponsorEpost, setSponsorEpost] = useState('');
-  const [sponsorTelefon, setSponsorTelefon] = useState('');
-  const [sponsorPoststed, setSponsorPoststed] = useState('');
-  const [sponsorBelop, setSponsorBelop] = useState<250 | 350>(250);
-  const [sponsorMetode, setSponsorMetode] = useState<'vipps' | 'bank'>('vipps');
-  const [sponsorSavedName, setSponsorSavedName] = useState<string | null>(null);
   const [childFirstName, setChildFirstName] = useState('');
   const [childBirthYear, setChildBirthYear] = useState(2017);
   const [childGender, setChildGender] = useState<'gutt' | 'jente'>('gutt');
@@ -32,32 +34,17 @@ export const AdminPeoplePanel: React.FC = () => {
   const [childSavedName, setChildSavedName] = useState<string | null>(null);
   const [selectedChildForAssign, setSelectedChildForAssign] = useState('');
   const [selectedSponsorForAssign, setSelectedSponsorForAssign] = useState('');
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (focusChildId) {
+      setSelectedChildId(focusChildId);
+      onClearChildFocus?.();
+    }
+  }, [focusChildId, onClearChildFocus]);
 
   const unassignedChildren = childrenList.filter((c) => !c.tildeltFadderId && c.status === 'aktiv');
   const childrenSorted = [...childrenList].sort((a, b) => a.internKode.localeCompare(b.internKode));
-  const sponsorsSorted = [...sponsors].sort((a, b) => b.startDato.localeCompare(a.startDato));
-
-  const handleAddSponsor = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sponsorNavn.trim() || !sponsorEpost.trim()) return;
-    const newId = addSponsor({
-      navn: sponsorNavn.trim(),
-      epost: sponsorEpost.trim(),
-      telefon: sponsorTelefon.trim(),
-      poststed: sponsorPoststed.trim(),
-      maanedsbelop: sponsorBelop,
-      betalingsmetode: sponsorMetode,
-    });
-    setSponsorSavedName(sponsorNavn.trim());
-    setSelectedSponsorForAssign(newId);
-    setSponsorNavn('');
-    setSponsorEpost('');
-    setSponsorTelefon('');
-    setSponsorPoststed('');
-    setSponsorBelop(250);
-    setSponsorMetode('vipps');
-    setShowAddSponsor(false);
-  };
 
   const handleAddChild = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,13 +81,23 @@ export const AdminPeoplePanel: React.FC = () => {
     </button>
   );
 
+  const selectedChild = selectedChildId ? childrenList.find((c) => c.id === selectedChildId) : undefined;
+  const selectedChildSponsor = selectedChild?.tildeltFadderId
+    ? sponsors.find((s) => s.id === selectedChild.tildeltFadderId)
+    : undefined;
+
   return (
     <div className="space-y-6">
-      {(sponsorSavedName || childSavedName) && (
+      <div>
+        <h2 className="text-xl font-serif font-bold text-stone-900">Barn</h2>
+        <p className="text-xs text-stone-600 mt-0.5">
+          Barn i programmet. Faddere administreres under Brukere. Klikk en rad for barnekort.
+        </p>
+      </div>
+
+      {childSavedName && (
         <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-          {childSavedName ? `${childSavedName} er lagt inn i barnelisten.` : null}
-          {childSavedName && sponsorSavedName ? ' ' : null}
-          {sponsorSavedName ? `${sponsorSavedName} er lagt til som fadder. Koble til et barn i boksen under.` : null}
+          {childSavedName} er lagt inn i barnelisten.
         </p>
       )}
 
@@ -161,7 +158,10 @@ export const AdminPeoplePanel: React.FC = () => {
           {plusBtn(showAddChild, () => setShowAddChild((v) => !v), 'Legg til barn')}
         </div>
         {showAddChild && (
-          <form onSubmit={handleAddChild} className="p-4 border-b border-stone-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-stone-50/80">
+          <form
+            onSubmit={handleAddChild}
+            className="p-4 border-b border-stone-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-stone-50/80"
+          >
             <input
               required
               value={childFirstName}
@@ -210,7 +210,10 @@ export const AdminPeoplePanel: React.FC = () => {
               ))}
             </select>
             <div className="flex items-end">
-              <button type="submit" className="px-4 py-2 bg-[#4D6B3E] text-white rounded-lg text-xs font-medium cursor-pointer">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#4D6B3E] text-white rounded-lg text-xs font-medium cursor-pointer"
+              >
                 Lagre barn
               </button>
             </div>
@@ -232,7 +235,11 @@ export const AdminPeoplePanel: React.FC = () => {
               {childrenSorted.map((ch) => {
                 const assignedSponsor = sponsors.find((s) => s.id === ch.tildeltFadderId);
                 return (
-                  <tr key={ch.id} className="hover:bg-stone-50/60">
+                  <tr
+                    key={ch.id}
+                    className="hover:bg-stone-50/60 cursor-pointer"
+                    onClick={() => setSelectedChildId(ch.id)}
+                  >
                     <td className="py-2.5 px-4 font-mono font-bold text-stone-800">{ch.internKode}</td>
                     <td className="py-2.5 px-4 font-semibold text-stone-900">
                       {ch.fornavn} ({new Date().getFullYear() - ch.fodselsaar} år)
@@ -249,7 +256,7 @@ export const AdminPeoplePanel: React.FC = () => {
                       )}
                     </td>
                     <td className="py-2.5 px-4 capitalize text-stone-700">{ch.status}</td>
-                    <td className="py-2.5 px-4 text-right">
+                    <td className="py-2.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       {ch.status === 'aktiv' && ch.tildeltFadderId && (
                         <button
                           type="button"
@@ -272,88 +279,48 @@ export const AdminPeoplePanel: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-stone-200 flex items-center justify-between gap-3">
-          <h2 className="text-base font-serif font-bold text-stone-900">Faddere ({sponsors.length})</h2>
-          {plusBtn(showAddSponsor, () => setShowAddSponsor((v) => !v), 'Legg til fadder')}
-        </div>
-        {showAddSponsor && (
-          <form onSubmit={handleAddSponsor} className="p-4 border-b border-stone-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-stone-50/80">
-            <input
-              required
-              value={sponsorNavn}
-              onChange={(e) => setSponsorNavn(e.target.value)}
-              placeholder="Navn"
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            />
-            <input
-              type="email"
-              required
-              value={sponsorEpost}
-              onChange={(e) => setSponsorEpost(e.target.value)}
-              placeholder="E-post"
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            />
-            <input
-              value={sponsorTelefon}
-              onChange={(e) => setSponsorTelefon(e.target.value)}
-              placeholder="Telefon"
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            />
-            <input
-              value={sponsorPoststed}
-              onChange={(e) => setSponsorPoststed(e.target.value)}
-              placeholder="Poststed"
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            />
-            <select
-              value={sponsorBelop}
-              onChange={(e) => setSponsorBelop(Number(e.target.value) as 250 | 350)}
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            >
-              <option value={250}>250 kr</option>
-              <option value={350}>350 kr</option>
-            </select>
-            <select
-              value={sponsorMetode}
-              onChange={(e) => setSponsorMetode(e.target.value as 'vipps' | 'bank')}
-              className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs"
-            >
-              <option value="vipps">Vipps</option>
-              <option value="bank">Bank</option>
-            </select>
+      {selectedChild && (
+        <AdminOverlayModal
+          title={`${selectedChild.internKode} — ${selectedChild.fornavn}`}
+          onClose={() => setSelectedChildId(null)}
+        >
+          <dl className="space-y-2 text-xs">
             <div>
-              <button type="submit" className="px-4 py-2 bg-[#4D6B3E] text-white rounded-lg text-xs font-medium cursor-pointer">
-                Lagre fadder
+              <dt className="text-stone-500">Alder</dt>
+              <dd>{new Date().getFullYear() - selectedChild.fodselsaar} år</dd>
+            </div>
+            <div>
+              <dt className="text-stone-500">Skole</dt>
+              <dd>{selectedChild.skoleNavn}</dd>
+            </div>
+            <div>
+              <dt className="text-stone-500">Klassetrinn</dt>
+              <dd>{selectedChild.klassetrinn}</dd>
+            </div>
+            <div>
+              <dt className="text-stone-500">Status</dt>
+              <dd className="capitalize">{selectedChild.status}</dd>
+            </div>
+          </dl>
+          {selectedChildSponsor ? (
+            <div className="pt-3 border-t border-stone-100">
+              <p className="text-xs text-stone-500 mb-1">Fadder</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedChildId(null);
+                  onOpenSponsorByEmail?.(selectedChildSponsor.epost);
+                }}
+                className="text-[#4D6B3E] hover:underline font-semibold cursor-pointer"
+              >
+                {selectedChildSponsor.navn} ({selectedChildSponsor.epost})
               </button>
             </div>
-          </form>
-        )}
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-stone-50 text-stone-600 uppercase tracking-wider">
-              <tr>
-                <th className="py-2.5 px-4 font-semibold">Navn</th>
-                <th className="py-2.5 px-4 font-semibold">Start</th>
-                <th className="py-2.5 px-4 font-semibold">Beløp</th>
-                <th className="py-2.5 px-4 font-semibold">Barn</th>
-                <th className="py-2.5 px-4 font-semibold">Kontakt</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {sponsorsSorted.map((sp) => (
-                <tr key={sp.id} className="hover:bg-stone-50/80">
-                  <td className="py-2.5 px-4 font-medium text-stone-900">{sp.navn}</td>
-                  <td className="py-2.5 px-4 text-stone-600 tabular-nums">{sp.startDato.split('-').reverse().join('.')}</td>
-                  <td className="py-2.5 px-4 text-stone-700">{sp.maanedsbelop} kr</td>
-                  <td className="py-2.5 px-4 text-stone-600">{childNamesOfSponsor(childrenList, sp)}</td>
-                  <td className="py-2.5 px-4 text-stone-500">{sp.epost}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          ) : (
+            <p className="text-xs text-[#4D6B3E] pt-3 border-t border-stone-100">Ingen fadder tildelt ennå.</p>
+          )}
+        </AdminOverlayModal>
+      )}
     </div>
   );
 };

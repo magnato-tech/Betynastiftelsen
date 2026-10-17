@@ -43,7 +43,7 @@ import {
 import { db, firestoreEnabled as firestoreConfigured } from '../config/firebase';
 import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
 import type { AppDataSnapshot } from '../db/firestoreData';
-import { saveUserDirectoryEntry } from '../db/firestoreData';
+import { saveUserDirectoryEntry, updateUserDirectoryStatus as persistUserDirectoryStatus } from '../db/firestoreData';
 import type { FirestoreUser, FirestoreUserDirectoryEntry } from '../db/firestoreProfile';
 import { consumePortalIntent, markPortalIntent } from '../utils/portalIntent';
 import { canOpenPortalRole } from '../utils/portalRoles';
@@ -180,6 +180,7 @@ interface AppContextType {
   importBrowserToFirestore: () => Promise<void>;
   /** Legg inn e-post i userDirectory (kun admin, Firestore-regler). */
   inviteUserToDirectory: (entry: FirestoreUserDirectoryEntry) => Promise<void>;
+  updateUserDirectoryStatus: (email: string, status: FirestoreUserDirectoryEntry['status']) => Promise<void>;
   /** Offentlig innhold er ikke lest fra databasen ennå. */
   firestoreLoading: boolean;
   firestoreSave: { state: 'idle' | 'saving' | 'saved' | 'error'; lastSavedAt: number | null; error: string | null };
@@ -374,6 +375,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     await saveUserDirectoryEntry(db, entry);
   }, [firestore.firestoreUserProfile?.role]);
+
+  const updateUserDirectoryStatus = useCallback(
+    async (email: string, status: FirestoreUserDirectoryEntry['status']) => {
+      if (!db) throw new Error('Firestore er ikke konfigurert');
+      if (firestore.firestoreUserProfile?.role !== 'admin') {
+        throw new Error('Bare administrator kan endre brukerstatus');
+      }
+      await persistUserDirectoryStatus(db, email, status);
+    },
+    [firestore.firestoreUserProfile?.role]
+  );
 
   useEffect(() => {
     const profile = firestore.firestoreUserProfile;
@@ -1626,6 +1638,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await firestore.importBrowserToFirestore();
         },
         inviteUserToDirectory,
+        updateUserDirectoryStatus,
         firestoreLoading: firestore.firestoreEnabled && firestore.loadState === 'loading',
         firestoreSave: firestore.saveStatus,
       }}

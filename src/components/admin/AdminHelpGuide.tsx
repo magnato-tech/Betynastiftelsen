@@ -62,11 +62,11 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       title: 'Koble fadder og barn',
       steps: [
         'Bytt til Administrasjon (Kristiansand) i Visningsmodus.',
-        'Åpne Barn & Faddere. Siden viser en barn-tabell og en faddertabell.',
+        'Åpne Barn for barnelisten og Brukere for faddere, koordinatorer og administratorer.',
         'Bruk plusstegnet for å legge til barn eller fadder. Koble dem i den lille boksen «Koble barn og fadder».',
         'Koble en ventende fadder til et barn uten fadder.',
       ],
-      go: () => openAsRole('admin', 'tildeling'),
+      go: () => openAsRole('admin', 'barn'),
     },
     {
       id: 'ADM-02',
@@ -116,7 +116,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
       role: 'Admin',
       title: 'E-post: henvendelse, system og nyhetsbrev',
       steps: [
-        'Åpne E-post for å svare på henvendelser, sende systemmelding eller nyhetsbrev.',
+        'Åpne Innstillinger for e-post: henvendelser, systemmelding og nyhetsbrev.',
         'Automatiske varsler (av/på) ligger på denne siden, øverst under Innstillinger.',
         'Publiser svar i Spørsmålsflyt sender e-post bare hvis «Svar på spørsmål» er på.',
       ],
@@ -282,7 +282,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
                   <strong>Godkjenningskø:</strong> fransk og norsk side om side; godkjenn eller avvis rapporter.
                 </li>
                 <li>
-                  <strong>Barn &amp; faddere:</strong> barn-tabell og faddertabell, plusstegn for å legge til, og en liten boks for manuell kobling (ingen auto-tildeling fra nettside).
+                  <strong>Barn</strong> og <strong>Brukere:</strong> barn-tabell med klikkbare kort; brukertabell med status (aktiv, invitert, sperret) og invitasjonsskjema; koblingsboks for barn og fadder (ingen auto-tildeling fra nettside).
                 </li>
                 <li>
                   <strong>Spørsmålsflyt:</strong> svar eller send videre til koordinator (senere).

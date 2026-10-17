@@ -183,19 +183,23 @@ export function useFirestoreAppSync() {
     setFirestoreAccessMessage(null);
     (async () => {
       try {
-        const profile = await ensureFirestoreUserOnLogin(
+        const result = await ensureFirestoreUserOnLogin(
           db,
           firebaseUser.uid,
           email,
           firebaseUser.displayName
         );
         if (cancelled) return;
-        setFirestoreUserProfile(profile);
-        if (!profile) {
+        if (!result.ok) {
+          setFirestoreUserProfile(null);
           setFirestoreAccessMessage(
-            'Denne Google-kontoen finnes ikke i userDirectory og er ikke satt opp som administrator. Be en eksisterende admin legge inn e-posten din i Firestore, eller logg inn med en admin-konto.'
+            result.reason === 'sperret'
+              ? 'Kontoen er sperret. Kontakt administrator i Betyna hvis du mener dette er en feil.'
+              : 'Denne Google-kontoen finnes ikke i userDirectory og er ikke satt opp som administrator. Be en eksisterende admin legge inn e-posten din i Firestore, eller logg inn med en admin-konto.'
           );
+          return;
         }
+        setFirestoreUserProfile(result.profile);
       } catch (err) {
         if (!cancelled) {
           setFirestoreUserProfile(null);

@@ -70,10 +70,14 @@ export interface FirestoreUser {
   createdAt: string;
 }
 
+export type UserDirectoryStatus = 'aktiv' | 'invitert' | 'sperret';
+
 /** Admin legger inn brukere her; ved Google-innlogging kopieres til `users/{authUid}`. */
 export interface FirestoreUserDirectoryEntry {
   email: string;
   role: 'admin' | 'coordinator' | 'sponsor';
+  /** Mangler felt = behandles som `aktiv` i appen. */
+  status?: UserDirectoryStatus;
   displayName?: string;
   coordinatorId?: string;
   sponsorId?: string;

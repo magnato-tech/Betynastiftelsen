@@ -303,6 +303,7 @@ export async function saveUserDirectoryEntry(
   const payload: FirestoreUserDirectoryEntry = {
     email,
     role: entry.role,
+    status: entry.status ?? 'invitert',
     displayName: entry.displayName?.trim() || email.split('@')[0],
   };
   if (entry.role === 'coordinator' && entry.coordinatorId) {
@@ -312,6 +313,15 @@ export async function saveUserDirectoryEntry(
     payload.sponsorId = entry.sponsorId;
   }
   await setDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, email), payload, { merge: true });
+}
+
+export async function updateUserDirectoryStatus(
+  db: Firestore,
+  email: string,
+  status: FirestoreUserDirectoryEntry['status']
+): Promise<void> {
+  const id = emailToDirectoryDocId(email);
+  await setDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, id), { status, email: id }, { merge: true });
 }
 
 export type DbChange =

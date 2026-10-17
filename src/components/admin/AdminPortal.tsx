@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { CmsEditor } from './CmsEditor';
 import { AdminPeoplePanel } from './AdminPeoplePanel';
+import { AdminUsersPanel } from './AdminUsersPanel';
 import { AdminFinancePanel } from './AdminFinancePanel';
-import { AdminNewsletterPanel } from './AdminNewsletterPanel';
 import { AdminSettingsPanel } from './AdminSettingsPanel';
 import {
   buildAdminContentQueue,
@@ -68,6 +68,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     trivsel: '',
     historie: '',
   });
+
+  const [usersFocusEmail, setUsersFocusEmail] = useState<string | null>(null);
+  const [childrenFocusId, setChildrenFocusId] = useState<string | null>(null);
 
   const [contentView, setContentView] = useState<'kort' | 'tabell' | null>(null);
   const [contentSortKey, setContentSortKey] = useState<AdminContentSortKey>('dato');
@@ -431,8 +434,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* 4. TAB: BARN & FADDERE */}
-      {activeSection === 'tildeling' && <AdminPeoplePanel />}
+      {(activeSection === 'barn' || activeSection === 'tildeling') && (
+        <AdminPeoplePanel
+          focusChildId={childrenFocusId}
+          onClearChildFocus={() => setChildrenFocusId(null)}
+          onOpenSponsorByEmail={(email) => {
+            setUsersFocusEmail(email);
+            setActiveSection('brukere');
+          }}
+        />
+      )}
+
+      {activeSection === 'brukere' && (
+        <AdminUsersPanel
+          focusEmail={usersFocusEmail}
+          onClearFocus={() => setUsersFocusEmail(null)}
+          onOpenChild={(childId) => {
+            setChildrenFocusId(childId);
+            setActiveSection('barn');
+          }}
+        />
+      )}
 
       {/* 5. TAB: SPØRSMÅLSFLYT */}
       {activeSection === 'sporsmaal' && (
@@ -620,10 +642,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         />
       )}
 
-      {activeSection === 'nyhetsbrev' && <AdminNewsletterPanel />}
-
-      {(activeSection === 'innstillinger' || activeSection === 'hjelp') && (
-        <AdminSettingsPanel setActiveSection={setActiveSection} />
+      {(activeSection === 'innstillinger' || activeSection === 'hjelp' || activeSection === 'nyhetsbrev') && (
+        <AdminSettingsPanel
+          setActiveSection={setActiveSection}
+          showEmailPanel={activeSection === 'innstillinger' || activeSection === 'nyhetsbrev'}
+        />
       )}
     </div>
   );
