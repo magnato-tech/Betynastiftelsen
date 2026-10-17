@@ -23,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     campaigns,
     language,
     firestoreEnabled,
-    firestoreUserEmail,
     firestoreUserProfile,
     firestoreProfileLoading,
     firestoreAccessMessage,
@@ -34,7 +33,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [loginOpen, setLoginOpen] = useState(false);
 
   const handleOpenLogin = () => {
-    if (!firestoreEnabled) return;
     setLoginOpen(true);
   };
 
@@ -45,12 +43,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     setLoginOpen(false);
   };
 
-  const loginNavClass =
-    'transition-colors whitespace-nowrap shrink-0 cursor-pointer text-[#4D6B3E] font-semibold hover:text-[#3B522F]';
   const loginButtonClass =
     'px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
+    <>
     <header className="bg-[#F6F4ED]/95 backdrop-blur-md sticky top-0 z-30 border-b border-[#DFD9CB]">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-8 px-6 py-4">
         {/* Zone 1: Single text element wordmark */}
@@ -110,26 +107,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {t('nav.transparency', 'Åpenhet')}
               </button>
-              <span className="text-[#DFD9CB] select-none" aria-hidden>|</span>
-              {firestoreProfileLoading && (
-                <span className="text-xs text-stone-500 whitespace-nowrap">Logger inn …</span>
-              )}
-              {!firestoreProfileLoading && !firestoreUserProfile && (
-                <button
-                  type="button"
-                  onClick={handleOpenLogin}
-                  disabled={!firestoreEnabled}
-                  title={firestoreEnabled ? undefined : 'Firestore er ikke aktivert i dette miljøet'}
-                  className={loginNavClass}
-                >
-                  {t('nav.login', 'Logg inn')}
-                </button>
-              )}
-              {!firestoreProfileLoading && firestoreUserProfile && (
-                <button type="button" onClick={handleEnterPortal} className={loginNavClass}>
-                  {t('nav.enterPortal', 'Gå til administrasjon')}
-                </button>
-              )}
             </>
           )}
 
@@ -310,28 +287,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           {role !== 'public' && <NotificationCenter onNavigateSection={setActiveSection} />}
 
           {role === 'public' && firestoreProfileLoading && (
-            <span className="text-xs text-stone-500 whitespace-nowrap md:hidden">Logger inn …</span>
+            <span className="text-xs text-stone-500 whitespace-nowrap">Logger inn …</span>
           )}
 
           {role === 'public' && !firestoreProfileLoading && !firestoreUserProfile && (
             <button
               type="button"
               onClick={handleOpenLogin}
-              disabled={!firestoreEnabled}
-              title={firestoreEnabled ? undefined : 'Firestore er ikke aktivert i dette miljøet'}
-              className={`${loginButtonClass} md:hidden`}
+              className={loginButtonClass}
             >
               {t('nav.login', 'Logg inn')}
             </button>
           )}
 
           {role === 'public' && !firestoreProfileLoading && firestoreUserProfile && (
-            <button
-              type="button"
-              onClick={handleEnterPortal}
-              className={`${loginButtonClass} md:hidden`}
-            >
-              {t('nav.enterPortal', 'Administrasjon')}
+            <button type="button" onClick={handleEnterPortal} className={loginButtonClass}>
+              {t('nav.enterPortal', 'Gå til portalen')}
             </button>
           )}
 
@@ -358,13 +329,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {firestoreAuthError || firestoreAccessMessage}
         </p>
       )}
-      <PortalLoginModal
-        isOpen={loginOpen}
-        onClose={() => {
-          setLoginOpen(false);
-          enterPortalFromProfile();
-        }}
-      />
     </header>
+    <PortalLoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
   );
 };

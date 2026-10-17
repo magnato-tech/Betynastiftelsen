@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { markPortalIntent } from '../../utils/portalIntent';
@@ -58,8 +59,8 @@ export const PortalLoginModal: React.FC<PortalLoginModalProps> = ({ isOpen, onCl
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pt-16 bg-stone-950/70 backdrop-blur-xs">
       <div className="bg-[#F6F4ED] border border-[#DFD9CB] rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
         <button
           type="button"
@@ -131,6 +132,7 @@ export const PortalLoginModal: React.FC<PortalLoginModalProps> = ({ isOpen, onCl
           </p>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

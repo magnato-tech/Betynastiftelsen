@@ -7,7 +7,6 @@ import {
   sendSignInLinkToEmail,
   setPersistence,
   signInWithEmailLink,
-  signInWithPopup,
   signInWithRedirect,
   type User,
 } from 'firebase/auth';
@@ -17,6 +16,7 @@ import {
   readStoredAuthError,
 } from './firebaseAuthRedirect';
 import { formatFirebaseAuthError } from './firebaseAuthErrors';
+import { signInWithGoogleOnThisSite } from './googleSignIn';
 import { auth, db, firestoreEnabled } from '../config/firebase';
 import { readBrowserStateSnapshot } from './browserStateSnapshot';
 import {
@@ -424,10 +424,9 @@ export function useFirestoreAppSync() {
   const signInWithGoogle = useCallback(async () => {
     if (!auth) throw new Error('Firestore er ikke konfigurert');
     setAuthError(null);
-    await prepareGoogleSignIn();
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      await prepareGoogleSignIn();
+      await signInWithGoogleOnThisSite(auth);
     } catch (err) {
       const message = formatFirebaseAuthError(err);
       setAuthError(message);
@@ -452,11 +451,7 @@ export function useFirestoreAppSync() {
     if (!auth) throw new Error('Firestore er ikke konfigurert');
     setAuthError(null);
     clearStoredAuthError();
-    try {
-      sessionStorage.setItem('betyna_return_to', 'admin:innstillinger');
-    } catch {
-      /* ignore */
-    }
+    markPortalIntent();
     const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);

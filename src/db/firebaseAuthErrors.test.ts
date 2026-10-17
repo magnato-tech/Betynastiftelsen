@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { formatFirebaseAuthError } from './firebaseAuthErrors';
+import { formatFirebaseAuthError, isPopupAuthFailure } from './firebaseAuthErrors';
+
+describe('isPopupAuthFailure', () => {
+  it('gjenkjenner blokkert popup', () => {
+    expect(isPopupAuthFailure({ code: 'auth/popup-blocked' })).toBe(true);
+  });
+  it('gjenkjenner ikke miljø som støtter popup', () => {
+    expect(isPopupAuthFailure({ code: 'auth/popup-closed-by-user' })).toBe(false);
+  });
+});
 
 describe('formatFirebaseAuthError', () => {
   it.each([
-    ['auth/popup-blocked', 'blokkerte popup'],
+    ['auth/popup-blocked', 'blokkerte vinduet'],
     ['auth/popup-closed-by-user', 'lukket'],
     ['auth/cancelled-popup-request', 'avbrutt'],
     ['auth/unauthorized-domain', 'ikke godkjent i Firebase'],
-    ['auth/operation-not-supported-in-this-environment', 'Popup-innlogging'],
+    ['auth/operation-not-supported-in-this-environment', 'Chrome eller Edge'],
     ['auth/internal-error', 'lagring av innlogging'],
     ['auth/web-storage-unsupported', 'lagring av innlogging'],
   ])('%s gir forklarende tekst som inneholder "%s"', (code, fragment) => {

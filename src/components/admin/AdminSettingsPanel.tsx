@@ -42,7 +42,7 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
           <div>
             <h3 className="text-sm font-serif font-bold text-stone-900">Database (Firestore)</h3>
             <p className="text-xs text-stone-600 mt-1 leading-relaxed max-w-2xl">
-              Logg inn med Google fra forsiden (knappen Logg inn ved siden av Bli fadder). Etter innlogging
+              Logg inn fra forsiden (hvit knapp Logg inn ved siden av Bli fadder). Etter innlogging
               åpnes din portal. Her kan du lagre det som ligger i <strong>denne nettleseren</strong> nå
               (tekster, barn, CMS — alt du har jobbet med). Etterpå leser og lagrer appen i skyen. Ingenting overskrives
               automatisk på nytt. Hvem som er admin, koordinator eller fadder styres av Firestore-samlingen{' '}
