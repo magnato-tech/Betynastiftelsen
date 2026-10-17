@@ -4,6 +4,7 @@ import { NotificationCenter } from '../common/NotificationCenter';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { PortalLoginModal } from '../auth/PortalLoginModal';
 import { defaultPortalSectionForProfile } from '../../utils/portalSession';
+import { isAdminOppfolgingSection } from '../../utils/adminOppfolging';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
@@ -213,10 +214,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => setActiveSection('godkjenning')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'godkjenning' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  isAdminOppfolgingSection(activeSection)
+                    ? 'text-[#4D6B3E] font-semibold'
+                    : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Godkjenning
+                Oppfølging
               </button>
               <button
                 onClick={() => setActiveSection('barn')}
@@ -237,22 +240,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Brukere
               </button>
               <button
-                onClick={() => setActiveSection('sporsmaal')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'sporsmaal' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                Spørsmål
-              </button>
-              <button
-                onClick={() => setActiveSection('okonomi')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'okonomi' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                Økonomi
-              </button>
-              <button
                 onClick={() => setActiveSection('cms')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   activeSection === 'cms' ||
@@ -265,14 +252,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 CMS
               </button>
               <button
-                onClick={() => setActiveSection('logg')}
+                onClick={() => setActiveSection('okonomi')}
                 className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'logg' || activeSection === 'aksjoner'
-                    ? 'text-[#4D6B3E] font-semibold'
-                    : 'hover:text-[#3C3C3C]'
+                  activeSection === 'okonomi' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
                 }`}
               >
-                Logg
+                Økonomi
               </button>
               <button
                 onClick={() => setActiveSection('innstillinger')}

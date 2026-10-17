@@ -1,23 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ExternalLink, Monitor, Smartphone, Tablet, X } from 'lucide-react';
+import type { AdultGraduateStory, Campaign, CmsContent } from '../../types';
 import {
   buildEmbeddedPreviewUrl,
   buildNewTabPreviewUrl,
   cmsPreviewHash,
   type CmsPreviewSection,
 } from '../../utils/cmsPreview';
+import { postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 interface CmsLivePreviewProps {
   section: CmsPreviewSection;
   onClose: () => void;
+  cmsContent: CmsContent;
+  stories: AdultGraduateStory[];
+  campaigns: Campaign[];
 }
 
-export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose }) => {
+export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
+  section,
+  onClose,
+  cmsContent,
+  stories,
+  campaigns,
+}) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [device, setDevice] = useState<PreviewDevice>('desktop');
   const [src] = useState(() => buildEmbeddedPreviewUrl(section));
+
+  const pushDraft = useCallback(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    const draft: CmsPreviewDraftPayload = {
+      cmsContent,
+      stories,
+      campaigns,
+      highlightSection: section,
+    };
+    postCmsPreviewDraft(win, draft);
+  }, [campaigns, cmsContent, section, stories]);
+
+  useEffect(() => {
+    pushDraft();
+  }, [pushDraft]);
 
   useEffect(() => {
     const win = iframeRef.current?.contentWindow;
@@ -28,7 +55,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose
         win.location.hash = hash;
       }
     } catch {
-      /* tverr-opprinnelse skal ikke skje på samme vert */
+      /* samme vert */
     }
   }, [section]);
 
@@ -45,7 +72,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-semibold text-stone-800">Live forhåndsvisning</span>
-          <span className="text-stone-500 hidden lg:inline">Samme side som besøkende ser</span>
+          <span className="text-stone-500 hidden lg:inline">Viser utkast fra editoren (norsk)</span>
         </div>
 
         <div className="flex items-center gap-1 bg-stone-50 p-0.5 rounded-lg border border-stone-200">
@@ -97,6 +124,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({ section, onClose
             ref={iframeRef}
             title="Forhåndsvisning av nettsiden"
             src={src}
+            onLoad={pushDraft}
             className="w-full border-0 bg-white h-[min(82vh,900px)] xl:h-[calc(100vh-8.5rem)]"
           />
         </div>

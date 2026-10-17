@@ -3,7 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
 import { CmsLivePreview } from './CmsLivePreview';
+import { CmsHomeLayoutPanel } from './CmsHomeLayoutPanel';
+import type { CmsPreviewSection } from '../../utils/cmsPreview';
 import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
+import { BETYNA_DEFAULT_HERO_IMAGE } from '../../utils/cmsHeroImage';
 import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
 import {
   Layout,
@@ -294,6 +297,12 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
       </div>
 
+      <CmsHomeLayoutPanel
+        cmsContent={cmsContent}
+        onUpdateLayout={(homeLayout) => updateCmsSection('homeLayout', homeLayout)}
+        onEditModule={(tab: CmsPreviewSection) => setActiveSubTab(tab as CmsSubTab)}
+      />
+
       {/* Save Notification Toast */}
       {saveToast && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
@@ -454,10 +463,11 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               <div className="pt-2">
                 <ImagePickerField
                   label="Bakgrunnsbilde for hovedbanner"
-                  sublabel="Velg et kuratert motiv, last opp en lokal bildefil, eller lim inn en bilde-URL."
+                  sublabel={`Standard er gruppebildet (${BETYNA_DEFAULT_HERO_IMAGE}). Last opp eller lim inn adresse — motiver ligger i biblioteket under.`}
                   currentUrl={cmsContent.hero.backgroundImageUrl}
                   currentPreset={cmsContent.hero.backgroundPreset}
                   currentScrimOpacity={cmsContent.hero.scrimOpacity}
+                  defaultRestoreUrl={BETYNA_DEFAULT_HERO_IMAGE}
                   onChange={handleHeroBackgroundChange}
                 />
               </div>
@@ -1093,7 +1103,13 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
         {previewOpen && (
           <div className="w-full xl:flex-[1.25] xl:min-w-[40%] shrink-0 min-w-0">
-            <CmsLivePreview section={activeSubTab} onClose={() => setPreviewOpen(false)} />
+            <CmsLivePreview
+              section={activeSubTab}
+              onClose={() => setPreviewOpen(false)}
+              cmsContent={cmsContent}
+              stories={stories}
+              campaigns={campaigns}
+            />
           </div>
         )}
       </div>

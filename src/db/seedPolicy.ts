@@ -1,4 +1,5 @@
 import type { CmsContent } from '../types';
+import { BETYNA_DEFAULT_HERO_IMAGE } from '../utils/cmsHeroImage';
 import { DEFAULT_HERO_LAYOUT } from '../utils/heroLayout';
 import { DEFAULT_TESTIMONIALS_SECTION } from '../utils/testimonials';
 
@@ -22,7 +23,8 @@ export const EMPTY_CMS_CONTENT: CmsContent = {
     subtitle: '',
     primaryButtonText: '',
     secondaryButtonText: '',
-    backgroundPreset: 'pattern',
+    backgroundPreset: 'custom',
+    backgroundImageUrl: BETYNA_DEFAULT_HERO_IMAGE,
     scrimOpacity: 70,
     ...DEFAULT_HERO_LAYOUT,
   },

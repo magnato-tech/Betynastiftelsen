@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Upload, Link2, Sparkles, Trash2, Sliders, Check, Image as ImageIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Upload, Link2, Sparkles, Trash2, Sliders, Check, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { BETYNA_DEFAULT_HERO_IMAGE } from '../../utils/cmsHeroImage';
 
 export interface ImagePresetOption {
   id: string;
@@ -18,6 +19,8 @@ export interface ImagePickerFieldProps {
   showScrimSlider?: boolean;
   aspectRatio?: '16/9' | '4/3' | '1/1' | 'auto';
   customPresets?: ImagePresetOption[];
+  /** Ved «Fjern bilde» — bruk dette i stedet for tomt mønster (f.eks. standard gruppebilde). */
+  defaultRestoreUrl?: string;
   onChange: (updates: {
     backgroundImageUrl?: string;
     backgroundPreset?: 'pattern' | 'classroom' | 'workshop' | 'books' | 'students' | 'custom' | string;
@@ -25,7 +28,13 @@ export interface ImagePickerFieldProps {
   }) => void;
 }
 
-const DEFAULT_PRESETS: ImagePresetOption[] = [
+const LIBRARY_PRESETS: ImagePresetOption[] = [
+  {
+    id: 'betyna-group',
+    name: 'Synelle og barna (anbefalt)',
+    desc: 'Offisielt gruppebilde — IMG_1194.jpg på forsiden',
+    url: BETYNA_DEFAULT_HERO_IMAGE,
+  },
   {
     id: 'pattern',
     name: 'Geometrisk håpsmønster',
@@ -64,20 +73,26 @@ const DEFAULT_PRESETS: ImagePresetOption[] = [
 
 export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
   label = 'Bakgrunnsbilde & Visuell Stemning',
-  sublabel = 'Velg et kuratert motiv, last opp en lokal bildefil fra maskinen, eller lim inn en direkte bilde-URL.',
+  sublabel = 'Last opp bilde fra maskinen eller lim inn adresse. Motiver fra biblioteket brukes sjelden.',
   currentUrl,
-  currentPreset = 'pattern',
+  currentPreset = 'custom',
   currentScrimOpacity = 75,
   showScrimSlider = true,
   customPresets,
+  defaultRestoreUrl,
   onChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'presets' | 'upload' | 'url'>('presets');
+  const [activeTab, setActiveTab] = useState<'upload' | 'url'>('upload');
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [urlInput, setUrlInput] = useState(currentUrl || '');
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const presets = customPresets || DEFAULT_PRESETS;
+  const presets = customPresets ?? LIBRARY_PRESETS;
+
+  useEffect(() => {
+    setUrlInput(currentUrl || '');
+  }, [currentUrl]);
 
   const processFile = (file: File) => {
     setUploadError(null);
@@ -128,6 +143,14 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
   };
 
   const handleRemoveImage = () => {
+    if (defaultRestoreUrl) {
+      onChange({
+        backgroundImageUrl: defaultRestoreUrl,
+        backgroundPreset: 'custom',
+      });
+      setUrlInput(defaultRestoreUrl);
+      return;
+    }
     onChange({
       backgroundImageUrl: '',
       backgroundPreset: 'pattern',
@@ -135,9 +158,31 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
     setUrlInput('');
   };
 
+  const applyPreset = (p: ImagePresetOption) => {
+    if (p.id === 'pattern') {
+      onChange({
+        backgroundPreset: 'pattern',
+        backgroundImageUrl: '',
+      });
+      setUrlInput('');
+      return;
+    }
+    if (p.url) {
+      onChange({
+        backgroundPreset: p.id === 'betyna-group' ? 'custom' : p.id,
+        backgroundImageUrl: p.url,
+      });
+      setUrlInput(p.url);
+    }
+  };
+
+  const showRestoreDefault =
+    defaultRestoreUrl &&
+    currentUrl !== defaultRestoreUrl &&
+    (!currentUrl?.trim() || currentPreset === 'pattern');
+
   return (
     <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 sm:p-5 space-y-4 text-xs font-sans">
-      {/* Header and remove action */}
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
           <h4 className="font-semibold text-stone-900 text-sm flex items-center gap-1.5">
@@ -147,25 +192,36 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           {sublabel && <p className="text-stone-500 text-[11px] mt-0.5">{sublabel}</p>}
         </div>
 
-        {(currentUrl || (currentPreset && currentPreset !== 'pattern')) && (
+        {currentUrl && (
           <button
             type="button"
             onClick={handleRemoveImage}
             className="flex items-center gap-1 text-rose-700 hover:text-rose-900 font-medium px-2 py-1 rounded cursor-pointer whitespace-nowrap shrink-0 hover:bg-rose-50 transition-colors"
-            title="Fjern bilde og tilbakestill"
+            title={defaultRestoreUrl ? 'Tilbakestill til standard gruppebilde' : 'Fjern bilde'}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Fjern bilde</span>
+            <span>{defaultRestoreUrl ? 'Tilbakestill' : 'Fjern bilde'}</span>
           </button>
         )}
       </div>
 
-      {/* Mini preview strip if image is active */}
+      {showRestoreDefault && (
+        <button
+          type="button"
+          onClick={() =>
+            onChange({ backgroundImageUrl: defaultRestoreUrl, backgroundPreset: 'custom' })
+          }
+          className="w-full text-left px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-[11px] font-medium cursor-pointer hover:bg-amber-100"
+        >
+          Gjenopprett standard gruppebilde ({defaultRestoreUrl})
+        </button>
+      )}
+
       {currentUrl && (
         <div className="flex items-center gap-3 p-2.5 bg-white rounded-lg border border-stone-200">
           <div className="w-14 h-10 rounded overflow-hidden bg-stone-900 shrink-0 border border-stone-300 relative">
             <img
-              src={currentUrl}
+              src={currentUrl.startsWith('/') || currentUrl.includes('://') || currentUrl.startsWith('data:') ? currentUrl : `/${currentUrl}`}
               alt="Gjeldende bilde"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
@@ -173,30 +229,17 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-semibold text-stone-800 truncate">
-              {currentUrl.startsWith('data:') ? 'Lokal opplastet fil (innstøpt base64)' : currentUrl}
+              {currentUrl.startsWith('data:') ? 'Lokal opplastet fil' : currentUrl}
             </div>
             <div className="text-[10px] text-emerald-700 flex items-center gap-1 font-medium mt-0.5">
               <Check className="w-3 h-3" />
-              <span>Aktivt bilde i bruk på komponenten</span>
+              <span>Aktivt bilde på forsiden</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tabs for choosing method */}
       <div className="flex bg-stone-200/80 p-0.5 rounded-lg border border-stone-300 w-fit">
-        <button
-          type="button"
-          onClick={() => setActiveTab('presets')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-            activeTab === 'presets'
-              ? 'bg-white text-stone-900 shadow-2xs'
-              : 'text-stone-600 hover:text-stone-900'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>Forhåndsdefinerte motiver</span>
-        </button>
         <button
           type="button"
           onClick={() => setActiveTab('upload')}
@@ -207,7 +250,7 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           }`}
         >
           <Upload className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>Last opp lokal fil</span>
+          <span>Last opp</span>
         </button>
         <button
           type="button"
@@ -219,52 +262,10 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           }`}
         >
           <Link2 className="w-3.5 h-3.5 text-[#4D6B3E]" />
-          <span>Bilde-URL</span>
+          <span>Bilde-URL / filnavn</span>
         </button>
       </div>
 
-      {/* Tab 1: Presets */}
-      {activeTab === 'presets' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {presets.map((p) => {
-            const isSelected = (currentPreset === p.id && !currentUrl) || (p.url && currentUrl === p.url);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  if (p.id === 'pattern') {
-                    onChange({
-                      backgroundPreset: 'pattern',
-                      backgroundImageUrl: '',
-                    });
-                  } else {
-                    onChange({
-                      backgroundPreset: p.id,
-                      backgroundImageUrl: p.url,
-                    });
-                  }
-                }}
-                className={`p-3 text-left rounded-lg border transition-all cursor-pointer flex flex-col justify-between h-24 ${
-                  isSelected
-                    ? 'border-[#4D6B3E] bg-[#A3B18A]/15 shadow-xs ring-1 ring-[#4D6B3E]'
-                    : 'border-stone-300 bg-white hover:border-stone-400'
-                }`}
-              >
-                <div>
-                  <div className="font-semibold text-stone-900 text-xs">{p.name}</div>
-                  <div className="text-[11px] text-stone-500 line-clamp-2 mt-0.5">{p.desc}</div>
-                </div>
-                <span className="text-[10px] font-mono uppercase text-[#4D6B3E] font-medium">
-                  {isSelected ? '✓ Valgt motiv' : 'Velg motiv'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Tab 2: Upload local file */}
       {activeTab === 'upload' && (
         <div
           onDragOver={(e) => {
@@ -282,44 +283,70 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           <label className="cursor-pointer block space-y-2">
             <Upload className="w-6 h-6 text-stone-400 mx-auto" />
             <div>
-              <span className="font-medium text-stone-800 underline">Klikk for å velge fil fra datamaskinen</span>
-              <p className="text-[11px] text-stone-500 mt-0.5">
-                Eller dra og slipp bildefilen her (JPG, PNG, WebP opptil 5 MB).
-              </p>
+              <span className="font-medium text-stone-800 underline">Klikk for å velge fil</span>
+              <p className="text-[11px] text-stone-500 mt-0.5">JPG, PNG, WebP opptil 5 MB</p>
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
+            <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
           </label>
-          {uploadError && (
-            <p className="text-rose-600 text-xs mt-2 font-medium">{uploadError}</p>
-          )}
+          {uploadError && <p className="text-rose-600 text-xs mt-2 font-medium">{uploadError}</p>}
         </div>
       )}
 
-      {/* Tab 3: URL input */}
       {activeTab === 'url' && (
-        <form onSubmit={handleApplyUrl} className="flex gap-2">
+        <form onSubmit={handleApplyUrl} className="space-y-2">
           <input
-            type="url"
+            type="text"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="https://eksempel.no/bilde.jpg"
-            className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] font-sans"
+            placeholder={`https://… eller ${BETYNA_DEFAULT_HERO_IMAGE}`}
+            className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] font-sans"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0"
+            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-medium cursor-pointer"
           >
-            Bruk URL
+            Bruk adresse
           </button>
         </form>
       )}
 
-      {/* Scrim Opacity Slider */}
+      <div className="border-t border-stone-200 pt-3">
+        <button
+          type="button"
+          onClick={() => setLibraryOpen((o) => !o)}
+          className="flex items-center gap-2 text-[11px] font-semibold text-stone-600 hover:text-[#4D6B3E] cursor-pointer"
+        >
+          <ChevronDown className={`w-4 h-4 transition-transform ${libraryOpen ? 'rotate-180' : ''}`} />
+          <Sparkles className="w-3.5 h-3.5" />
+          Motivbibliotek (sjelden brukt)
+        </button>
+        {libraryOpen && (
+          <ul className="mt-3 space-y-1.5 max-h-48 overflow-y-auto">
+            {presets.map((p) => {
+              const isSelected =
+                (p.id === 'pattern' && currentPreset === 'pattern' && !currentUrl) ||
+                (p.url && (currentUrl === p.url || currentUrl === `/${p.url}`));
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(p)}
+                    className={`w-full text-left px-3 py-2 rounded-lg border text-[11px] cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'border-[#4D6B3E] bg-[#A3B18A]/15 text-stone-900'
+                        : 'border-stone-200 bg-white hover:border-stone-300 text-stone-700'
+                    }`}
+                  >
+                    <span className="font-semibold">{p.name}</span>
+                    <span className="text-stone-500"> — {p.desc}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
       {showScrimSlider && (
         <div className="pt-2 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-stone-700">
@@ -339,7 +366,7 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
               value={currentScrimOpacity}
               onChange={(e) =>
                 onChange({
-                  scrimOpacity: parseInt(e.target.value),
+                  scrimOpacity: parseInt(e.target.value, 10),
                 })
               }
               className="flex-1 accent-[#4D6B3E] cursor-pointer"

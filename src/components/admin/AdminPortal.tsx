@@ -25,6 +25,8 @@ import {
   type AdminContentSortKey,
 } from '../../utils/adminContentQueue';
 import { AdminContentWorkbench } from './AdminContentWorkbench';
+import { AdminOppfolgingSubNav } from './AdminOppfolgingSubNav';
+import { isAdminOppfolgingSection } from '../../utils/adminOppfolging';
 import type { FieldFact } from '../../types';
 
 interface AdminPortalProps {
@@ -169,12 +171,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           : 'max-w-7xl mx-auto px-6 py-8 space-y-10'
       }
     >
+      {isAdminOppfolgingSection(activeSection) && (
+        <AdminOppfolgingSubNav activeSection={activeSection} setActiveSection={setActiveSection} />
+      )}
+
       {/* 3. TAB: GODKJENNINGSKØ & TOSPRAKLIG REVISJON */}
       {(activeSection === 'godkjenning' || activeSection === 'home') && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-serif font-bold text-stone-900">Innhold til fadder</h2>
+              <h3 className="text-lg font-serif font-bold text-stone-900">Innhold til fadder</h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 Kort viser det som venter. Tabellen har også publiserte rapporter, med status og sortering på dato. Du
                 retter selv — ingenting sendes tilbake til koordinator.
@@ -460,7 +466,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeSection === 'sporsmaal' && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-serif font-bold text-stone-900">Spørsmål fra faddere</h2>
+            <h3 className="text-lg font-serif font-bold text-stone-900">Spørsmål fra faddere</h3>
             <p className="text-xs text-stone-600 mt-0.5">
               Håndter spørsmål fra faddere. Du kan svare direkte eller videresende til koordinator i Kongo.
               Når du publiserer svar, går det en systemmelding til fadderens e-post med lenke til faddersiden.
@@ -609,11 +615,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {activeSection === 'okonomi' && <AdminFinancePanel setActiveSection={setActiveSection} />}
 
-      {/* 7. TAB: REVISJONSLOGG */}
-      {(activeSection === 'logg' || activeSection === 'aksjoner') && (
+      {activeSection === 'logg' && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-base font-serif font-bold text-stone-900">Sikkerhets- og revisjonslogg</h3>
+            <h3 className="text-lg font-serif font-bold text-stone-900">Sikkerhets- og revisjonslogg</h3>
             <p className="text-xs text-stone-500 mt-1 max-w-2xl">
               Hva som er gjort i administrasjonen. Ekstraordinære aksjoner og vitnesbyrd redigeres under CMS.
             </p>

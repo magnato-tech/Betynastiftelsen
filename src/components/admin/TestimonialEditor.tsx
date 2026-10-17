@@ -1,7 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdultGraduateStory, CmsTestimonialsSection, TestimonialCategory } from '../../types';
-import { isFrontPageTestimonial, withTestimonialsSectionDefaults } from '../../utils/testimonials';
+import {
+  getTestimonialFrontPageBlockers,
+  isFrontPageTestimonial,
+  withTestimonialsSectionDefaults,
+} from '../../utils/testimonials';
+import { normalizeCmsHomeLayout, setHomeModuleVisible } from '../../utils/cmsHomeLayout';
 import { TestimonialStoryCard } from '../public/TestimonialStoryCard';
 import {
   Quote,
@@ -183,6 +188,12 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       ...testimonialsSection,
       ...patch,
     });
+    if (typeof patch.enabled === 'boolean') {
+      updateCmsSection(
+        'homeLayout',
+        setHomeModuleVisible(normalizeCmsHomeLayout(cmsContent), 'stories', patch.enabled)
+      );
+    }
     setToastMessage('Seksjonstekst for vitnesbyrd oppdatert.');
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -260,11 +271,16 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
   };
 
   const handleToggleFeatured = (st: AdultGraduateStory) => {
+    if (st.category === 'child') {
+      setToastMessage('Barn/ungdom kan ikke vises på forsiden.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
     const nextState = !(st.fremhevetPaaForside ?? true);
     updateStory(st.id, { fremhevetPaaForside: nextState });
     setToastMessage(
       nextState
-        ? `"${st.navn}" vises nå fremhevet på forsiden.`
+        ? `"${st.navn}" er merket for forsiden (vises når bilde, samtykke og godkjenning er på plass).`
         : `"${st.navn}" er skjult fra forsiden.`
     );
     setTimeout(() => setToastMessage(null), 3000);
@@ -498,7 +514,9 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
         {filteredStories.map((st) => {
           const meta = getCategoryMeta(st.category);
           const Icon = meta.icon;
-          const isFeatured = st.fremhevetPaaForside ?? true;
+          const onFrontPage = isFrontPageTestimonial(st);
+          const blockers = getTestimonialFrontPageBlockers(st);
+          const wantsFront = st.fremhevetPaaForside !== false && st.category !== 'child';
 
           return (
             <div
@@ -515,27 +533,35 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                     <span>{meta.label}</span>
                   </span>
 
-                  <button
-                    onClick={() => handleToggleFeatured(st)}
-                    className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
-                      isFeatured
-                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                    }`}
-                    title={isFeatured ? 'Vises på forsiden (klikk for å skjule)' : 'Skjult fra forsiden (klikk for å vise)'}
-                  >
-                    {isFeatured ? (
-                      <>
-                        <Eye className="w-3 h-3" />
-                        <span>På forsiden</span>
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="w-3 h-3" />
-                        <span>Skjult</span>
-                      </>
-                    )}
-                  </button>
+                  {onFrontPage ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeatured(st)}
+                      className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      title="Vises på forsiden (klikk for å skjule)"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>På forsiden</span>
+                    </button>
+                  ) : wantsFront && blockers.length > 0 ? (
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-900 max-w-[9rem] text-left"
+                      title={blockers.join(' · ')}
+                    >
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      {blockers[0]}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeatured(st)}
+                      className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded cursor-pointer bg-stone-100 text-stone-500 hover:bg-stone-200"
+                      title="Skjult fra forsiden (klikk for å vise)"
+                    >
+                      <EyeOff className="w-3 h-3" />
+                      <span>Skjult</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Author profile row: Photo + Name + Role */}

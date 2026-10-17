@@ -43,10 +43,28 @@ export function storyHasPublicPhoto(story: AdultGraduateStory): boolean {
 
 /** Godkjent vitnesbyrd som kan vises på forsiden (runde 3). */
 export function isFrontPageTestimonial(story: AdultGraduateStory): boolean {
-  if (story.category === 'child') return false;
-  if (!story.godkjentAvAdmin || !story.samtykkeDokumentert) return false;
-  if (story.fremhevetPaaForside === false) return false;
-  return storyHasPublicPhoto(story);
+  return getTestimonialFrontPageBlockers(story).length === 0;
+}
+
+/** Hvorfor et vitnesbyrd ikke vises på forsiden (tom = vises). */
+export function getTestimonialFrontPageBlockers(story: AdultGraduateStory): string[] {
+  const reasons: string[] = [];
+  if (story.category === 'child') {
+    reasons.push('Barn/ungdom vises ikke på forsiden');
+  }
+  if (!story.samtykkeDokumentert) {
+    reasons.push('Mangler dokumentert samtykke');
+  }
+  if (!story.godkjentAvAdmin) {
+    reasons.push('Mangler admin-godkjenning');
+  }
+  if (!storyHasPublicPhoto(story)) {
+    reasons.push('Mangler bilde');
+  }
+  if (story.fremhevetPaaForside === false) {
+    reasons.push('Skjult fra forsiden');
+  }
+  return reasons;
 }
 
 export type StoryDisplayPhotos = {

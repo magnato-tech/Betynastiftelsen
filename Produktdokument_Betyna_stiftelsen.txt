@@ -635,6 +635,26 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
 
+Arbeidsdokument - Versjon 1.89 - 18. oktober 2026
+
+18. oktober 2026, hero-bilde og motivbibliotek
+Standard hovedbanner er gruppebildet IMG_1194.jpg (Synelle og barna). Stock-motiver er flyttet til sammenleggbart motivbibliotek i CMS; hovedvalg er opplasting eller URL. Tilbakestill gjenoppretter gruppebildet.
+
+Arbeidsdokument - Versjon 1.88 - 18. oktober 2026
+
+18. oktober 2026, admin-meny Oppfolging
+Toppmeny admin: Oppfolging, Barn, Brukere, CMS, Okonomi, Innstillinger. Godkjenning, Sporsmal og Logg er horisontale underfaner under Oppfolging (standard landing fortsatt godkjenning). Varsler lenker fortsatt til godkjenning eller sporsmal.
+
+Arbeidsdokument - Versjon 1.87 - 18. oktober 2026
+
+18. oktober 2026, CMS implementert med bibliotek og live preview
+Forside-panelet i CMS (homeLayout) styre rekkefolge og pa/av per modultype; fanene er biblioteket. Live forhandsvisning far utkast via postMessage og viser norsk CMS-tekst. Vitnesbyrd: merke Pa forsiden bare nar kortet faktisk kan vises; ellers arsak pa kortet. Nokkeltall og fadderoppfordring rendres pa forsiden nar modulen er pa.
+
+Arbeidsdokument - Versjon 1.86 - 18. oktober 2026
+
+18. oktober 2026, CMS-bibliotek og forside
+Alt som finnes i CMS i dag (hovedbanner, fadderordningen, vitnesbyrd, kjernerammer, n?kkeltall, fadderoppfordring, aksjoner) beholdes som modultyper. Innhold lagres i et bibliotek; det som ikke vises p? nettsiden ligger fortsatt i biblioteket og kan redigeres. Forsiden settes sammen ved ? velge moduler fra biblioteket og endre rekkef?lge (opp/ned). Live forh?ndsvisning skal vise samme utkast som admin redigerer. Vitnesbyrd: hvert kort er ett element i biblioteket; modulen ?Ekte vitnesbyrd? p? forsiden viser bare kort som er godkjent, har bilde/samtykke og er merket for visning ? skjulte kort forblir i biblioteket.
+
 Arbeidsdokument - Versjon 1.85 - 18. oktober 2026
 
 18. oktober 2026, brukere, personkort og kortere faner

@@ -311,6 +311,20 @@ export interface CmsTestimonialsSection {
   gridColumns?: 2 | 3;
 }
 
+/** Av/på for hele seksjonen på forsiden (mangler = på). */
+export interface CmsSectionToggle {
+  enabled?: boolean;
+}
+
+/** Modultyper som kan ligge på forsiden (innholdet ligger i biblioteket). */
+export type CmsHomeModuleId = 'hero' | 'stories' | 'steps' | 'about' | 'kpis' | 'cta' | 'behov';
+
+export interface CmsHomeLayoutItem {
+  moduleId: CmsHomeModuleId;
+  /** false = kun i biblioteket, ikke på forsiden */
+  visible?: boolean;
+}
+
 export interface CmsContent {
   hero: CmsHero;
   steps: CmsStep[];
@@ -318,6 +332,13 @@ export interface CmsContent {
   kpiStats: CmsKpiStat[];
   ctaBanner?: CmsCtaBanner;
   testimonialsSection?: CmsTestimonialsSection;
+  /** Rekkefølge og synlighet på forsiden. Mangler = standard rekkefølge + eldre av/på-felt. */
+  homeLayout?: CmsHomeLayoutItem[];
+  heroSection?: CmsSectionToggle;
+  stepsSection?: CmsSectionToggle;
+  aboutSection?: CmsSectionToggle;
+  kpiSection?: CmsSectionToggle;
+  ctaSection?: CmsSectionToggle;
 }
 
 export type EmailKind = 'newsletter' | 'inquiry' | 'system';

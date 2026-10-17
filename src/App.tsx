@@ -17,16 +17,44 @@ import { DonateCampaignModal } from './components/modals/DonateCampaignModal';
 import { Campaign } from './types';
 import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
+import {
+  applyCmsSectionHighlight,
+  isCmsPreviewMessage,
+  type CmsPreviewDraftPayload,
+} from './utils/cmsPreviewBridge';
 import { consumePortalIntent, markPortalIntent } from './utils/portalIntent';
 import { defaultPortalSectionForProfile } from './utils/portalSession';
 
 const MainLayout: React.FC = () => {
-  const { role, setRole, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } = useApp();
+  const { role, setRole, setLanguage, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } =
+    useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
+  const [cmsPreviewDraft, setCmsPreviewDraft] = useState<CmsPreviewDraftPayload | null>(null);
   const homepageChosenFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!previewFlags.embedded) return;
+    setLanguage('no');
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (isCmsPreviewMessage(event.data)) {
+        setCmsPreviewDraft(event.data.draft);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [previewFlags.embedded, setLanguage]);
+
+  useEffect(() => {
+    if (!previewFlags.embedded || !cmsPreviewDraft) return;
+    const id = requestAnimationFrame(() => {
+      applyCmsSectionHighlight(cmsPreviewDraft.highlightSection);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [previewFlags.embedded, cmsPreviewDraft]);
 
   useEffect(() => {
     try {
@@ -98,6 +126,8 @@ const MainLayout: React.FC = () => {
             onOpenDonateModal={(camp) => setDonateCampaign(camp)}
             activeSection={activeSection}
             setActiveSection={setActiveSection}
+            cmsPreviewDraft={previewFlags.embedded ? cmsPreviewDraft : null}
+            cmsPreviewEmbedded={previewFlags.embedded}
           />
         )}
 

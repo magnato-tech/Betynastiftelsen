@@ -294,7 +294,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
                   <strong>CMS:</strong> én fane for forsidetekst, ekstraordinære aksjoner og vitnesbyrd (samtykke og godkjenning før de vises åpent).
                 </li>
                 <li>
-                  <strong>Revisjonslogg:</strong> hva som er gjort i administrasjonen. Ikke et redigeringssted.
+                  <strong>Oppfølging:</strong> godkjenning, spørsmål fra faddere og revisjonslogg (underfaner). CMS, barn og brukere er egne faner.
                 </li>
               </ul>
               <button
@@ -308,7 +308,7 @@ export const AdminHelpGuide: React.FC<AdminHelpGuideProps> = ({ setActiveSection
             <HelpScreenshot
               src="/help/admin-kontrollpanel.png"
               alt="Admin kontrollpanel"
-              caption="Administratorens kontrollpanel med faner for godkjenning, faddere og CMS."
+              caption="Administratorens kontrollpanel med Oppfølging, Barn, Brukere, CMS og mer."
             />
           </div>
 

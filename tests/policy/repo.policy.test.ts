@@ -139,7 +139,6 @@ describe('farlige API-er i appkoden', () => {
     expect(grep(/sessionStorage\./).sort()).toEqual([
       'src/App.tsx',
       'src/db/firebaseAuthRedirect.ts',
-      'src/db/useFirestoreAppSync.ts',
       'src/utils/portalIntent.ts',
     ]);
   });
