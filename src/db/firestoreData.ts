@@ -19,7 +19,8 @@ import type { SeedLock } from './seedPolicy';
 import { LIVE_LAUNCH_VERSION, createSeedLock } from './seedPolicy';
 
 import type { AppDataSnapshot } from './appDataSnapshot';
-import type { FirestoreUser } from './firestoreProfile';
+import type { FirestoreUser, FirestoreUserDirectoryEntry } from './firestoreProfile';
+import { emailToDirectoryDocId } from './firestoreUser';
 
 export type { AppDataSnapshot };
 
@@ -291,6 +292,26 @@ export async function saveWebsiteSponsor(
     tildeltBarnIds: [],
     registrertKilde: 'nettside',
   });
+}
+
+/** Admin legger inn koordinator/fadder (og evt. admin) før første innlogging. */
+export async function saveUserDirectoryEntry(
+  db: Firestore,
+  entry: FirestoreUserDirectoryEntry
+): Promise<void> {
+  const email = emailToDirectoryDocId(entry.email);
+  const payload: FirestoreUserDirectoryEntry = {
+    email,
+    role: entry.role,
+    displayName: entry.displayName?.trim() || email.split('@')[0],
+  };
+  if (entry.role === 'coordinator' && entry.coordinatorId) {
+    payload.coordinatorId = entry.coordinatorId;
+  }
+  if (entry.role === 'sponsor' && entry.sponsorId) {
+    payload.sponsorId = entry.sponsorId;
+  }
+  await setDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, email), payload, { merge: true });
 }
 
 export type DbChange =

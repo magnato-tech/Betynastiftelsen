@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
 import { PortalRoleBar } from './components/common/PortalRoleBar';
@@ -16,16 +16,17 @@ import { BecomeSponsorModal } from './components/modals/BecomeSponsorModal';
 import { DonateCampaignModal } from './components/modals/DonateCampaignModal';
 import { Campaign } from './types';
 import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
-import { parseSponsorPortalLink } from './email/sponsorPortalLink';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
 import { markPortalIntent } from './utils/portalIntent';
+import { defaultPortalSectionForProfile } from './utils/portalSession';
 
 const MainLayout: React.FC = () => {
-  const { role, setRole, setCurrentSponsorId, firestoreLoading, firestoreUserProfile } = useApp();
+  const { setRole, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
+  const portalBootstrappedFor = useRef<string | null>(null);
 
   useEffect(() => {
     try {
@@ -46,16 +47,28 @@ const MainLayout: React.FC = () => {
       window.addEventListener('hashchange', onHash);
       return () => window.removeEventListener('hashchange', onHash);
     }
-    const parsed = parseSponsorPortalLink(window.location.search);
-    if (parsed) {
-      setRole('sponsor');
-      setCurrentSponsorId(parsed.sponsorId);
-      setActiveSection(parsed.section);
-      return;
+  }, [previewFlags.preview, setRole]);
+
+  useEffect(() => {
+    if (previewFlags.preview || firestoreLoading) return;
+    if (firestoreUserProfile) {
+      enterPortalFromProfile();
+      if (portalBootstrappedFor.current !== firestoreUserProfile.id) {
+        setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
+        portalBootstrappedFor.current = firestoreUserProfile.id;
+      }
+    } else {
+      portalBootstrappedFor.current = null;
+      setRole('public');
+      setActiveSection('home');
     }
-    setRole('public');
-    setActiveSection('home');
-  }, [previewFlags.preview, setRole, setCurrentSponsorId]);
+  }, [
+    previewFlags.preview,
+    firestoreLoading,
+    firestoreUserProfile,
+    enterPortalFromProfile,
+    setRole,
+  ]);
 
   if (firestoreLoading) {
     return (
@@ -68,11 +81,9 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
       <SaveStatusPill />
-      {/* 1. Persistent Role Switcher Ribbon for immediate testing */}
-      {firestoreUserProfile && <PortalRoleBar />}
-      {prototypeRoleSwitcherEnabled && !previewFlags.preview && !firestoreUserProfile && (
-        <RoleSwitcherBanner />
-      )}
+      {/* Testperiode: visningslinjen blir stående også etter innlogging. Fjernes med VITE_PROTOTYPE_ROLE_SWITCHER=false. */}
+      {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
+      {!prototypeRoleSwitcherEnabled && firestoreUserProfile && <PortalRoleBar />}
 
       {/* 2. Top Bar complying with strict 1-row 3-zone contract */}
       <Navbar

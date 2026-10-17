@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { EMAIL_AUTO_SEND_EVENTS } from '../../email/autoSendPrefs';
 import { AdminHelpGuide } from './AdminHelpGuide';
+import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
 
 interface AdminSettingsPanelProps {
   setActiveSection: (sec: string) => void;
@@ -96,6 +97,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
         </div>
       )}
 
+      <UserDirectoryInviteForm />
+
       <div className="bg-white p-6 md:p-8 rounded-xl border border-stone-200 shadow-xs space-y-4">
         <div className="flex items-start gap-2">
           <Settings className="w-4 h-4 text-[#4D6B3E] shrink-0 mt-0.5" />
@@ -103,7 +106,7 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ setActiv
             <h3 className="text-sm font-serif font-bold text-stone-900">Automatisk e-post</h3>
             <p className="text-xs text-stone-600 mt-1 leading-relaxed">
               Daglig leder bestemmer hvilke hendelser som sender e-post. Av betyr varsel i portalen, men ingen e-post.
-              Manuell sending under E-post påvirkes ikke. Engangslenke for innlogging kommer senere.
+              Manuell sending under E-post påvirkes ikke.
             </p>
           </div>
         </div>

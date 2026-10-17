@@ -38,6 +38,7 @@ import {
   stableJson,
   type Baseline,
 } from './syncEngine';
+import { assertNoAdminOnlyWrites, planScopedPortalChanges } from './scopedPortalSave';
 
 export type FirestoreHydration = {
   [K in keyof AppDataSnapshot]?: AppDataSnapshot[K];
@@ -293,42 +294,52 @@ export function useFirestoreAppSync() {
   }, []);
 
   /** Regner ut endringer mot det som ligger i databasen. */
-  const planChanges = useCallback((snapshot: AppDataSnapshot) => {
-    const changes: DbChange[] = [];
-    const nextLists: Partial<Record<ListKey, Baseline>> = {};
-    for (const { key, collection } of SYNCED_LISTS) {
-      const baseline = listBaselines.current[key] ?? new Map();
-      const items = snapshot[key] as { id: string }[];
-      const plan = planCollectionSync(baseline, items);
-      if (isSuspiciousWipe(baseline, plan.deletes)) {
-        throw new SuspiciousWipeError(
-          `Lagringen ble stoppet: alt i «${collection}» ville blitt slettet på én gang. Last siden på nytt.`
-        );
+  const planChanges = useCallback(
+    (snapshot: AppDataSnapshot) => {
+      const profile = firestoreUserProfile;
+      if (profile && (profile.role === 'coordinator' || profile.role === 'sponsor')) {
+        const scoped = planScopedPortalChanges(profile, listBaselines.current, snapshot);
+        assertNoAdminOnlyWrites(scoped.changes);
+        return scoped;
       }
-      nextLists[key] = plan.next;
-      for (const item of plan.sets) changes.push({ kind: 'set', collection, id: item.id, data: item });
-      for (const id of plan.deletes) changes.push({ kind: 'delete', collection, id });
-    }
-    const cms = planSingleSync(cmsBaseline.current, snapshot.cms);
-    if (cms.write) {
-      changes.push({ kind: 'set', collection: FIRESTORE_COLLECTIONS.cms, id: CMS_PUBLIC_DOC_ID, data: cms.data });
-    }
-    const email = planSingleSync(emailBaseline.current, snapshot.emailAutoSend);
-    if (email.write) {
-      changes.push({
-        kind: 'set',
-        collection: FIRESTORE_COLLECTIONS.settings,
-        id: SETTINGS_EMAIL_DOC_ID,
-        data: email.data,
-      });
-    }
-    const commit = () => {
-      listBaselines.current = nextLists;
-      cmsBaseline.current = cms.json;
-      emailBaseline.current = email.json;
-    };
-    return { changes, commit };
-  }, []);
+
+      const changes: DbChange[] = [];
+      const nextLists: Partial<Record<ListKey, Baseline>> = {};
+      for (const { key, collection } of SYNCED_LISTS) {
+        const baseline = listBaselines.current[key] ?? new Map();
+        const items = snapshot[key] as { id: string }[];
+        const plan = planCollectionSync(baseline, items);
+        if (isSuspiciousWipe(baseline, plan.deletes)) {
+          throw new SuspiciousWipeError(
+            `Lagringen ble stoppet: alt i «${collection}» ville blitt slettet på én gang. Last siden på nytt.`
+          );
+        }
+        nextLists[key] = plan.next;
+        for (const item of plan.sets) changes.push({ kind: 'set', collection, id: item.id, data: item });
+        for (const id of plan.deletes) changes.push({ kind: 'delete', collection, id });
+      }
+      const cms = planSingleSync(cmsBaseline.current, snapshot.cms);
+      if (cms.write) {
+        changes.push({ kind: 'set', collection: FIRESTORE_COLLECTIONS.cms, id: CMS_PUBLIC_DOC_ID, data: cms.data });
+      }
+      const email = planSingleSync(emailBaseline.current, snapshot.emailAutoSend);
+      if (email.write) {
+        changes.push({
+          kind: 'set',
+          collection: FIRESTORE_COLLECTIONS.settings,
+          id: SETTINGS_EMAIL_DOC_ID,
+          data: email.data,
+        });
+      }
+      const commit = () => {
+        listBaselines.current = nextLists;
+        cmsBaseline.current = cms.json;
+        emailBaseline.current = email.json;
+      };
+      return { changes, commit };
+    },
+    [firestoreUserProfile]
+  );
 
   const flush = useCallback(async () => {
     if (!db || !readyRef.current || !latestRef.current) return;

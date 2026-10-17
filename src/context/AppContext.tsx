@@ -40,10 +40,11 @@ import {
   createSeedLock,
   type SeedLock,
 } from '../db/seedPolicy';
-import { firestoreEnabled as firestoreConfigured } from '../config/firebase';
+import { db, firestoreEnabled as firestoreConfigured } from '../config/firebase';
 import { useFirestoreAppSync } from '../db/useFirestoreAppSync';
 import type { AppDataSnapshot } from '../db/firestoreData';
-import type { FirestoreUser } from '../db/firestoreProfile';
+import { saveUserDirectoryEntry } from '../db/firestoreData';
+import type { FirestoreUser, FirestoreUserDirectoryEntry } from '../db/firestoreProfile';
 import { consumePortalIntent, markPortalIntent } from '../utils/portalIntent';
 import { canOpenPortalRole } from '../utils/portalRoles';
 import { prototypeRoleSwitcherEnabled } from '../config/prototypeAccess';
@@ -176,6 +177,8 @@ interface AppContextType {
   /** Bytt til innlogget rolle (admin/koordinator/fadder). Returnerer false hvis profil mangler. */
   enterPortalFromProfile: () => boolean;
   importBrowserToFirestore: () => Promise<void>;
+  /** Legg inn e-post i userDirectory (kun admin, Firestore-regler). */
+  inviteUserToDirectory: (entry: FirestoreUserDirectoryEntry) => Promise<void>;
   /** Offentlig innhold er ikke lest fra databasen ennå. */
   firestoreLoading: boolean;
   firestoreSave: { state: 'idle' | 'saving' | 'saved' | 'error'; lastSavedAt: number | null; error: string | null };
@@ -329,8 +332,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setEmailOutbox(h.emailOutbox ?? []);
       if (h.cms) setCmsContent(h.cms);
       if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
+      const role = firestore.firestoreUserProfile?.role;
       firestore.confirmHydrated(h, {
-        enableSave: firestore.firestoreUserProfile?.role === 'admin',
+        enableSave: role === 'admin' || role === 'coordinator' || role === 'sponsor',
       });
     } else {
       if (h.cms) setCmsContent(h.cms);
@@ -358,6 +362,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     applyFirestoreProfileToRole(profile);
     return true;
   }, [applyFirestoreProfileToRole, firestore.firestoreUserProfile]);
+
+  const inviteUserToDirectory = useCallback(async (entry: FirestoreUserDirectoryEntry) => {
+    if (!db) throw new Error('Firestore er ikke konfigurert');
+    if (firestore.firestoreUserProfile?.role !== 'admin') {
+      throw new Error('Bare administrator kan invitere brukere');
+    }
+    if (entry.role === 'coordinator' && !entry.coordinatorId) {
+      throw new Error('Velg koordinator-id for koordinator-rollen');
+    }
+    if (entry.role === 'sponsor' && !entry.sponsorId) {
+      throw new Error('Velg fadder-id for fadder-rollen');
+    }
+    await saveUserDirectoryEntry(db, entry);
+  }, [firestore.firestoreUserProfile?.role]);
 
   useEffect(() => {
     const profile = firestore.firestoreUserProfile;
@@ -543,9 +561,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setRole = (newRole: UserRole) => {
     const profile = firestore.firestoreUserProfile;
+    if (prototypeRoleSwitcherEnabled) {
+      setRoleState(newRole);
+      return;
+    }
     if (profile) {
       if (!canOpenPortalRole(profile, newRole)) return;
-    } else if (!prototypeRoleSwitcherEnabled && newRole !== 'public') {
+    } else if (newRole !== 'public') {
       return;
     }
     setRoleState(newRole);
@@ -1604,6 +1626,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         importBrowserToFirestore: async () => {
           await firestore.importBrowserToFirestore();
         },
+        inviteUserToDirectory,
         firestoreLoading: firestore.firestoreEnabled && firestore.loadState === 'loading',
         firestoreSave: firestore.saveStatus,
       }}
