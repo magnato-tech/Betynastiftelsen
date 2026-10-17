@@ -30,6 +30,7 @@ import {
 import { CMS_PUBLIC_DOC_ID, FIRESTORE_COLLECTIONS, SETTINGS_EMAIL_DOC_ID, type FirestoreUser } from './firestoreProfile';
 import type { AppDataSnapshot } from './firestoreData';
 import { ensureFirestoreUserOnLogin } from './firestoreUser';
+import { markPortalIntent } from '../utils/portalIntent';
 import {
   baselineOf,
   isSuspiciousWipe,
@@ -156,6 +157,7 @@ export function useFirestoreAppSync() {
           setAuthError('Åpne innloggingslenken i samme nettleser, eller be om ny lenke.');
           return;
         }
+        markPortalIntent();
         await signInWithEmailLink(auth, email, window.location.href);
         window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);
         clearStoredAuthError();

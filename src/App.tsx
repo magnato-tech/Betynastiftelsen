@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
 import { PortalRoleBar } from './components/common/PortalRoleBar';
@@ -17,7 +17,7 @@ import { DonateCampaignModal } from './components/modals/DonateCampaignModal';
 import { Campaign } from './types';
 import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
-import { markPortalIntent } from './utils/portalIntent';
+import { consumePortalIntent, markPortalIntent } from './utils/portalIntent';
 import { defaultPortalSectionForProfile } from './utils/portalSession';
 
 const MainLayout: React.FC = () => {
@@ -26,7 +26,6 @@ const MainLayout: React.FC = () => {
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
-  const portalBootstrappedFor = useRef<string | null>(null);
 
   useEffect(() => {
     try {
@@ -49,26 +48,21 @@ const MainLayout: React.FC = () => {
     }
   }, [previewFlags.preview, setRole]);
 
+  /** Rot-URL (betyna.no / www) er offentlig forsiden. Portal åpnes bare ved innlogging, portalIntent eller «Gå til …». */
   useEffect(() => {
     if (previewFlags.preview || firestoreLoading) return;
-    if (firestoreUserProfile) {
-      enterPortalFromProfile();
-      if (portalBootstrappedFor.current !== firestoreUserProfile.id) {
-        setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
-        portalBootstrappedFor.current = firestoreUserProfile.id;
-      }
-    } else {
-      portalBootstrappedFor.current = null;
+    if (!firestoreUserProfile) {
       setRole('public');
       setActiveSection('home');
+      return;
     }
-  }, [
-    previewFlags.preview,
-    firestoreLoading,
-    firestoreUserProfile,
-    enterPortalFromProfile,
-    setRole,
-  ]);
+    if (consumePortalIntent() && enterPortalFromProfile()) {
+      setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
+      return;
+    }
+    setRole('public');
+    setActiveSection('home');
+  }, [previewFlags.preview, firestoreLoading, firestoreUserProfile, enterPortalFromProfile, setRole]);
 
   if (firestoreLoading) {
     return (

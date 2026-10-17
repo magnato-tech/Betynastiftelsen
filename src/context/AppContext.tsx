@@ -355,10 +355,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const enterPortalFromProfile = useCallback((): boolean => {
     const profile = firestore.firestoreUserProfile;
-    if (!profile) {
-      markPortalIntent();
-      return false;
-    }
+    if (!profile) return false;
     applyFirestoreProfileToRole(profile);
     return true;
   }, [applyFirestoreProfileToRole, firestore.firestoreUserProfile]);

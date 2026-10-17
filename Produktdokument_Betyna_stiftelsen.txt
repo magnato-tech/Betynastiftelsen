@@ -635,10 +635,15 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
 
+Arbeidsdokument - Versjon 1.81 - 16. oktober 2026
+
+16. oktober 2026, rot-URL er offentlig forsiden
+https://www.betyna.no/ (og betyna.no som peker dit) viser alltid offentlig nettside for besokende og innloggede som ikke har valgt portal. Innlogget sesjon bytter ikke automatisk til admin ved oppfrisking. Portal aapnes ved vellykket innlogging (Google/e-postlenke), Gaa til administrasjon, eller visningsmodus. Tidligere v1.80-tekst om automatisk portal ved oppfrisking er erstattet.
+
 Arbeidsdokument - Versjon 1.80 - 16. oktober 2026
 
 16. oktober 2026, innlogging fullfort for roller
-Etter Google- eller e-postlenke-innlogging aapnes riktig portal (admin: godkjenning, koordinator: elever, fadder: barn), ogsaa ved oppfrisking. URL med ?portal=sponsor&sponsor=id gir ikke lenger tilgang; fadder kommer inn via innlogging og sponsorId paa profilen. Admin legger koordinator og fadder inn under Innstillinger (skjema som skriver userDirectory). Koordinator og fadder faar automatisk lagring bare for egne dokumenter (ingen CMS, ingen sletting av andres data). Den svarte visningslinjen blir i testperioden (VITE_PROTOTYPE_ROLE_SWITCHER).
+URL med ?portal=sponsor&sponsor=id gir ikke lenger tilgang; fadder kommer inn via innlogging og sponsorId paa profilen. Admin legger koordinator og fadder inn under Innstillinger (skjema som skriver userDirectory). Koordinator og fadder faar automatisk lagring bare for egne dokumenter (ingen CMS, ingen sletting av andres data). Den svarte visningslinjen blir i testperioden (VITE_PROTOTYPE_ROLE_SWITCHER).
 
 Arbeidsdokument - Versjon 1.79 - 16. oktober 2026
 

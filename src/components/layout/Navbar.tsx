@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { PortalLoginModal } from '../auth/PortalLoginModal';
+import { defaultPortalSectionForProfile } from '../../utils/portalSession';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
@@ -34,12 +35,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleOpenLogin = () => {
     if (!firestoreEnabled) return;
-    enterPortalFromProfile();
     setLoginOpen(true);
   };
 
   const handleEnterPortal = () => {
-    enterPortalFromProfile();
+    if (firestoreUserProfile && enterPortalFromProfile()) {
+      setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
+    }
     setLoginOpen(false);
   };
 

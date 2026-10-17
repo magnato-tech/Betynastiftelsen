@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { markPortalIntent } from '../../utils/portalIntent';
 
 interface PortalLoginModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const PortalLoginModal: React.FC<PortalLoginModalProps> = ({ isOpen, onCl
     setLocalError(null);
     setBusy(true);
     try {
+      markPortalIntent();
       await signInFirestoreGoogle();
       enterPortalFromProfile();
       onClose();
