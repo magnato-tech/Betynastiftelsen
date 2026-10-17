@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { PortalLoginModal } from '../auth/PortalLoginModal';
-import { defaultPortalSectionForProfile } from '../../utils/portalSession';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
@@ -22,12 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     t,
     campaigns,
     language,
-    firestoreEnabled,
     firestoreUserProfile,
     firestoreProfileLoading,
     firestoreAccessMessage,
     firestoreAuthError,
-    enterPortalFromProfile,
+    signOutFirestore,
   } = useApp();
 
   const [loginOpen, setLoginOpen] = useState(false);
@@ -36,11 +34,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     setLoginOpen(true);
   };
 
-  const handleEnterPortal = () => {
-    if (firestoreUserProfile && enterPortalFromProfile()) {
-      setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
-    }
+  const handleSignOut = () => {
     setLoginOpen(false);
+    setRole('public');
+    setActiveSection('home');
+    void signOutFirestore();
   };
 
   const loginButtonClass =
@@ -290,19 +288,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-xs text-stone-500 whitespace-nowrap">Logger inn …</span>
           )}
 
-          {role === 'public' && !firestoreProfileLoading && !firestoreUserProfile && (
+          {!firestoreProfileLoading && (
             <button
               type="button"
-              onClick={handleOpenLogin}
+              onClick={firestoreUserProfile ? handleSignOut : handleOpenLogin}
               className={loginButtonClass}
             >
-              {t('nav.login', 'Logg inn')}
-            </button>
-          )}
-
-          {role === 'public' && !firestoreProfileLoading && firestoreUserProfile && (
-            <button type="button" onClick={handleEnterPortal} className={loginButtonClass}>
-              {t('nav.enterPortal', 'Gå til portalen')}
+              {firestoreUserProfile ? t('nav.logout', 'Logg ut') : t('nav.login', 'Logg inn')}
             </button>
           )}
 

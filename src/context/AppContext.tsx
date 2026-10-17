@@ -174,6 +174,7 @@ interface AppContextType {
   signInFirestoreGoogle: () => Promise<void>;
   sendFirestoreEmailSignInLink: (email: string) => Promise<void>;
   signInFirestoreGoogleRedirect: () => Promise<void>;
+  signOutFirestore: () => Promise<void>;
   /** Bytt til innlogget rolle (admin/koordinator/fadder). Returnerer false hvis profil mangler. */
   enterPortalFromProfile: () => boolean;
   importBrowserToFirestore: () => Promise<void>;
@@ -1619,6 +1620,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signInFirestoreGoogle: firestore.signInWithGoogle,
         sendFirestoreEmailSignInLink: firestore.sendEmailSignInLink,
         signInFirestoreGoogleRedirect: firestore.signInWithGoogleRedirect,
+        signOutFirestore: firestore.signOutFirebase,
         enterPortalFromProfile,
         importBrowserToFirestore: async () => {
           await firestore.importBrowserToFirestore();

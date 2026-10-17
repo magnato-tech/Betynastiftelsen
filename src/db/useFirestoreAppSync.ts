@@ -7,6 +7,7 @@ import {
   sendSignInLinkToEmail,
   setPersistence,
   signInWithEmailLink,
+  signOut,
   signInWithRedirect,
   type User,
 } from 'firebase/auth';
@@ -462,6 +463,17 @@ export function useFirestoreAppSync() {
     }
   }, []);
 
+  const signOutFirebase = useCallback(async () => {
+    if (!auth) return;
+    await signOut(auth);
+    setFirestoreUserProfile(null);
+    setFirestoreAccessMessage(null);
+    setAuthError(null);
+    fullLoadedRef.current = false;
+    readyRef.current = false;
+    setBackendActive(false);
+  }, []);
+
   const importBrowserToFirestore = useCallback(async () => {
     if (!db || !auth?.currentUser) {
       throw new Error('Logg inn med Google først');
@@ -504,6 +516,7 @@ export function useFirestoreAppSync() {
     signInWithGoogle,
     sendEmailSignInLink,
     signInWithGoogleRedirect,
+    signOutFirebase,
     importBrowserToFirestore,
     registerSnapshotProvider,
     schedulePersist,

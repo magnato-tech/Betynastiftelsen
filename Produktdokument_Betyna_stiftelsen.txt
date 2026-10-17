@@ -635,6 +635,11 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
 
+Arbeidsdokument - Versjon 1.83 - 17. oktober 2026
+
+17. oktober 2026, samme knapp for inn og ut
+En hvit knapp ved siden av Bli fadder heter Logg inn naar man er ute, og Logg ut naar man er inne. Samme plass i portalen. Etter utlogging staar det Logg inn igjen. Portal aapnes fra den svarte testlinjen.
+
 Arbeidsdokument - Versjon 1.82 - 16. oktober 2026
 
 16. oktober 2026, innlogging fra forsiden
