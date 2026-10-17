@@ -44,6 +44,18 @@ export interface Child {
 
 export type CatalogPhotoStatus = 'innsendt' | 'publisert' | 'avvist';
 
+/** Admin mediabibliotek — bilder til nettside/CMS (Firebase Storage + metadata i Firestore). */
+export interface MediaLibraryItem {
+  id: string;
+  label: string;
+  /** Nedlastings-URL eller relativ sti (f.eks. IMG_1194.jpg). */
+  url: string;
+  storagePath?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+  sizeBytes?: number;
+}
+
 /** Skolebilde i koordinatorens katalog. Ett bilde kan merkes med flere barn. */
 export interface CatalogPhoto {
   id: string;

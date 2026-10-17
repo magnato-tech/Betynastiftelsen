@@ -4,6 +4,7 @@ import { EMPTY_CMS_CONTENT } from '../db/seedPolicy';
 import {
   moveHomeModule,
   normalizeCmsHomeLayout,
+  reorderHomeModule,
   setHomeModuleVisible,
   visibleHomeModules,
 } from './cmsHomeLayout';
@@ -36,5 +37,13 @@ describe('cmsHomeLayout', () => {
     const stepsIdx = layout.findIndex((r) => r.moduleId === 'steps');
     layout = moveHomeModule(layout, 'steps', 'up');
     expect(layout.findIndex((r) => r.moduleId === 'steps')).toBe(stepsIdx - 1);
+  });
+
+  it('reorderHomeModule flytter modul til ny posisjon', () => {
+    const layout = normalizeCmsHomeLayout(baseCms());
+    const next = reorderHomeModule(layout, 'behov', 'hero');
+    expect(next.map((r) => r.moduleId)[0]).toBe('behov');
+    const back = reorderHomeModule(next, 'behov', 'behov');
+    expect(back).toEqual(next);
   });
 });

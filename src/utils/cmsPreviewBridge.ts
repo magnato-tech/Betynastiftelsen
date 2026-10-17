@@ -2,12 +2,13 @@ import type { AdultGraduateStory, Campaign, CmsContent } from '../types';
 import type { CmsPreviewSection } from './cmsPreview';
 
 export const CMS_PREVIEW_MESSAGE = 'betyna-cms-draft';
+export const CMS_PREVIEW_READY = 'betyna-cms-ready';
 
 export interface CmsPreviewDraftPayload {
   cmsContent: CmsContent;
   stories: AdultGraduateStory[];
   campaigns: Campaign[];
-  highlightSection: CmsPreviewSection;
+  highlightSection: CmsPreviewSection | null;
 }
 
 export function isCmsPreviewMessage(data: unknown): data is { type: string; draft: CmsPreviewDraftPayload } {
@@ -35,13 +36,23 @@ export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
   behov: 'aksjoner',
 };
 
+export const CMS_PREVIEW_ACTIVE_CLASS = 'cms-preview-active';
+
+let lastScrolledSection: CmsPreviewSection | null = null;
+
 export function applyCmsSectionHighlight(section: CmsPreviewSection | null): void {
   document.querySelectorAll('[data-cms-section]').forEach((el) => {
-    el.classList.remove('ring-4', 'ring-[#4D6B3E]/50', 'ring-offset-2', 'ring-offset-[#F6F4ED]');
+    el.classList.remove(CMS_PREVIEW_ACTIVE_CLASS);
   });
-  if (!section) return;
+  if (!section) {
+    lastScrolledSection = null;
+    return;
+  }
   const el = document.querySelector(`[data-cms-section="${section}"]`);
-  if (!el) return;
-  el.classList.add('ring-4', 'ring-[#4D6B3E]/50', 'ring-offset-2', 'ring-offset-[#F6F4ED]');
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!(el instanceof HTMLElement)) return;
+  el.classList.add(CMS_PREVIEW_ACTIVE_CLASS);
+  if (lastScrolledSection !== section) {
+    lastScrolledSection = section;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }

@@ -3,11 +3,12 @@ import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
 import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
 import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
-import { BETYNA_DEFAULT_HERO_IMAGE } from '../../utils/cmsHeroImage';
+import { heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { visibleHomeModules } from '../../utils/cmsHomeLayout';
 import type { CmsHomeModuleId } from '../../types';
-import type { CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
-import { isFrontPageTestimonial, withTestimonialsSectionDefaults } from '../../utils/testimonials';
+import { CMS_PREVIEW_ACTIVE_CLASS, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
+import type { CmsPreviewSection } from '../../utils/cmsPreview';
+import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionDefaults } from '../../utils/testimonials';
 import { TestimonialStoryCard } from './TestimonialStoryCard';
 import {
   GraduationCap,
@@ -44,6 +45,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const campaigns = cmsPreviewDraft?.campaigns ?? app.campaigns;
   const { childrenList, language, t } = app;
   const useRawCmsText = cmsPreviewEmbedded;
+  const highlightedSection: CmsPreviewSection | null = cmsPreviewEmbedded
+    ? (cmsPreviewDraft?.highlightSection ?? null)
+    : null;
+  const previewMark = (section: CmsPreviewSection) =>
+    highlightedSection === section ? CMS_PREVIEW_ACTIVE_CLASS : '';
 
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');
@@ -70,11 +76,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const homeModuleOrder = visibleHomeModules(cmsContent);
   const onHome = (id: CmsHomeModuleId) => homeModuleOrder.includes(id);
 
-  const heroImageUrl = cmsContent.hero.backgroundImageUrl?.trim() || BETYNA_DEFAULT_HERO_IMAGE;
-  const heroImageSrc =
-    heroImageUrl.startsWith('http://') || heroImageUrl.startsWith('https://') || heroImageUrl.startsWith('data:') || heroImageUrl.startsWith('/')
-      ? heroImageUrl
-      : `/${heroImageUrl}`;
+  const heroImageSrc = heroImageSrcFromUrl(
+    cmsContent.hero.backgroundImageUrl,
+    cmsContent.hero.backgroundPreset
+  );
 
   const [sponsorshipDetailsOpen, setSponsorshipDetailsOpen] = useState(false);
 
@@ -125,8 +130,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="home"
         data-cms-section="hero"
+        data-cms-label="Hovedbanner"
         style={homeBlockStyle('hero')}
-        className="scroll-mt-24 rounded-lg transition-shadow"
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('hero')}`}
       >
         {/* Mobil: løfte, skjema, deretter bilde (runde 1) */}
         <div className="lg:hidden space-y-5 px-4 sm:px-6">
@@ -165,8 +171,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="historier"
         data-cms-section="stories"
+        data-cms-label="Vitnesbyrd"
         style={homeBlockStyle('stories')}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('stories')}`}
       >
           <div className="max-w-2xl mb-8">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
@@ -206,8 +213,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="fadderordningen"
         data-cms-section="steps"
+        data-cms-label="Fadderordningen"
         style={homeBlockStyle('steps')}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('steps')}`}
       >
         <div className="max-w-2xl mb-12">
           <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
@@ -337,11 +345,12 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="cms-kpi"
         data-cms-section="kpis"
+        data-cms-label="Nøkkeltall"
         style={{
           ...homeBlockStyle('kpis'),
           display: onHome('kpis') && cmsContent.kpiStats.length > 0 ? undefined : 'none',
         }}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('kpis')}`}
       >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {cmsContent.kpiStats.map((kpi) => (
@@ -361,8 +370,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="om-oss"
         data-cms-section="about"
+        data-cms-label="Kjernerammer"
         style={homeBlockStyle('about')}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('about')}`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5 space-y-4">
@@ -523,11 +533,12 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="aksjoner"
         data-cms-section="behov"
+        data-cms-label="Aksjoner"
         style={{
           ...homeBlockStyle('behov'),
           display: onHome('behov') && activeCampaigns.length > 0 ? undefined : 'none',
         }}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('behov')}`}
       >
         {activeCampaigns.length > 0 && (
           <>
@@ -549,32 +560,45 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {activeCampaigns.map((camp) => {
               const pct = Math.min(100, Math.round((camp.innsamletBelop / camp.maalbelop) * 100));
+              const campImageSrc = resolvePublicImageUrl(camp.bildeUrl);
               return (
                 <div
                   key={camp.id}
-                  className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs flex flex-col justify-between gap-4"
+                  className="bg-white rounded-xl border border-stone-200 shadow-xs flex flex-col justify-between gap-4 overflow-hidden"
                 >
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-serif font-bold text-stone-900">{camp.tittel}</h3>
-                    <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{camp.beskrivelse}</p>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[11px] font-mono tabular-nums text-stone-600">
-                        <span>{camp.innsamletBelop.toLocaleString('no-NO')} kr</span>
-                        <span>{pct}% av {camp.maalbelop.toLocaleString('no-NO')} kr</span>
-                      </div>
-                      <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
-                        <div className="h-full bg-[#4D6B3E]" style={{ width: `${pct}%` }} />
+                  {campImageSrc && (
+                    <div className="aspect-[16/10] w-full bg-stone-100 relative">
+                      <img
+                        src={campImageSrc}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5 flex flex-col justify-between gap-4 flex-1">
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-serif font-bold text-stone-900">{camp.tittel}</h3>
+                      <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{camp.beskrivelse}</p>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[11px] font-mono tabular-nums text-stone-600">
+                          <span>{camp.innsamletBelop.toLocaleString('no-NO')} kr</span>
+                          <span>{pct}% av {camp.maalbelop.toLocaleString('no-NO')} kr</span>
+                        </div>
+                        <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+                          <div className="h-full bg-[#4D6B3E]" style={{ width: `${pct}%` }} />
+                        </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => onOpenDonateModal(camp)}
+                      className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-[#3C3C3C] font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>Støtt denne aksjonen</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onOpenDonateModal(camp)}
-                    className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-[#3C3C3C] font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>Støtt denne aksjonen</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               );
             })}
@@ -591,11 +615,12 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <section
         id="cta"
         data-cms-section="cta"
+        data-cms-label="Fadderoppfordring"
         style={{
           ...homeBlockStyle('cta'),
           display: onHome('cta') && ctaBanner?.title?.trim() ? undefined : 'none',
         }}
-        className="max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow"
+        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('cta')}`}
       >
         {ctaBanner && (
           <div

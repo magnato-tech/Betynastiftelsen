@@ -64,6 +64,7 @@ type ListKey =
   | 'children'
   | 'sponsors'
   | 'catalogPhotos'
+  | 'mediaLibrary'
   | 'facts'
   | 'reports'
   | 'milestones'
@@ -81,6 +82,7 @@ const SYNCED_LISTS: { key: ListKey; collection: string }[] = [
   { key: 'children', collection: FIRESTORE_COLLECTIONS.children },
   { key: 'sponsors', collection: FIRESTORE_COLLECTIONS.sponsors },
   { key: 'catalogPhotos', collection: FIRESTORE_COLLECTIONS.catalogPhotos },
+  { key: 'mediaLibrary', collection: FIRESTORE_COLLECTIONS.mediaLibrary },
   { key: 'facts', collection: FIRESTORE_COLLECTIONS.facts },
   { key: 'reports', collection: FIRESTORE_COLLECTIONS.reports },
   { key: 'milestones', collection: FIRESTORE_COLLECTIONS.milestones },

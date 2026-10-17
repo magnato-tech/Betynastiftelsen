@@ -16,6 +16,7 @@ import {
   Coordinator,
   FieldFact,
   CatalogPhoto,
+  MediaLibraryItem,
   EmailOutboxItem,
 } from '../types';
 import {
@@ -33,6 +34,10 @@ import { childrenForCoordinator } from '../utils/coordinatorScope';
 import { addChildId, childIdsOfSponsor, migrateSponsorsChildIds, removeChildId } from '../utils/sponsorChildren';
 import { migrateCampaignPayments, migrateCampaigns } from '../utils/campaignMigrate';
 import { EMPTY_APP_CONTENT } from '../db/emptyContent';
+import { migrateCmsHeroStock } from '../utils/cmsHeroImage';
+import { deletePublicMediaFile, publicMediaObjectPath, uploadPublicMediaFile } from '../db/publicMediaStorage';
+import { readImageFileAsDataUrl } from '../utils/readImageFile';
+import { storage as firebaseStorage } from '../config/firebase';
 import {
   LIVE_LAUNCH_VERSION,
   bootStoredOrLive,
@@ -117,6 +122,9 @@ interface AppContextType {
   catalogPhotos: CatalogPhoto[];
   addCatalogPhoto: (photo: Omit<CatalogPhoto, 'id'>) => string;
   updateCatalogPhoto: (id: string, updates: Partial<CatalogPhoto>) => void;
+  mediaLibrary: MediaLibraryItem[];
+  uploadMediaLibraryItem: (file: File, label?: string) => Promise<string>;
+  deleteMediaLibraryItem: (id: string) => Promise<void>;
 
   addMilestone: (milestoneData: Omit<ChildMilestone, 'id' | 'opprettetDato'>) => string;
   updateMilestone: (id: string, updates: Partial<ChildMilestone>) => void;
@@ -296,10 +304,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
   const [cmsContent, setCmsContent] = useState<CmsContent>(() => {
     const stored = loadState<CmsContent>('cms');
-    return bootStoredOrLive(stored, EMPTY_APP_CONTENT.cms);
+    return migrateCmsHeroStock(bootStoredOrLive(stored, EMPTY_APP_CONTENT.cms));
   });
   const [catalogPhotos, setCatalogPhotos] = useState<CatalogPhoto[]>(() =>
     bootStoredOrLive(loadState<CatalogPhoto[]>('catalogPhotos'), EMPTY_APP_CONTENT.catalogPhotos)
+  );
+  const [mediaLibrary, setMediaLibrary] = useState<MediaLibraryItem[]>(() =>
+    bootStoredOrLive(loadState<MediaLibraryItem[]>('mediaLibrary'), EMPTY_APP_CONTENT.mediaLibrary)
   );
   const [emailOutbox, setEmailOutbox] = useState<EmailOutboxItem[]>(() =>
     bootStoredOrLive(loadState<EmailOutboxItem[]>('emailOutbox'), [])
@@ -331,15 +342,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAuditLogs(h.auditLogs ?? []);
       setNotifications(h.notifications ?? []);
       setCatalogPhotos(h.catalogPhotos ?? []);
+      setMediaLibrary(h.mediaLibrary ?? []);
       setEmailOutbox(h.emailOutbox ?? []);
-      if (h.cms) setCmsContent(h.cms);
+      if (h.cms) setCmsContent(migrateCmsHeroStock(h.cms));
       if (h.emailAutoSend) setEmailAutoSend(migrateEmailAutoSend(h.emailAutoSend));
       const role = firestore.firestoreUserProfile?.role;
       firestore.confirmHydrated(h, {
         enableSave: role === 'admin' || role === 'coordinator' || role === 'sponsor',
       });
     } else {
-      if (h.cms) setCmsContent(h.cms);
+      if (h.cms) setCmsContent(migrateCmsHeroStock(h.cms));
       if (h.campaigns) setCampaigns(migrateCampaigns(h.campaigns));
       if (h.testimonials) setStories(h.testimonials);
     }
@@ -409,6 +421,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     children: childrenList,
     sponsors,
     catalogPhotos,
+    mediaLibrary,
     facts: fieldFacts,
     reports,
     milestones,
@@ -427,6 +440,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     childrenList,
     sponsors,
     catalogPhotos,
+    mediaLibrary,
     fieldFacts,
     reports,
     milestones,
@@ -1085,6 +1099,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCatalogPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   };
 
+  const uploadMediaLibraryItem = async (file: File, label?: string): Promise<string> => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Kun bildefiler kan lastes opp');
+    }
+    const id = `media-${Date.now()}`;
+    const displayLabel = label?.trim() || file.name.replace(/\.[^.]+$/, '') || 'Bilde';
+    let url: string;
+    let storagePath: string | undefined;
+    if (firebaseStorage) {
+      storagePath = publicMediaObjectPath(id, file.name);
+      url = await uploadPublicMediaFile(file, storagePath);
+    } else {
+      url = await readImageFileAsDataUrl(file);
+      if (url.length > 900_000) {
+        throw new Error('Bildet er for stort uten Firebase Storage. Konfigurer Storage eller bruk mindre fil.');
+      }
+    }
+    const entry: MediaLibraryItem = {
+      id,
+      label: displayLabel,
+      url,
+      storagePath,
+      uploadedAt: new Date().toISOString(),
+      sizeBytes: file.size,
+    };
+    setMediaLibrary((prev) => [entry, ...prev]);
+    addAuditLog('La til mediabilde', `${displayLabel} (${id})`);
+    return id;
+  };
+
+  const deleteMediaLibraryItem = async (id: string): Promise<void> => {
+    const item = mediaLibrary.find((m) => m.id === id);
+    if (!item) return;
+    if (item.storagePath) {
+      await deletePublicMediaFile(item.storagePath);
+    }
+    setMediaLibrary((prev) => prev.filter((m) => m.id !== id));
+    addAuditLog('Slettet mediabilde', `${item.label} (${id})`);
+  };
+
   const approveChildPhoto = (childId: string) => {
     const child = childrenList.find((c) => c.id === childId);
     if (!child?.ventendeFotoUrl) return;
@@ -1601,6 +1655,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         catalogPhotos,
         addCatalogPhoto,
         updateCatalogPhoto,
+        mediaLibrary,
+        uploadMediaLibraryItem,
+        deleteMediaLibraryItem,
         addMilestone,
         updateMilestone,
         deleteMilestone,

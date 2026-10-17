@@ -110,3 +110,19 @@ export function setHomeModuleVisible(
 ): CmsHomeLayoutItem[] {
   return layout.map((row) => (row.moduleId === moduleId ? { ...row, visible } : row));
 }
+
+/** Dra-og-slipp: flytt fromId til posisjonen der toId står. */
+export function reorderHomeModule(
+  layout: CmsHomeLayoutItem[],
+  fromId: CmsHomeModuleId,
+  toId: CmsHomeModuleId
+): CmsHomeLayoutItem[] {
+  if (fromId === toId) return layout;
+  const fromIdx = layout.findIndex((r) => r.moduleId === fromId);
+  const toIdx = layout.findIndex((r) => r.moduleId === toId);
+  if (fromIdx < 0 || toIdx < 0) return layout;
+  const next = [...layout];
+  const [moved] = next.splice(fromIdx, 1);
+  next.splice(toIdx, 0, moved);
+  return next;
+}

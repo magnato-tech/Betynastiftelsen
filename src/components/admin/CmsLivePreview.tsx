@@ -7,12 +7,12 @@ import {
   cmsPreviewHash,
   type CmsPreviewSection,
 } from '../../utils/cmsPreview';
-import { postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
+import { CMS_PREVIEW_READY, postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 interface CmsLivePreviewProps {
-  section: CmsPreviewSection;
+  section: CmsPreviewSection | null;
   onClose: () => void;
   cmsContent: CmsContent;
   stories: AdultGraduateStory[];
@@ -28,7 +28,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [device, setDevice] = useState<PreviewDevice>('desktop');
-  const [src] = useState(() => buildEmbeddedPreviewUrl(section));
+  const [src] = useState(() => buildEmbeddedPreviewUrl(section ?? 'hero'));
 
   const pushDraft = useCallback(() => {
     const win = iframeRef.current?.contentWindow;
@@ -47,8 +47,20 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
   }, [pushDraft]);
 
   useEffect(() => {
+    const onReady = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== CMS_PREVIEW_READY) return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      pushDraft();
+    };
+    window.addEventListener('message', onReady);
+    return () => window.removeEventListener('message', onReady);
+  }, [pushDraft]);
+
+  useEffect(() => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
+    if (!section) return;
     try {
       const hash = cmsPreviewHash(section);
       if (win.location.hash.replace('#', '') !== hash) {

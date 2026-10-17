@@ -3,10 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
 import { CmsLivePreview } from './CmsLivePreview';
-import { CmsHomeLayoutPanel } from './CmsHomeLayoutPanel';
-import type { CmsPreviewSection } from '../../utils/cmsPreview';
+import { CmsMediaLibraryPanel } from './CmsMediaLibraryPanel';
+import { CmsSectionNav } from './CmsSectionNav';
 import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
-import { BETYNA_DEFAULT_HERO_IMAGE } from '../../utils/cmsHeroImage';
+import { BETYNA_DEFAULT_HERO_IMAGE, heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
 import {
   Layout,
@@ -29,20 +29,9 @@ import {
   FileCheck,
   Users,
   Megaphone,
-  type LucideIcon,
 } from 'lucide-react';
 
-type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov';
-
-const CMS_NAV: { id: CmsSubTab; label: string; hint: string; icon: LucideIcon }[] = [
-  { id: 'hero', label: 'Hovedbanner', hint: 'Første inntrykk', icon: Layout },
-  { id: 'steps', label: 'Fadderordningen', hint: 'Ramme 1–2–3', icon: Layers },
-  { id: 'stories', label: 'Vitnesbyrd', hint: 'Historier med samtykke', icon: MessageSquare },
-  { id: 'about', label: 'Kjernerammer', hint: 'Verdier og etikk', icon: ShieldCheck },
-  { id: 'kpis', label: 'Nøkkeltall', hint: 'Faktabånd på forsiden', icon: TrendingUp },
-  { id: 'cta', label: 'Fadderoppfordring', hint: 'Handlingsbånd', icon: Megaphone },
-  { id: 'behov', label: 'Aksjoner', hint: 'Konkrete behov', icon: ImageIcon },
-];
+type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov' | 'media';
 
 interface CmsEditorProps {
   initialSubTab?: CmsSubTab;
@@ -61,6 +50,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
     updateCampaign,
     deleteCampaign,
     childrenList,
+    mediaLibrary,
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<CmsSubTab>(initialSubTab ?? 'hero');
@@ -297,12 +287,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
       </div>
 
-      <CmsHomeLayoutPanel
-        cmsContent={cmsContent}
-        onUpdateLayout={(homeLayout) => updateCmsSection('homeLayout', homeLayout)}
-        onEditModule={(tab: CmsPreviewSection) => setActiveSubTab(tab as CmsSubTab)}
-      />
-
       {/* Save Notification Toast */}
       {saveToast && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
@@ -350,47 +334,15 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       <div
         className={`flex flex-col lg:flex-row gap-3 items-start ${previewOpen ? 'xl:items-stretch xl:min-h-[calc(100vh-8rem)]' : ''}`}
       >
-        <nav
-          aria-label="CMS-seksjoner"
-          className={`w-full shrink-0 lg:sticky lg:top-20 bg-white rounded-xl border border-stone-200 shadow-xs p-2 ${previewOpen ? 'lg:w-44' : 'lg:w-52'}`}
-        >
-          <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-stone-400">
-            Seksjoner
-          </p>
-          <ul className="space-y-0.5">
-            {CMS_NAV.map((item) => {
-              const Icon = item.icon;
-              const active = activeSubTab === item.id;
-              const count =
-                item.id === 'stories' ? stories.length : item.id === 'behov' ? campaigns.length : null;
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSubTab(item.id)}
-                    aria-current={active ? 'page' : undefined}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg cursor-pointer transition-colors flex items-start gap-2.5 ${
-                      active
-                        ? 'bg-[#4D6B3E] text-white shadow-xs'
-                        : 'text-stone-700 hover:bg-stone-50'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? 'text-white' : 'text-[#4D6B3E]'}`} />
-                    <span className="min-w-0">
-                      <span className="block text-xs font-semibold">
-                        {item.label}
-                        {count !== null ? ` (${count})` : ''}
-                      </span>
-                      <span className={`block text-[11px] leading-snug ${active ? 'text-white/80' : 'text-stone-500'}`}>
-                        {item.hint}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        <CmsSectionNav
+          cmsContent={cmsContent}
+          activeSubTab={activeSubTab}
+          onSelectTab={setActiveSubTab}
+          onUpdateLayout={(homeLayout) => updateCmsSection('homeLayout', homeLayout)}
+          storiesCount={stories.length}
+          campaignsCount={campaigns.length}
+          previewOpen={previewOpen}
+        />
 
         <div className="min-w-0 flex-1 w-full space-y-6">
       {/* =========================================================================
@@ -468,6 +420,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   currentPreset={cmsContent.hero.backgroundPreset}
                   currentScrimOpacity={cmsContent.hero.scrimOpacity}
                   defaultRestoreUrl={BETYNA_DEFAULT_HERO_IMAGE}
+                  mediaLibrary={mediaLibrary}
                   onChange={handleHeroBackgroundChange}
                 />
               </div>
@@ -600,9 +553,12 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white shadow-md"
               style={{ height: `${Math.min(320, (getHeroHeightVh(cmsContent.hero) / 100) * 280)}px` }}
             >
-              {cmsContent.hero.backgroundImageUrl ? (
+              {cmsContent.hero.backgroundImageUrl || cmsContent.hero.backgroundPreset ? (
                 <img
-                  src={cmsContent.hero.backgroundImageUrl}
+                  src={heroImageSrcFromUrl(
+                    cmsContent.hero.backgroundImageUrl,
+                    cmsContent.hero.backgroundPreset
+                  )}
                   alt="Bakgrunn forhåndsvisning"
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 w-full h-full object-cover"
@@ -722,6 +678,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                       currentUrl={step.imageUrl}
                       currentPreset={step.imagePreset}
                       showScrimSlider={false}
+                      mediaLibrary={mediaLibrary}
                       onChange={(updates) => handleStepImageChange(idx, updates)}
                     />
                   </div>
@@ -808,6 +765,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                       sublabel="Lokal fil eller bilde-URL (valgfritt)."
                       currentUrl={card.imageUrl}
                       showScrimSlider={false}
+                      mediaLibrary={mediaLibrary}
                       onChange={(updates) => handlePrincipleImageChange(idx, updates)}
                     />
                   </div>
@@ -933,6 +891,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   currentUrl={currentCtaBanner.backgroundImageUrl}
                   currentPreset={currentCtaBanner.backgroundPreset}
                   currentScrimOpacity={currentCtaBanner.scrimOpacity || 75}
+                  mediaLibrary={mediaLibrary}
                   onChange={handleCtaImageChange}
                 />
               </div>
@@ -995,6 +954,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
       )}
 
+      {activeSubTab === 'media' && <CmsMediaLibraryPanel />}
+
       {activeSubTab === 'behov' && (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1018,6 +979,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             <CampaignForm
               title="Ny aksjon"
               childrenList={childrenList}
+              mediaLibrary={mediaLibrary}
               initial={{
                 tittel: '',
                 beskrivelse: '',
@@ -1059,6 +1021,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               key={camp.id}
               title={camp.tittel}
               childrenList={childrenList}
+              mediaLibrary={mediaLibrary}
               liveProgress={{ innsamlet: camp.innsamletBelop, givere: camp.antallGivere }}
               initial={{
                 tittel: camp.tittel,
@@ -1083,6 +1046,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   status: draft.status,
                   barnIds: draft.barnIds,
                   sluttrapport: draft.sluttrapport || undefined,
+                  bildeUrl: draft.bildeUrl.trim() || undefined,
                 });
                 showNotification(`«${draft.tittel.trim()}» er oppdatert.`);
               }}
@@ -1104,7 +1068,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         {previewOpen && (
           <div className="w-full xl:flex-[1.25] xl:min-w-[40%] shrink-0 min-w-0">
             <CmsLivePreview
-              section={activeSubTab}
+              section={activeSubTab === 'media' ? null : activeSubTab}
               onClose={() => setPreviewOpen(false)}
               cmsContent={cmsContent}
               stories={stories}
@@ -1131,6 +1095,7 @@ type CampaignDraft = {
 function CampaignForm({
   title,
   childrenList,
+  mediaLibrary,
   initial,
   liveProgress,
   onSave,
@@ -1140,6 +1105,7 @@ function CampaignForm({
 }: {
   title: string;
   childrenList: { id: string; fornavn: string; internKode: string }[];
+  mediaLibrary: import('../../types').MediaLibraryItem[];
   initial: CampaignDraft;
   liveProgress?: { innsamlet: number; givere: number };
   onSave: (draft: CampaignDraft) => void;
@@ -1277,6 +1243,7 @@ function CampaignForm({
           currentUrl={draft.bildeUrl}
           currentPreset={draft.bildeUrl ? 'custom' : 'pattern'}
           showScrimSlider={false}
+          mediaLibrary={mediaLibrary}
           onChange={(updates) => {
             const url = updates.backgroundImageUrl || '';
             setDraft((prev) => ({ ...prev, bildeUrl: url }));

@@ -48,3 +48,32 @@
     font-family: var(--font-serif);
   }
 }
+
+/* Ramme i innebygd CMS-preview rundt modulen som er valgt til venstre. */
+[data-cms-section].cms-preview-active {
+  outline: 3px solid #4d6b3e;
+  outline-offset: 6px;
+  box-shadow: 0 0 0 6px rgba(77, 107, 62, 0.22);
+  border-radius: 12px;
+  position: relative;
+  z-index: 5;
+}
+
+[data-cms-section].cms-preview-active::after {
+  content: attr(data-cms-label);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+  background: #4d6b3e;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}

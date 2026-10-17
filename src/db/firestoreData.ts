@@ -111,6 +111,9 @@ export async function loadAllFromFirestore(db: Firestore): Promise<Partial<AppDa
     catalogPhotos: await loadList<AppDataSnapshot['catalogPhotos'][number]>(
       FIRESTORE_COLLECTIONS.catalogPhotos
     ),
+    mediaLibrary: await loadList<AppDataSnapshot['mediaLibrary'][number]>(
+      FIRESTORE_COLLECTIONS.mediaLibrary
+    ),
     facts: await loadList<AppDataSnapshot['facts'][number]>(FIRESTORE_COLLECTIONS.facts),
     reports: await loadList<AppDataSnapshot['reports'][number]>(FIRESTORE_COLLECTIONS.reports),
     milestones: await loadList<AppDataSnapshot['milestones'][number]>(
@@ -152,6 +155,7 @@ export async function loadPortalFromFirestore(
     sponsors: [],
     children: [],
     catalogPhotos: [],
+    mediaLibrary: [],
     facts: [],
     reports: [],
     milestones: [],

@@ -11,6 +11,7 @@ export const EMPTY_APP_CONTENT: Omit<AppDataSnapshot, 'language'> = {
   sponsors: [],
   children: [],
   catalogPhotos: [],
+  mediaLibrary: [],
   facts: [],
   reports: [],
   milestones: [],

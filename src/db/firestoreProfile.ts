@@ -25,6 +25,7 @@ export const FIRESTORE_COLLECTIONS = {
   newsletterLogs: 'newsletterLogs',
   emailOutbox: 'emailOutbox',
   catalogPhotos: 'catalogPhotos',
+  mediaLibrary: 'mediaLibrary',
   settings: 'settings',
   system: 'system',
 } as const;

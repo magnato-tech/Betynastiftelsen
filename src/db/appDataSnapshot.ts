@@ -3,6 +3,7 @@ import type {
   AuditLogItem,
   Campaign,
   CatalogPhoto,
+  MediaLibraryItem,
   Child,
   ChildMilestone,
   CmsContent,
@@ -22,6 +23,7 @@ export interface AppDataSnapshot {
   children: Child[];
   sponsors: Sponsor[];
   catalogPhotos: CatalogPhoto[];
+  mediaLibrary: MediaLibraryItem[];
   facts: FieldFact[];
   reports: Report[];
   milestones: ChildMilestone[];

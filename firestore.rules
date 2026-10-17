@@ -163,6 +163,10 @@ service cloud.firestore {
       allow delete: if canAdminWrite();
     }
 
+    match /mediaLibrary/{id} {
+      allow read, write: if canAdminWrite();
+    }
+
     match /settings/{id} {
       allow read, write: if canAdminWrite();
     }

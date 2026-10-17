@@ -60,10 +60,10 @@ describe('Automatisk lagring: alt som gjoeres sendes til lagringsmotoren', () =>
     expect(fakeSync.persisted.length).toBeGreaterThan(before);
     expect(lastPersisted().children.map((c: any) => c.fornavn)).toEqual(['Ange']);
   });
-  it('snapshotet har alle 14 samlinger pluss cms og innstillinger', () => {
+  it('snapshotet har alle 15 samlinger pluss cms og innstillinger', () => {
     mountApp();
     expect(Object.keys(lastPersisted()).sort()).toEqual(
-      ['auditLogs', 'catalogPhotos', 'children', 'cms', 'coordinators', 'emailAutoSend', 'emailOutbox', 'facts', 'inquiries', 'language', 'milestones', 'notifications', 'payments', 'campaigns', 'reports', 'sponsors', 'testimonials'].sort(),
+      ['auditLogs', 'catalogPhotos', 'children', 'cms', 'coordinators', 'emailAutoSend', 'emailOutbox', 'facts', 'inquiries', 'language', 'mediaLibrary', 'milestones', 'notifications', 'payments', 'campaigns', 'reports', 'sponsors', 'testimonials'].sort(),
     );
   });
   it.each([

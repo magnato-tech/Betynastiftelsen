@@ -19,6 +19,7 @@ import { prototypeRoleSwitcherEnabled } from './config/prototypeAccess';
 import { readCmsPreviewFlags } from './utils/cmsPreview';
 import {
   applyCmsSectionHighlight,
+  CMS_PREVIEW_READY,
   isCmsPreviewMessage,
   type CmsPreviewDraftPayload,
 } from './utils/cmsPreviewBridge';
@@ -45,6 +46,9 @@ const MainLayout: React.FC = () => {
       }
     };
     window.addEventListener('message', onMessage);
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: CMS_PREVIEW_READY }, window.location.origin);
+    }
     return () => window.removeEventListener('message', onMessage);
   }, [previewFlags.embedded, setLanguage]);
 

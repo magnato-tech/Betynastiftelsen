@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Upload, Link2, Sparkles, Trash2, Sliders, Check, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { BETYNA_DEFAULT_HERO_IMAGE } from '../../utils/cmsHeroImage';
+import type { MediaLibraryItem } from '../../types';
+import { mediaItemDisplayUrl } from '../../utils/mediaLibrary';
 
 export interface ImagePresetOption {
   id: string;
@@ -21,6 +23,8 @@ export interface ImagePickerFieldProps {
   customPresets?: ImagePresetOption[];
   /** Ved «Fjern bilde» — bruk dette i stedet for tomt mønster (f.eks. standard gruppebilde). */
   defaultRestoreUrl?: string;
+  /** Bilder fra CMS mediabibliotek (Firestore + Storage). */
+  mediaLibrary?: MediaLibraryItem[];
   onChange: (updates: {
     backgroundImageUrl?: string;
     backgroundPreset?: 'pattern' | 'classroom' | 'workshop' | 'books' | 'students' | 'custom' | string;
@@ -41,34 +45,6 @@ const LIBRARY_PRESETS: ImagePresetOption[] = [
     desc: 'Minimalistisk grafisk mønster i dyp oliven og salvie',
     preview: 'bg-stone-900 border-[#4D6B3E]/40',
   },
-  {
-    id: 'classroom',
-    name: 'Klasserom og tavle',
-    desc: 'Skolehverdag med bøker og naturlig morgenlys',
-    url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
-    preview: 'bg-stone-800',
-  },
-  {
-    id: 'workshop',
-    name: 'Yrkesopplæring & verksted',
-    desc: 'Systue med stoffer og mekaniske symaskiner',
-    url: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80',
-    preview: 'bg-stone-800',
-  },
-  {
-    id: 'books',
-    name: 'Skolebøker & materiell',
-    desc: 'Notatbøker, linjaler og lærebøker for grunnskolen',
-    url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
-    preview: 'bg-stone-800',
-  },
-  {
-    id: 'students',
-    name: 'Læreglede & fellesskap',
-    desc: 'Elever samlet i trygge skoleomgivelser',
-    url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80',
-    preview: 'bg-stone-800',
-  },
 ];
 
 export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
@@ -80,9 +56,10 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
   showScrimSlider = true,
   customPresets,
   defaultRestoreUrl,
+  mediaLibrary = [],
   onChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'url'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'library' | 'url'>('upload');
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [urlInput, setUrlInput] = useState(currentUrl || '');
   const [isDragging, setIsDragging] = useState(false);
@@ -254,6 +231,18 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
         </button>
         <button
           type="button"
+          onClick={() => setActiveTab('library')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+            activeTab === 'library'
+              ? 'bg-white text-stone-900 shadow-2xs'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5 text-[#4D6B3E]" />
+          <span>Mediabibliotek</span>
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab('url')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
             activeTab === 'url'
@@ -265,6 +254,46 @@ export const ImagePickerField: React.FC<ImagePickerFieldProps> = ({
           <span>Bilde-URL / filnavn</span>
         </button>
       </div>
+
+      {activeTab === 'library' && (
+        <div className="space-y-2">
+          {mediaLibrary.length === 0 ? (
+            <p className="text-[11px] text-stone-600 bg-white border border-stone-200 rounded-lg p-3">
+              Biblioteket er tomt. Gå til fanen <strong>Mediabibliotek</strong> i CMS for å laste opp bilder til Storage.
+            </p>
+          ) : (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto">
+              {mediaLibrary.map((item) => {
+                const isSelected = currentUrl === item.url || currentUrl === mediaItemDisplayUrl(item.url);
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange({ backgroundImageUrl: item.url, backgroundPreset: 'custom' });
+                        setUrlInput(item.url);
+                      }}
+                      className={`w-full rounded-lg border overflow-hidden text-left cursor-pointer ${
+                        isSelected ? 'border-[#4D6B3E] ring-2 ring-[#4D6B3E]/30' : 'border-stone-200 hover:border-stone-300'
+                      }`}
+                    >
+                      <div className="aspect-video bg-stone-100 relative">
+                        <img
+                          src={mediaItemDisplayUrl(item.url)}
+                          alt={item.label}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <p className="text-[10px] font-medium text-stone-800 px-2 py-1 truncate">{item.label}</p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
 
       {activeTab === 'upload' && (
         <div
