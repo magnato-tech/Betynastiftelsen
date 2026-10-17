@@ -109,7 +109,7 @@ export const UserDirectoryInviteForm: React.FC = () => {
               <option value="">Velg …</option>
               {coordinators.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.navn} ({c.id})
+                  {c.fornavn} {c.etternavn} ({c.id})
                 </option>
               ))}
             </select>

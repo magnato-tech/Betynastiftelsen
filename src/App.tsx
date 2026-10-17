@@ -21,7 +21,7 @@ import { markPortalIntent } from './utils/portalIntent';
 import { defaultPortalSectionForProfile } from './utils/portalSession';
 
 const MainLayout: React.FC = () => {
-  const { setRole, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } = useApp();
+  const { role, setRole, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
