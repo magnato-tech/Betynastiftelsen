@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
 import { PortalRoleBar } from './components/common/PortalRoleBar';
@@ -26,6 +26,7 @@ const MainLayout: React.FC = () => {
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
+  const homepageChosenFor = useRef<string | null>(null);
 
   useEffect(() => {
     try {
@@ -48,9 +49,12 @@ const MainLayout: React.FC = () => {
     }
   }, [previewFlags.preview, setRole]);
 
-  /** Rot-URL (betyna.no / www) er offentlig forsiden. Portal åpnes bare ved innlogging, portalIntent eller «Gå til …». */
+  /** Rot-URL starter som offentlig forsiden. Valg i den svarte menyen skal bli stående. */
   useEffect(() => {
     if (previewFlags.preview || firestoreLoading) return;
+    const key = firestoreUserProfile?.id ?? 'anonymous';
+    if (homepageChosenFor.current === key) return;
+    homepageChosenFor.current = key;
     if (!firestoreUserProfile) {
       setRole('public');
       setActiveSection('home');
