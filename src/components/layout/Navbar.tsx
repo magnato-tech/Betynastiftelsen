@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { PortalLoginModal } from '../auth/PortalLoginModal';
+import { defaultPortalSectionForProfile } from '../../utils/portalSession';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     firestoreProfileLoading,
     firestoreAccessMessage,
     firestoreAuthError,
+    enterPortalFromProfile,
     signOutFirestore,
   } = useApp();
 
@@ -32,6 +34,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleOpenLogin = () => {
     setLoginOpen(true);
+  };
+
+  const handleEnterAdmin = () => {
+    if (firestoreUserProfile && enterPortalFromProfile()) {
+      setActiveSection(defaultPortalSectionForProfile(firestoreUserProfile));
+    }
   };
 
   const handleSignOut = () => {
@@ -295,6 +303,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={loginButtonClass}
             >
               {firestoreUserProfile ? t('nav.logout', 'Logg ut') : t('nav.login', 'Logg inn')}
+            </button>
+          )}
+
+          {role === 'public' && firestoreUserProfile?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={handleEnterAdmin}
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-stone-900 hover:bg-stone-800 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              {t('nav.goAdmin', 'Administrasjon')}
             </button>
           )}
 
