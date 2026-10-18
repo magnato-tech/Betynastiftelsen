@@ -343,7 +343,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('nav.viewPublic', 'Se offentlig side')}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
       {role === 'public' && (firestoreAuthError || firestoreAccessMessage) && (
