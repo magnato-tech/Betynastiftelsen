@@ -125,9 +125,25 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     </>
   );
 
-  const heroImage = (
+  const heroScrim = Math.min(90, Math.max(20, cmsContent.hero.scrimOpacity ?? 70));
+
+  const heroHeadlineOnImage = (
+    <>
+      <p className="text-xs font-semibold tracking-widest uppercase text-[#C5D4BC] drop-shadow-sm">
+        {heroKicker}
+      </p>
+      <h1 className="mt-3 text-3xl sm:text-4xl lg:text-[2.35rem] font-serif font-bold text-white leading-[1.12] text-balance drop-shadow-md">
+        {heroTitle}
+      </h1>
+      <p className="mt-3 text-sm sm:text-base text-white/95 leading-relaxed drop-shadow-sm max-w-xl">
+        {heroSubtitle}
+      </p>
+    </>
+  );
+
+  const heroImageBlock = (className = '') => (
     <div
-      className="relative w-full overflow-hidden bg-[#F6F4ED] rounded-none lg:rounded-none"
+      className={`relative w-full overflow-hidden bg-[#F6F4ED] ${className}`}
       style={{ height: `${heroHeightVh}vh`, maxHeight: '92vh' }}
     >
       <img
@@ -138,6 +154,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       />
     </div>
   );
+
+  const ctaHangPx = heroConfig.ctaOverlapPx ?? 176;
 
   const homeBlockStyle = (id: CmsHomeModuleId): React.CSSProperties => ({
     order: onHome(id) ? homeModuleOrder.indexOf(id) : 99,
@@ -154,15 +172,63 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         style={homeBlockStyle('hero')}
         className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('hero')}`}
       >
-        <HomeColumn cms={cmsContent} className="space-y-5 lg:space-y-6">
-          {heroImage}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+        <HomeColumn cms={cmsContent}>
+          {/* Mobil: bilde, løfte, deretter skjema */}
+          <div className="lg:hidden space-y-5">
+            {heroImageBlock()}
             <div className="text-left">{heroHeadline}</div>
             {heroConfig.showCtaCard && (
-              <div id="bli-fadder" className="w-full max-w-[22rem] lg:max-w-[22rem] lg:ml-auto scroll-mt-24">
+              <div id="bli-fadder" className="w-full max-w-[22rem] scroll-mt-24 shadow-lg rounded-xl">
                 <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
               </div>
             )}
+          </div>
+
+          {/* Stor skjerm: Redd Barna / Plan — giverkort på bildet, løfte på bildet til høyre */}
+          <div
+            className="hidden lg:block relative"
+            style={{ marginBottom: heroConfig.showCtaCard ? Math.round(ctaHangPx * 0.4) : 0 }}
+          >
+            <div
+              className="relative w-full overflow-visible"
+              style={{ height: `${heroHeightVh}vh`, maxHeight: '92vh' }}
+            >
+              <img
+                src={heroImageSrc}
+                alt="Betyna sammen med barn i Kongo"
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ objectPosition: heroObjectPosition }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                aria-hidden
+                style={{
+                  background: `linear-gradient(105deg, rgba(0,0,0,${(heroScrim / 100) * 0.55}) 0%, rgba(0,0,0,${(heroScrim / 100) * 0.2}) 42%, transparent 68%)`,
+                }}
+              />
+              <div className="absolute inset-0 z-10 flex items-end pb-6">
+                <div className="grid grid-cols-12 gap-8 w-full items-end">
+                  {heroConfig.showCtaCard ? (
+                    <div className="col-span-5 flex justify-start">
+                      <div
+                        id="bli-fadder"
+                        className="w-full max-w-[22rem] scroll-mt-24 rounded-xl bg-white shadow-xl ring-1 ring-black/5 pointer-events-auto"
+                        style={{ transform: `translateY(${Math.round(ctaHangPx * 0.35)}px)` }}
+                      >
+                        <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
+                      </div>
+                    </div>
+                  ) : null}
+                  <div
+                    className={`pb-2 pr-2 ${
+                      heroConfig.showCtaCard ? 'col-span-7 text-left' : 'col-span-12 text-center max-w-3xl mx-auto'
+                    }`}
+                  >
+                    {heroHeadlineOnImage}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </HomeColumn>
       </section>
