@@ -596,15 +596,52 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                               <input
                                 type="range"
                                 min={0}
-                                max={100}
+                                max={150}
                                 value={layout.headlinePosYPercent ?? 55}
                                 onChange={(e) => setLayout({ headlinePosYPercent: Number(e.target.value) })}
                                 className="w-full accent-[#4D6B3E]"
                               />
                               <p className="text-[10px] text-stone-500 mt-1">
-                                Y er relativt hele hero-seksjonen (bilde + heng), ikke bare fotoet.
+                                Y er relativt hele hero-scenen (bilde + heng), inntil 150 %. Teksten ligger utenfor
+                                bildeklipp.
                               </p>
                             </div>
+                          )}
+                          {headlinePlacement === 'belowImage' && (
+                            <>
+                              <div>
+                                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                  Luft under hero (px): {layout.headlineBelowGapPx ?? 24}
+                                </label>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={1200}
+                                  value={layout.headlineBelowGapPx ?? 24}
+                                  onChange={(e) => setLayout({ headlineBelowGapPx: Number(e.target.value) })}
+                                  className="w-full accent-[#4D6B3E]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                  Tekst ned (ekstra): {layout.headlineBelowYOffsetPercent ?? 0} %
+                                </label>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={150}
+                                  value={layout.headlineBelowYOffsetPercent ?? 0}
+                                  onChange={(e) =>
+                                    setLayout({ headlineBelowYOffsetPercent: Number(e.target.value) })
+                                  }
+                                  className="w-full accent-[#4D6B3E]"
+                                />
+                                <p className="text-[10px] text-stone-500 mt-1">
+                                  Luft i px + Y nedover. Med fadder-CTA legges automatisk ekstra avstand til så teksten
+                                  kommer under kortet.
+                                </p>
+                              </div>
+                            </>
                           )}
                           <div>
                             <label className="block text-xs font-semibold text-stone-700 mb-1">

@@ -293,6 +293,10 @@ export interface CmsHero {
   headlinePosXPercent?: number;
   /** Vertikal posisjon for løftetekst på bildet (0–100 % fra topp). */
   headlinePosYPercent?: number;
+  /** Ekstra luft over løftetekst når headlinePlacement er belowImage (0–1200 px). */
+  headlineBelowGapPx?: number;
+  /** Ekstra nedover under hero når headlinePlacement er belowImage (0–150 % av hero-høyde). */
+  headlineBelowYOffsetPercent?: number;
   /** Maks bredde for løftetekst (32–100 % av hero-kolonnen). */
   headlineMaxWidthPercent?: number;
   /** Tekstfarge. auto følger plassering (lys på bilde, mørk under). */

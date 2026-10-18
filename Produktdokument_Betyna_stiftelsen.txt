@@ -636,6 +636,21 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
 
+Arbeidsdokument - Versjon 1.104 - 18. oktober 2026
+
+18. oktober 2026, hoyere CMS-preview
+Live forhandsvisning: iframe-hoyde folger tilgjengelig skjermhoyde i preview-kolonnen (ikke fast 900 px), slik hoy hero får mer synlig plass.
+
+Arbeidsdokument - Versjon 1.103 - 18. oktober 2026
+
+18. oktober 2026, luft under hero-tekst
+Plassering Under bildet: slider Luft under hero (0-560 px). Tekst under CTA ved behov. Pa bildet: Y anker nederkant av tekstboks pa bildet (vokser oppover).
+
+Arbeidsdokument - Versjon 1.102 - 18. oktober 2026
+
+18. oktober 2026, hero-fokus i CMS-preview
+Ved redigering av Hovedbanner fyller hero-seksjonen synlig hoyde i iframe (min-height under navbar) og preview scroller til topp, slik vitnesbyrd og andre moduler ikke synes uten scroll.
+
 Arbeidsdokument - Versjon 1.101 - 18. oktober 2026
 
 18. oktober 2026, offentlig meny folger CMS

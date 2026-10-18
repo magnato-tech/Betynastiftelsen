@@ -3,9 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
 import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
 import {
-  clampHeroHeadlinePosYPercent,
+  clampHeroHeadlineSceneYPercent,
   getHeroCtaBottomCss,
   getHeroCtaCardConfig,
+  getHeroHeadlineBelowMarginTopPx,
   getHeroHeadlineTone,
   getHeroHeadlineWidthPercent,
   getHeroHeightVh,
@@ -19,7 +20,11 @@ import { heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { visibleHomeModules } from '../../utils/cmsHomeLayout';
 import { cmsPageWidthFromContent } from '../../utils/cmsPageWidth';
 import type { CmsContent, CmsHomeModuleId } from '../../types';
-import { CMS_PREVIEW_ACTIVE_CLASS, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
+import {
+  CMS_PREVIEW_ACTIVE_CLASS,
+  CMS_PREVIEW_HERO_MIN_HEIGHT_CSS,
+  type CmsPreviewDraftPayload,
+} from '../../utils/cmsPreviewBridge';
 import type { CmsPreviewSection } from '../../utils/cmsPreview';
 import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionDefaults } from '../../utils/testimonials';
 import { TestimonialStoryCard } from './TestimonialStoryCard';
@@ -80,6 +85,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     : null;
   const previewMark = (section: CmsPreviewSection) =>
     highlightedSection === section ? CMS_PREVIEW_ACTIVE_CLASS : '';
+  const heroPreviewFillsViewport =
+    cmsPreviewEmbedded && highlightedSection === 'hero';
 
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');
@@ -157,7 +164,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const ctaBottomCss = getHeroCtaBottomCss(heroConfig);
   const heroSceneBottomPadding = getHeroSceneBottomPaddingPx(heroConfig);
   const headlinePosX = heroConfig.headlinePosXPercent ?? 42;
-  const headlinePosY = clampHeroHeadlinePosYPercent(heroConfig.headlinePosYPercent ?? 55);
+  const headlinePosY = clampHeroHeadlineSceneYPercent(heroConfig.headlinePosYPercent ?? 55);
   const heroCtaConfig = getHeroCtaCardConfig(cmsContent.hero);
   const heroImageCssHeight = `min(${heroHeightVh}vh, 92vh)`;
   const headlineMaxW = heroConfig.headlineMaxWidthPercent ?? 52;
@@ -214,7 +221,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         id="home"
         data-cms-section="hero"
         data-cms-label="Hovedbanner"
-        style={homeBlockStyle('hero')}
+        style={{
+          ...homeBlockStyle('hero'),
+          ...(heroPreviewFillsViewport ? { minHeight: CMS_PREVIEW_HERO_MIN_HEIGHT_CSS } : {}),
+        }}
         className={`scroll-mt-24 rounded-lg transition-shadow overflow-visible ${previewMark('hero')}`}
       >
         <HomeColumn cms={cmsContent}>
@@ -275,8 +285,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
             {!headlineOnImageDesktop && heroHasHeadlineCopy(cmsContent.hero) && (
               <div
-                className="relative z-30 mt-6 text-left hidden lg:block"
+                className="relative z-30 text-left hidden lg:block"
                 style={{
+                  marginTop: getHeroHeadlineBelowMarginTopPx(cmsContent.hero),
                   marginLeft: `${headlinePosX}%`,
                   width: `${headlineBoxWidth}%`,
                   maxWidth: `calc(100% - ${headlinePosX}%)`,

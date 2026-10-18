@@ -22,6 +22,8 @@ export const DEFAULT_HERO_LAYOUT = {
   headlinePlacement: 'onImage' as CmsHeroHeadlinePlacement,
   headlinePosXPercent: 42,
   headlinePosYPercent: 55,
+  headlineBelowGapPx: 24,
+  headlineBelowYOffsetPercent: 0,
   headlineMaxWidthPercent: 52,
   headlineTone: 'auto' as CmsHeroHeadlineTone,
   imageMotion: 'none' as const,
@@ -171,6 +173,9 @@ export function withHeroLayoutDefaults(hero: CmsHero): CmsHero {
     headlinePlacement,
     headlinePosXPercent: hero.headlinePosXPercent ?? DEFAULT_HERO_LAYOUT.headlinePosXPercent,
     headlinePosYPercent: hero.headlinePosYPercent ?? DEFAULT_HERO_LAYOUT.headlinePosYPercent,
+    headlineBelowGapPx: hero.headlineBelowGapPx ?? DEFAULT_HERO_LAYOUT.headlineBelowGapPx,
+    headlineBelowYOffsetPercent:
+      hero.headlineBelowYOffsetPercent ?? DEFAULT_HERO_LAYOUT.headlineBelowYOffsetPercent,
     headlineMaxWidthPercent: hero.headlineMaxWidthPercent ?? DEFAULT_HERO_LAYOUT.headlineMaxWidthPercent,
     headlineTone: hero.headlineTone ?? DEFAULT_HERO_LAYOUT.headlineTone,
     imageMotion: hero.imageMotion ?? DEFAULT_HERO_LAYOUT.imageMotion,
@@ -197,8 +202,16 @@ export function getHeroHeadlineTone(hero: CmsHero): 'light' | 'dark' {
   return getHeroHeadlinePlacement(hero) === 'onImage' ? 'light' : 'dark';
 }
 
+export const HERO_HEADLINE_SCENE_Y_MAX_PERCENT = 150;
+export const HERO_HEADLINE_BELOW_GAP_MAX_PX = 1200;
+
 export function clampHeroHeadlinePosYPercent(value: number): number {
   return Math.min(100, Math.max(0, value));
+}
+
+/** Y i hero-scenen (på bildet, eller ekstra ned når tekst ligger under bildet). */
+export function clampHeroHeadlineSceneYPercent(value: number): number {
+  return Math.min(HERO_HEADLINE_SCENE_Y_MAX_PERCENT, Math.max(0, value));
 }
 
 /** Én plassering: prosent fra bunn minus heng i px (ingen translateY oppå). */
@@ -210,7 +223,35 @@ export function getHeroCtaBottomCss(hero: CmsHero): string {
 }
 
 /** Ca. høyde på embedded fadder-kort — brukes til layout-reserve under bildet. */
-export const HERO_EMBEDDED_CTA_APPROX_HEIGHT_PX = 300;
+export const HERO_EMBEDDED_CTA_APPROX_HEIGHT_PX = 360;
+
+const HERO_HEADLINE_BELOW_CTA_CLEARANCE_PX = 16;
+
+/** Margin over løftetekst under hero (stor skjerm). Tar hensyn til hengende CTA. */
+export function getHeroHeadlineBelowMarginTopPx(hero: CmsHero): number {
+  const resolved = withHeroLayoutDefaults(hero);
+  const gap = Math.min(
+    HERO_HEADLINE_BELOW_GAP_MAX_PX,
+    Math.max(0, resolved.headlineBelowGapPx ?? DEFAULT_HERO_LAYOUT.headlineBelowGapPx)
+  );
+  const placement = getHeroHeadlinePlacement(hero);
+  const yExtraPx =
+    placement === 'belowImage'
+      ? Math.round(
+          (clampHeroHeadlineSceneYPercent(resolved.headlineBelowYOffsetPercent ?? 0) / 100) *
+            getHeroHeightVh(resolved) *
+            12
+        )
+      : 0;
+  if (placement !== 'belowImage' || !resolved.showCtaCard) {
+    return gap + yExtraPx;
+  }
+  const scenePad = getHeroSceneBottomPaddingPx(resolved);
+  const hang = getHeroReservedHangPaddingPx(resolved);
+  const cardReserve = Math.max(0, scenePad - hang);
+  const shortfall = Math.max(0, HERO_EMBEDDED_CTA_APPROX_HEIGHT_PX + HERO_HEADLINE_BELOW_CTA_CLEARANCE_PX - cardReserve);
+  return gap + yExtraPx + shortfall;
+}
 
 export function getHeroReservedHangPaddingPx(hero: CmsHero): number {
   const resolved = withHeroLayoutDefaults(hero);

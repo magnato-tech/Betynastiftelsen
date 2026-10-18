@@ -38,6 +38,9 @@ export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
 
 export const CMS_PREVIEW_ACTIVE_CLASS = 'cms-preview-active';
 
+/** Hero i iframe-preview: fyll synlig høyde under navbar slik neste modul ligger under fold. */
+export const CMS_PREVIEW_HERO_MIN_HEIGHT_CSS = 'calc(100vh - 4.5rem)';
+
 let lastScrolledSection: CmsPreviewSection | null = null;
 
 export function applyCmsSectionHighlight(section: CmsPreviewSection | null): void {
@@ -53,6 +56,10 @@ export function applyCmsSectionHighlight(section: CmsPreviewSection | null): voi
   el.classList.add(CMS_PREVIEW_ACTIVE_CLASS);
   if (lastScrolledSection !== section) {
     lastScrolledSection = section;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (section === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 }

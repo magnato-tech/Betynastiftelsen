@@ -15,7 +15,9 @@ import {
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
-const IFRAME_HEIGHT_PX = 900;
+/** Minimum design-høyde i iframe før måling (unngår hopp ved første paint). */
+const PREVIEW_MIN_DESIGN_HEIGHT_PX = 900;
+const VIEWPORT_CHROME_PADDING_PX = 24;
 
 interface CmsLivePreviewProps {
   section: CmsPreviewSection | null;
@@ -36,6 +38,10 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
   const viewportRef = useRef<HTMLDivElement>(null);
   const [device, setDevice] = useState<PreviewDevice>('desktop');
   const [desktopScale, setDesktopScale] = useState(1);
+  const [previewViewportPx, setPreviewViewportPx] = useState({
+    width: 0,
+    height: PREVIEW_MIN_DESIGN_HEIGHT_PX,
+  });
   const [src] = useState(() => buildEmbeddedPreviewUrl(section ?? 'hero'));
 
   const pushDraft = useCallback(() => {
@@ -81,14 +87,19 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
 
   useEffect(() => {
     const el = viewportRef.current;
-    if (!el || device !== 'desktop') {
-      setDesktopScale(1);
-      return;
-    }
+    if (!el) return;
     const update = () => {
-      const padding = 24;
-      const available = Math.max(0, el.clientWidth - padding);
-      setDesktopScale(computeCmsPreviewScale(available, CMS_PREVIEW_DESKTOP_WIDTH));
+      const availableW = Math.max(0, el.clientWidth - VIEWPORT_CHROME_PADDING_PX);
+      const availableH = Math.max(
+        PREVIEW_MIN_DESIGN_HEIGHT_PX,
+        el.clientHeight - VIEWPORT_CHROME_PADDING_PX
+      );
+      setPreviewViewportPx({ width: availableW, height: availableH });
+      if (device === 'desktop') {
+        setDesktopScale(computeCmsPreviewScale(availableW, CMS_PREVIEW_DESKTOP_WIDTH));
+      } else {
+        setDesktopScale(1);
+      }
     };
     update();
     const ro = new ResizeObserver(update);
@@ -100,7 +111,8 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
     device === 'desktop' ? CMS_PREVIEW_DESKTOP_WIDTH : device === 'tablet' ? 768 : 390;
   const scale = device === 'desktop' ? desktopScale : 1;
   const outerWidth = Math.round(designWidth * scale);
-  const outerHeight = Math.round(IFRAME_HEIGHT_PX * scale);
+  const designHeightPx = Math.round(previewViewportPx.height / scale);
+  const outerHeight = previewViewportPx.height;
 
   const frameClass =
     device === 'desktop'
@@ -163,13 +175,13 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
 
       <div
         ref={viewportRef}
-        className="flex-1 overflow-auto p-3 flex justify-center items-start bg-stone-200/40"
+        className="flex-1 min-h-0 overflow-auto p-3 flex justify-center items-start bg-stone-200/40"
       >
         <div className={frameClass} style={{ width: outerWidth, height: outerHeight }}>
           <div
             style={{
               width: designWidth,
-              height: IFRAME_HEIGHT_PX,
+              height: designHeightPx,
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
             }}
@@ -180,7 +192,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
               src={src}
               onLoad={pushDraft}
               className="border-0 bg-white block"
-              style={{ width: designWidth, height: IFRAME_HEIGHT_PX }}
+              style={{ width: designWidth, height: designHeightPx }}
             />
           </div>
         </div>

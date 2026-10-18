@@ -4,6 +4,7 @@ import {
   formatHeroCtaPrimaryButton,
   getHeroCtaCardConfig,
   getHeroCtaCardCopy,
+  getHeroHeadlineBelowMarginTopPx,
   getHeroHeadlinePlacement,
   getHeroHeadlineTone,
   getHeroHeadlineWidthPercent,
@@ -101,6 +102,20 @@ describe('heroLayout', () => {
     });
     expect(copy.title).toBe('Støtt et barn');
     expect(copy.primaryButton).toBe('Gi hver måned med Vipps');
+  });
+
+  it('belowImage margin øker med gap og CTA', () => {
+    const below = {
+      ...baseHero(),
+      headlinePlacement: 'belowImage',
+      headlineBelowGapPx: 40,
+      showCtaCard: true,
+      ctaHangBelowPx: 176,
+    };
+    expect(getHeroHeadlineBelowMarginTopPx(below)).toBeGreaterThan(40);
+    expect(
+      getHeroHeadlineBelowMarginTopPx({ ...below, showCtaCard: false, headlineBelowGapPx: 80 })
+    ).toBe(80);
   });
 
   it('headlineTone auto følger plassering', () => {
