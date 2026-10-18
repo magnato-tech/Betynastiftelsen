@@ -8,6 +8,7 @@ import { CmsSectionNav } from './CmsSectionNav';
 import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
 import { BETYNA_DEFAULT_HERO_IMAGE, heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
+import { CMS_PAGE_WIDTH_OPTIONS, type CmsPageWidth } from '../../utils/cmsPageWidth';
 import {
   Layout,
   Layers,
@@ -359,6 +360,26 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             </div>
 
             <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Innholdsbredde på forsiden</label>
+                <select
+                  value={cmsContent.pageWidth ?? 1120}
+                  onChange={(e) =>
+                    updateCmsSection('pageWidth', Number(e.target.value) as CmsPageWidth)
+                  }
+                  className="w-full max-w-xs px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+                >
+                  {CMS_PAGE_WIDTH_OPTIONS.map((w) => (
+                    <option key={w} value={w}>
+                      {w} px
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Samme bredde i footer, åpenhet og live forhåndsvisning.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (Kicker)</label>
                 <input

@@ -1,14 +1,18 @@
 import React from 'react';
 import { ShieldCheck, Mail, MapPin } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { cmsPageWidthFromContent } from '../../utils/cmsPageWidth';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
 export const Footer: React.FC = () => {
-  const { t } = useApp();
+  const { t, cmsContent } = useApp();
 
   return (
     <footer className="bg-stone-900 text-stone-300 border-t border-stone-800 text-sm mt-20">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div
+        className="w-full mx-auto px-4 sm:px-6 py-12"
+        style={{ maxWidth: cmsPageWidthFromContent(cmsContent) }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Col 1 */}
           <div className="space-y-3">

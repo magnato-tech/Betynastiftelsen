@@ -526,7 +526,7 @@ Ekstraordin?re aksjoner redigeres i CMS sammen med nettside og vitnesbyrd. Testi
 Arbeidsdokument - Versjon 1.47 - 15. oktober 2026
 
 15. oktober 2026, CMS venstremeny
-CMS-seksjonene ligger i en vertikal meny til venstre, ikke som horisontal fanerad. Arbeidsflaten er til h?yre.
+CMS-seksjonene ligger i en vertikal meny til venstre, ikke som horisontal fanerad. Med Forhandsvis: venstre seksjoner, midten redigering, hoyre live preview (se versjon 1.94).
 
 Arbeidsdokument - Versjon 1.48 - 15. oktober 2026
 
@@ -634,6 +634,16 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
+
+Arbeidsdokument - Versjon 1.95 - 18. oktober 2026
+
+18. oktober 2026, markedsforside og sidebredde
+Forsiden har sentrert kolonne (1040, 1120 eller 1280 px, standard 1120) med tettere b?nd. Hero: bilde f?rst, deretter loefte og fadderkort i to spalter pa stor skjerm; mobil bilde, tekst, skjema. Vitnesbyrd uten kort skjules. Kjernerammer som fullbreddeb?nd. Fadderoppfordring scroller til hero-skjema, ikke duplikat nederst. Desktop-preview i CMS skalerer 1280 px bredde. Senere moduler: Slik kan du bidra (to kort) og Pengene kommer frem (stolpe med egne tall).
+
+Arbeidsdokument - Versjon 1.94 - 18. oktober 2026
+
+18. oktober 2026, fast CMS-tredeling
+Med Forhandsvis apent er CMS-skrivebordet delt i tre: venstre seksjonsliste (velg, dra rekkefolge, oye pa/av forsiden), midten redigering for valgt seksjon, hoyre live forhandsvisning med desktop/nettbrett/mobil og Ny fane. Denne tredelingen og flyten skal ikke endres ved senere layoutarbeid (f.eks. fulle blokker eller sidebredde); kun innhold i kolonnene og offentlig forside.
 
 Arbeidsdokument - Versjon 1.93 - 18. oktober 2026
 

@@ -30,6 +30,20 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
   const [poststed, setPoststed] = useState('');
   const [belop, setBelop] = useState<number>(350);
   const [customBelop, setCustomBelop] = useState<string>('');
+
+  const monthlyImpactLine = (amount: number): string => {
+    if (amount === 250) {
+      return '250 kroner i måneden holder skoleplass, uniform og det familien trenger for ett barn — hele veien mot fagbrev og jobb.';
+    }
+    if (amount === 350) {
+      return '350 kroner gir mer rom for medisin, sykehus og det ekstra som kommer — uten at du mister den personlige følgingen.';
+    }
+    const custom = amount > 0 ? amount : parseInt(customBelop, 10) || 0;
+    if (custom > 0) {
+      return `${custom.toLocaleString('no-NO')} kroner i måneden følger ett barn mot utdanning og en reell jobb.`;
+    }
+    return 'Velg beløp for å se hva månedlig støtte betyr for ett barn.';
+  };
   const [metode, setMetode] = useState<'vipps' | 'avtalegiro' | 'bank'>('vipps');
   const [samtykke, setSamtykke] = useState(false);
   const [newSponsorId, setNewSponsorId] = useState<string>('');
@@ -89,6 +103,9 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
           <div className="space-y-3">
             <h2 className="text-lg font-serif font-bold text-[#3C3C3C] leading-snug">Støtt et barn</h2>
             <p className="text-xs text-stone-600 leading-relaxed">250 eller 350 kroner i måneden, hele veien til jobb.</p>
+            <p className="text-xs text-stone-700 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
+              {monthlyImpactLine(belop === 0 ? parseInt(customBelop, 10) || 0 : belop)}
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {[250, 350].map((amount) => (
                 <button

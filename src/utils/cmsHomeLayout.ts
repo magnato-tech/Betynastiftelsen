@@ -16,10 +16,10 @@ export const DEFAULT_CMS_HOME_LAYOUT: CmsHomeLayoutItem[] = [
   { moduleId: 'hero', visible: true },
   { moduleId: 'stories', visible: true },
   { moduleId: 'steps', visible: true },
+  { moduleId: 'behov', visible: true },
   { moduleId: 'kpis', visible: true },
   { moduleId: 'about', visible: true },
   { moduleId: 'cta', visible: true },
-  { moduleId: 'behov', visible: true },
 ];
 
 const MODULE_IDS: CmsHomeModuleId[] = [

@@ -337,7 +337,12 @@ export interface CmsHomeLayoutItem {
   visible?: boolean;
 }
 
+/** Innholdskolonne på forsiden (px). */
+export type CmsPageWidth = 1040 | 1120 | 1280;
+
 export interface CmsContent {
+  /** Sentrert kolonnebredde for offentlig innhold. Standard 1120. */
+  pageWidth?: CmsPageWidth;
   hero: CmsHero;
   steps: CmsStep[];
   aboutCards: CmsPrincipleCard[];

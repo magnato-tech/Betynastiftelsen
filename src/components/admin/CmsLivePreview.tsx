@@ -8,8 +8,14 @@ import {
   type CmsPreviewSection,
 } from '../../utils/cmsPreview';
 import { CMS_PREVIEW_READY, postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
+import {
+  CMS_PREVIEW_DESKTOP_WIDTH,
+  computeCmsPreviewScale,
+} from '../../utils/cmsLivePreviewScale';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
+
+const IFRAME_HEIGHT_PX = 900;
 
 interface CmsLivePreviewProps {
   section: CmsPreviewSection | null;
@@ -27,7 +33,9 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
   campaigns,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const [device, setDevice] = useState<PreviewDevice>('desktop');
+  const [desktopScale, setDesktopScale] = useState(1);
   const [src] = useState(() => buildEmbeddedPreviewUrl(section ?? 'hero'));
 
   const pushDraft = useCallback(() => {
@@ -71,12 +79,35 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
     }
   }, [section]);
 
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el || device !== 'desktop') {
+      setDesktopScale(1);
+      return;
+    }
+    const update = () => {
+      const padding = 24;
+      const available = Math.max(0, el.clientWidth - padding);
+      setDesktopScale(computeCmsPreviewScale(available, CMS_PREVIEW_DESKTOP_WIDTH));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [device]);
+
+  const designWidth =
+    device === 'desktop' ? CMS_PREVIEW_DESKTOP_WIDTH : device === 'tablet' ? 768 : 390;
+  const scale = device === 'desktop' ? desktopScale : 1;
+  const outerWidth = Math.round(designWidth * scale);
+  const outerHeight = Math.round(IFRAME_HEIGHT_PX * scale);
+
   const frameClass =
     device === 'desktop'
-      ? 'w-full rounded-xl border border-stone-200 shadow-lg'
+      ? 'rounded-xl border border-stone-200 shadow-lg overflow-hidden bg-white'
       : device === 'tablet'
-        ? 'w-[768px] max-w-full rounded-2xl border-4 border-stone-300 shadow-2xl'
-        : 'w-[390px] max-w-full rounded-3xl border-8 border-stone-300 shadow-2xl';
+        ? 'rounded-2xl border-4 border-stone-300 shadow-2xl overflow-hidden bg-white'
+        : 'rounded-3xl border-8 border-stone-300 shadow-2xl overflow-hidden bg-white';
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#F6F4ED] xl:static xl:inset-auto xl:z-auto xl:h-[calc(100vh-5.5rem)] xl:sticky xl:top-[4.5rem]">
@@ -130,15 +161,28 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-3 flex justify-center items-start bg-stone-200/40">
-        <div className={`overflow-hidden bg-white ${frameClass}`}>
-          <iframe
-            ref={iframeRef}
-            title="Forhåndsvisning av nettsiden"
-            src={src}
-            onLoad={pushDraft}
-            className="w-full border-0 bg-white h-[min(82vh,900px)] xl:h-[calc(100vh-8.5rem)]"
-          />
+      <div
+        ref={viewportRef}
+        className="flex-1 overflow-auto p-3 flex justify-center items-start bg-stone-200/40"
+      >
+        <div className={frameClass} style={{ width: outerWidth, height: outerHeight }}>
+          <div
+            style={{
+              width: designWidth,
+              height: IFRAME_HEIGHT_PX,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+            }}
+          >
+            <iframe
+              ref={iframeRef}
+              title="Forhåndsvisning av nettsiden"
+              src={src}
+              onLoad={pushDraft}
+              className="border-0 bg-white block"
+              style={{ width: designWidth, height: IFRAME_HEIGHT_PX }}
+            />
+          </div>
         </div>
       </div>
     </div>

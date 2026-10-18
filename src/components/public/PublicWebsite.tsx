@@ -5,7 +5,8 @@ import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
 import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
 import { heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { visibleHomeModules } from '../../utils/cmsHomeLayout';
-import type { CmsHomeModuleId } from '../../types';
+import { cmsPageWidthFromContent } from '../../utils/cmsPageWidth';
+import type { CmsContent, CmsHomeModuleId } from '../../types';
 import { CMS_PREVIEW_ACTIVE_CLASS, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
 import type { CmsPreviewSection } from '../../utils/cmsPreview';
 import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionDefaults } from '../../utils/testimonials';
@@ -22,6 +23,23 @@ import {
   Scale,
   Sparkles,
 } from 'lucide-react';
+
+const HomeColumn: React.FC<{ cms: CmsContent; className?: string; children: React.ReactNode }> = ({
+  cms,
+  className = '',
+  children,
+}) => (
+  <div
+    className={`w-full mx-auto px-4 sm:px-6 ${className}`}
+    style={{ maxWidth: cmsPageWidthFromContent(cms) }}
+  >
+    {children}
+  </div>
+);
+
+const scrollToBliFadder = () => {
+  document.getElementById('bli-fadder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 interface PublicWebsiteProps {
   onOpenSponsorModal: () => void;
@@ -68,9 +86,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
   const frontPageStories = stories.filter(isFrontPageTestimonial);
   const testimonialGridClass =
-    testimonialsSection.gridColumns === 2
-      ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
-      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
+    frontPageStories.length === 1
+      ? 'grid grid-cols-1 gap-6 max-w-2xl mx-auto'
+      : frontPageStories.length === 2 || testimonialsSection.gridColumns === 2
+        ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
 
   const ctaBanner = cmsContent.ctaBanner;
   const homeModuleOrder = visibleHomeModules(cmsContent);
@@ -125,7 +145,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   });
 
   return (
-    <div className="flex flex-col gap-20 pb-16">
+    <div className="flex flex-col gap-10 pb-16">
       {/* 1. HERO SECTION */}
       <section
         id="home"
@@ -134,37 +154,17 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         style={homeBlockStyle('hero')}
         className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('hero')}`}
       >
-        {/* Mobil: løfte, skjema, deretter bilde (runde 1) */}
-        <div className="lg:hidden space-y-5 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto text-center">{heroHeadline}</div>
-          {heroConfig.showCtaCard && (
-            <div className="max-w-[22rem] mx-auto w-full">
-              <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
-            </div>
-          )}
+        <HomeColumn cms={cmsContent} className="space-y-5 lg:space-y-6">
           {heroImage}
-        </div>
-
-        {/* Stor skjerm: bilde med overlappende CTA, deretter løfte */}
-        <div className="hidden lg:block">
-          {heroImage}
-          {heroConfig.showCtaCard && (
-            <div
-              className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6"
-              style={{ marginTop: `-${heroConfig.ctaOverlapPx}px` }}
-            >
-              <div className="w-full max-w-[22rem]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+            <div className="text-left">{heroHeadline}</div>
+            {heroConfig.showCtaCard && (
+              <div id="bli-fadder" className="w-full max-w-[22rem] lg:max-w-[22rem] lg:ml-auto scroll-mt-24">
                 <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
               </div>
-            </div>
-          )}
-          <div
-            className="max-w-3xl mx-auto px-6 mb-4 text-center"
-            style={{ marginTop: heroConfig.showCtaCard ? '1.5rem' : '2rem' }}
-          >
-            {heroHeadline}
+            )}
           </div>
-        </div>
+        </HomeColumn>
       </section>
 
       {/* Vitnesbyrd: CMS-tekst + kort i rutenett (runde 3) */}
@@ -172,10 +172,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         id="historier"
         data-cms-section="stories"
         data-cms-label="Vitnesbyrd"
-        style={homeBlockStyle('stories')}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('stories')}`}
+        style={{
+          ...homeBlockStyle('stories'),
+          display: onHome('stories') && frontPageStories.length > 0 ? undefined : 'none',
+        }}
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('stories')}`}
       >
-          <div className="max-w-2xl mb-8">
+        <HomeColumn cms={cmsContent}>
+          <div className="mb-8 w-full">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
               {useRawCmsText || language !== 'fr'
                 ? testimonialsSection.kicker
@@ -193,20 +197,12 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </p>
           </div>
 
-          {frontPageStories.length > 0 ? (
-            <div className={testimonialGridClass}>
-              {frontPageStories.map((story) => (
-                <TestimonialStoryCard key={story.id} story={story} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-stone-600 bg-white/80 border border-[#DFD9CB] rounded-xl p-6">
-              {t(
-                'testimonials.empty',
-                'Godkjente vitnesbyrd med bilde legges ut her etter hvert som samtykke er på plass.'
-              )}
-            </p>
-          )}
+          <div className={testimonialGridClass}>
+            {frontPageStories.map((story) => (
+              <TestimonialStoryCard key={story.id} story={story} />
+            ))}
+          </div>
+        </HomeColumn>
       </section>
 
       {/* 3. FADDERORDNINGEN (Slik fungerer det) */}
@@ -215,9 +211,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         data-cms-section="steps"
         data-cms-label="Fadderordningen"
         style={homeBlockStyle('steps')}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('steps')}`}
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('steps')}`}
       >
-        <div className="max-w-2xl mb-12">
+        <HomeColumn cms={cmsContent}>
+        <div className="mb-12 w-full">
           <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
             {t('steps.kicker', 'Fadderordningen')}
           </span>
@@ -340,6 +337,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             </div>
           )}
         </div>
+        </HomeColumn>
       </section>
 
       <section
@@ -350,8 +348,9 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('kpis'),
           display: onHome('kpis') && cmsContent.kpiStats.length > 0 ? undefined : 'none',
         }}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('kpis')}`}
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('kpis')}`}
       >
+        <HomeColumn cms={cmsContent}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {cmsContent.kpiStats.map((kpi) => (
               <div
@@ -364,6 +363,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </div>
             ))}
           </div>
+        </HomeColumn>
       </section>
 
       {/* 6. PROFIL & VERDIER (bistandsorganisasjon) — nav: Om Betyna */}
@@ -372,57 +372,52 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         data-cms-section="about"
         data-cms-label="Kjernerammer"
         style={homeBlockStyle('about')}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('about')}`}
+        className={`scroll-mt-24 transition-shadow ${previewMark('about')}`}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-5 space-y-4">
-            <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
-              {t('profile.kicker', 'Profil & verdier')}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
-              {t('profile.title', 'En liten bistandsorganisasjon med tydelig retning')}
-            </h2>
-            <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              {t(
-                'profile.intro1',
-                'Betyna er frivillig arbeid i Brazzaville — ikke en stiftelse, ikke masseinnsamling. Vi er en bistandsorganisasjon som følger enkeltbarn over lang tid, med koordinator på bakken og faddere i Norge som kjenner sitt barn.'
-              )}
-            </p>
-            <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              {t(
-                'profile.intro2',
-                'Vi tror på det som fungerer lokalt: storfamilien som tar ansvar når foreldre mangler eller ikke har råd. Vi bygger ikke barnehjem. Vi støtter skolegang, verdighet og hele løpet til fagbrev, utdanning og jobb.'
-              )}
-            </p>
-            <p className="text-sm text-stone-700 leading-relaxed font-sans">
-              {t(
-                'profile.intro3',
-                'Verdigrunnlaget er ærlighet, personlig ansvar og at hver krone skal nå barnet — via familien som omsorgsperson, med åpenhet om hva som skjer når noen må slutte som fadder.'
-              )}
-            </p>
-            <div className="flex flex-wrap gap-3 pt-2 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => setActiveSection('fadderordningen')}
-                className="text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
-              >
-                {t('profile.linkFadder', 'Slik fungerer fadderordningen')} →
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSection('apenhet')}
-                className="text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
-              >
-                {t('profile.linkApenhet', 'Slik pengene brukes')} →
-              </button>
+        <div className="bg-[#4D6B3E]/10 border-y border-[#DFD9CB] py-10 sm:py-12">
+          <HomeColumn cms={cmsContent} className="space-y-8">
+            <div className="w-full space-y-4">
+              <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
+                {t('profile.kicker', 'Profil & verdier')}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
+                {t('profile.title', 'En liten bistandsorganisasjon med tydelig retning')}
+              </h2>
+              <p className="text-sm text-stone-700 leading-relaxed font-sans max-w-3xl">
+                {t(
+                  'profile.intro1',
+                  'Betyna er frivillig arbeid i Brazzaville — ikke en stiftelse, ikke masseinnsamling. Vi er en bistandsorganisasjon som følger enkeltbarn over lang tid, med koordinator på bakken og faddere i Norge som kjenner sitt barn.'
+                )}
+              </p>
+              <p className="text-sm text-stone-700 leading-relaxed font-sans max-w-3xl">
+                {t(
+                  'profile.intro2',
+                  'Vi tror på det som fungerer lokalt: storfamilien som tar ansvar når foreldre mangler eller ikke har råd. Vi bygger ikke barnehjem. Vi støtter skolegang, verdighet og hele løpet til fagbrev, utdanning og jobb.'
+                )}
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('fadderordningen')}
+                  className="text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
+                >
+                  {t('profile.linkFadder', 'Slik fungerer fadderordningen')} →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('apenhet')}
+                  className="text-[#4D6B3E] hover:text-[#3B522F] underline underline-offset-2 cursor-pointer"
+                >
+                  {t('profile.linkApenhet', 'Slik pengene brukes')} →
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="lg:col-span-7 space-y-4">
-            <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wider">
-              {t('profile.valuesHeading', 'Verdier vi bygger på')}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wider">
+                {t('profile.valuesHeading', 'Verdier vi bygger på')}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {cmsContent.aboutCards.map((card) => {
               const IconComp =
                 card.iconName === 'Scale'
@@ -460,15 +455,17 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                 </div>
               );
             })}
+              </div>
             </div>
-          </div>
+          </HomeColumn>
         </div>
       </section>
 
       {/* 7. ÅPENHET OG ØKONOMI */}
-      <section id="apenhet" style={{ order: 45 }} className="max-w-7xl mx-auto px-6 scroll-mt-24">
+      <section id="apenhet" style={{ order: 45 }} className="scroll-mt-24">
+        <HomeColumn cms={cmsContent}>
         <div className="bg-white rounded-2xl border border-[#DFD9CB] p-8 md:p-12 shadow-xs">
-          <div className="max-w-2xl mb-8">
+          <div className="mb-8 w-full">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
               {t('transparency.kicker', 'Økonomi & åpenhet')}
             </span>
@@ -527,6 +524,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           </div>
 
         </div>
+        </HomeColumn>
       </section>
 
       {/* EKSTRAORDINÆRE AKSJONER — kompakt, etter tillitsseksjonen (runde 2) */}
@@ -538,11 +536,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('behov'),
           display: onHome('behov') && activeCampaigns.length > 0 ? undefined : 'none',
         }}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('behov')}`}
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('behov')}`}
       >
         {activeCampaigns.length > 0 && (
-          <>
-          <div className="max-w-2xl mb-6">
+          <HomeColumn cms={cmsContent}>
+          <div className="mb-6 w-full">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
               {t('campaigns.kicker', 'Konkrete behov')}
             </span>
@@ -608,7 +606,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               {completedCampaigns.length} fullført aksjon{completedCampaigns.length > 1 ? 'er' : ''} er dokumentert i arkivet.
             </p>
           )}
-          </>
+          </HomeColumn>
         )}
       </section>
 
@@ -620,54 +618,23 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('cta'),
           display: onHome('cta') && ctaBanner?.title?.trim() ? undefined : 'none',
         }}
-        className={`max-w-7xl mx-auto px-6 scroll-mt-24 rounded-lg transition-shadow ${previewMark('cta')}`}
+        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('cta')}`}
       >
         {ctaBanner && (
-          <div
-            className="relative rounded-2xl overflow-hidden border border-[#DFD9CB] p-8 md:p-12 text-center text-white"
-            style={{
-              backgroundImage: ctaBanner.backgroundImageUrl
-                ? `linear-gradient(rgba(0,0,0,${(ctaBanner.scrimOpacity ?? 75) / 100}), rgba(0,0,0,${(ctaBanner.scrimOpacity ?? 75) / 100})), url(${ctaBanner.backgroundImageUrl})`
-                : undefined,
-              backgroundColor: ctaBanner.backgroundImageUrl ? undefined : '#4D6B3E',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold">{ctaBanner.title}</h2>
-            <p className="mt-3 text-sm text-white/90 max-w-xl mx-auto leading-relaxed">{ctaBanner.subtitle}</p>
-            <button
-              type="button"
-              onClick={() => setActiveSection('bli-fadder')}
-              className="mt-6 px-6 py-2.5 bg-white text-[#4D6B3E] font-semibold text-sm rounded-lg cursor-pointer"
-            >
-              {ctaBanner.buttonText}
-            </button>
-          </div>
+          <HomeColumn cms={cmsContent}>
+            <div className="w-full rounded-2xl border border-[#DFD9CB] bg-white p-8 md:p-10 text-center shadow-xs">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">{ctaBanner.title}</h2>
+              <p className="mt-3 text-sm text-stone-600 max-w-2xl mx-auto leading-relaxed">{ctaBanner.subtitle}</p>
+              <button
+                type="button"
+                onClick={scrollToBliFadder}
+                className="mt-6 px-6 py-2.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-semibold text-sm rounded-lg cursor-pointer"
+              >
+                {ctaBanner.buttonText}
+              </button>
+            </div>
+          </HomeColumn>
         )}
-      </section>
-
-      {/* Ny sjanse til å melde seg (runde 2) */}
-      <section style={{ order: 55 }} className="max-w-7xl mx-auto px-6 scroll-mt-24">
-        <div className="max-w-3xl mx-auto text-center space-y-3">
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
-            {t('sponsorClosing.title', 'Klar til å bli fadder for ett barn?')}
-          </h2>
-          <p className="text-sm text-stone-600 leading-relaxed">
-            {t(
-              'sponsorClosing.subtitle',
-              '250 eller 350 kroner i måneden. Du blir registrert nå — vi kobler deg til ett barn og setter opp trekket. Du kan avslutte når som helst.'
-            )}
-          </p>
-        </div>
-        <div className="max-w-[22rem] mx-auto mt-6 w-full">
-          <BecomeSponsorModal
-            isOpen
-            onClose={() => undefined}
-            embedded
-            containerId="bli-fadder-bunn"
-          />
-        </div>
       </section>
     </div>
   );
