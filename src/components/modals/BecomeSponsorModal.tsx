@@ -3,12 +3,21 @@ import { useApp } from '../../context/AppContext';
 import { db } from '../../config/firebase';
 import { saveWebsiteSponsor } from '../../db/firestoreData';
 import { X, CheckCircle } from 'lucide-react';
+import {
+  formatHeroCtaImpactLine,
+  formatHeroCtaPrimaryButton,
+  getHeroCtaCardConfig,
+  type HeroCtaCardConfig,
+} from '../../utils/heroLayout';
+import { isVippsRecurringEnabledInFrontend, startVippsRecurringAgreement } from '../../utils/vippsRecurring';
 
 interface BecomeSponsorModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Står synlig på forsiden. Ingen ekstra klikk for å åpne skjemaet. */
   embedded?: boolean;
+  /** CMS-innstillinger for kortet (tekst, beløp, knapper). */
+  heroCtaConfig?: HeroCtaCardConfig;
   /** Anker for menyen «Bli fadder». Standard er toppen av forsiden. */
   containerId?: string;
 }
@@ -17,8 +26,18 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
   isOpen,
   onClose,
   embedded = false,
+  heroCtaConfig: heroCtaConfigProp,
   containerId = 'bli-fadder',
 }) => {
+  const ctaConfig = heroCtaConfigProp ?? getHeroCtaCardConfig({
+    kicker: '',
+    title: '',
+    subtitle: '',
+    primaryButtonText: '',
+    secondaryButtonText: '',
+    backgroundPreset: 'custom',
+    scrimOpacity: 70,
+  });
   const { registerNewSponsorInterest, setRole, setCurrentSponsorId, firestoreEnabled } = useApp();
 
   const [step, setStep] = useState<'choose' | 'form' | 'success'>('choose');
@@ -28,21 +47,53 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
   const [epost, setEpost] = useState('');
   const [telefon, setTelefon] = useState('');
   const [poststed, setPoststed] = useState('');
-  const [belop, setBelop] = useState<number>(350);
+  const [belop, setBelop] = useState<number>(ctaConfig.presetAmount2);
   const [customBelop, setCustomBelop] = useState<string>('');
 
-  const monthlyImpactLine = (amount: number): string => {
-    if (amount === 250) {
-      return '250 kroner i måneden holder skoleplass, uniform og det familien trenger for ett barn — hele veien mot fagbrev og jobb.';
+  useEffect(() => {
+    setBelop(heroCtaConfigProp?.presetAmount2 ?? ctaConfig.presetAmount2);
+  }, [heroCtaConfigProp?.presetAmount1, heroCtaConfigProp?.presetAmount2]);
+
+  const resolvedAmountKr = (): number => {
+    if (belop === 0) return parseInt(customBelop, 10) || 0;
+    return belop;
+  };
+
+  const amountButtonClass = (active: boolean) =>
+    `py-2 text-sm rounded-lg border font-medium cursor-pointer ${
+      active ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]' : 'bg-white text-stone-800 border-stone-300'
+    }`;
+
+  const amountButtonClassForm = (active: boolean) =>
+    `py-2 px-3 text-sm rounded-lg border font-medium text-center transition-all cursor-pointer ${
+      active
+        ? 'bg-[#4D6B3E] text-white border-[#4D6B3E] shadow-xs'
+        : 'bg-white text-stone-700 border-stone-300 hover:border-[#4D6B3E]'
+    }`;
+
+  const handleVippsFromChoose = async () => {
+    const amount = resolvedAmountKr();
+    if (amount < ctaConfig.customAmountMin && belop === 0) {
+      setSaveError(`Velg minst ${ctaConfig.customAmountMin} kr.`);
+      return;
     }
-    if (amount === 350) {
-      return '350 kroner gir mer rom for medisin, sykehus og det ekstra som kommer — uten at du mister den personlige følgingen.';
+    if (isVippsRecurringEnabledInFrontend() && amount > 0) {
+      try {
+        setSaving(true);
+        const { redirectUrl } = await startVippsRecurringAgreement({
+          amountKr: amount,
+          orderId: `betyna-hero-${Date.now()}`,
+        });
+        window.location.href = redirectUrl;
+        return;
+      } catch {
+        setSaveError('Vipps er ikke tilgjengelig akkurat nå. Fyll ut skjemaet under.');
+      } finally {
+        setSaving(false);
+      }
     }
-    const custom = amount > 0 ? amount : parseInt(customBelop, 10) || 0;
-    if (custom > 0) {
-      return `${custom.toLocaleString('no-NO')} kroner i måneden følger ett barn mot utdanning og en reell jobb.`;
-    }
-    return 'Velg beløp for å se hva månedlig støtte betyr for ett barn.';
+    setMetode('vipps');
+    setStep('form');
   };
   const [metode, setMetode] = useState<'vipps' | 'avtalegiro' | 'bank'>('vipps');
   const [samtykke, setSamtykke] = useState(false);
@@ -64,7 +115,10 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
       setSaveError('Kryss av for at Betyna kan lagre opplysningene dine.');
       return;
     }
-    const finalBelop = belop === 0 ? parseInt(customBelop, 10) || 250 : belop;
+    const finalBelop =
+      belop === 0
+        ? parseInt(customBelop, 10) || ctaConfig.presetAmount1
+        : belop;
     const payload = {
       navn,
       epost,
@@ -101,53 +155,65 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
       <>
         {step === 'choose' ? (
           <div className="space-y-3">
-            <h2 className="text-lg font-serif font-bold text-[#3C3C3C] leading-snug">Støtt et barn</h2>
-            <p className="text-xs text-stone-600 leading-relaxed">250 eller 350 kroner i måneden, hele veien til jobb.</p>
+            <h2 className="text-lg font-serif font-bold text-[#3C3C3C] leading-snug">{ctaConfig.title}</h2>
+            <p className="text-xs text-stone-600 leading-relaxed">{ctaConfig.lead}</p>
             <p className="text-xs text-stone-700 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
-              {monthlyImpactLine(belop === 0 ? parseInt(customBelop, 10) || 0 : belop)}
+              {formatHeroCtaImpactLine(ctaConfig, belop, customBelop)}
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[250, 350].map((amount) => (
+            <div
+              className={`grid gap-2 ${ctaConfig.showCustomOption ? 'grid-cols-3' : 'grid-cols-2'}`}
+            >
+              {[ctaConfig.presetAmount1, ctaConfig.presetAmount2].map((amount) => (
                 <button
                   key={amount}
                   type="button"
-                  onClick={() => { setBelop(amount); setCustomBelop(''); }}
-                  className={`py-2 text-sm rounded-lg border font-medium cursor-pointer ${belop === amount ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]' : 'bg-white text-stone-800 border-stone-300'}`}
+                  onClick={() => {
+                    setBelop(amount);
+                    setCustomBelop('');
+                  }}
+                  className={amountButtonClass(belop === amount)}
                 >
                   {amount} kr
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setBelop(0)}
-                className={`py-2 text-sm rounded-lg border font-medium cursor-pointer ${belop === 0 ? 'bg-[#4D6B3E] text-white border-[#4D6B3E]' : 'bg-white text-stone-800 border-stone-300'}`}
-              >
-                Valgfritt
-              </button>
+              {ctaConfig.showCustomOption && (
+                <button
+                  type="button"
+                  onClick={() => setBelop(0)}
+                  className={amountButtonClass(belop === 0)}
+                >
+                  {ctaConfig.customOptionLabel}
+                </button>
+              )}
             </div>
-            {belop === 0 && (
+            {belop === 0 && ctaConfig.showCustomOption && (
               <input
                 type="number"
-                min="100"
+                min={ctaConfig.customAmountMin}
                 placeholder="Valgfritt beløp"
                 value={customBelop}
                 onChange={(e) => setCustomBelop(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-sm"
               />
             )}
+            {saveError && <p className="text-xs text-red-700">{saveError}</p>}
             <button
               type="button"
-              onClick={() => { setMetode('vipps'); setStep('form'); }}
-              className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-semibold rounded-full text-sm cursor-pointer"
+              disabled={saving}
+              onClick={() => void handleVippsFromChoose()}
+              className="w-full py-3 bg-[#4D6B3E] hover:bg-[#3B522F] text-white font-semibold rounded-full text-sm cursor-pointer disabled:opacity-60"
             >
-              Gi hver måned med Vipps
+              {formatHeroCtaPrimaryButton(ctaConfig, belop, customBelop)}
             </button>
             <button
               type="button"
-              onClick={() => { setMetode('avtalegiro'); setStep('form'); }}
+              onClick={() => {
+                setMetode('avtalegiro');
+                setStep('form');
+              }}
               className="w-full text-xs text-stone-600 underline cursor-pointer"
             >
-              AvtaleGiro eller bank
+              {ctaConfig.secondaryLink}
             </button>
           </div>
         ) : step === 'form' ? (
@@ -167,51 +233,36 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#3C3C3C] mb-2">
                   Velg månedlig fadderbidrag
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBelop(250);
-                      setCustomBelop('');
-                    }}
-                    className={`py-2 px-3 text-sm rounded-lg border font-medium text-center transition-all cursor-pointer ${
-                      belop === 250
-                        ? 'bg-[#4D6B3E] text-white border-[#4D6B3E] shadow-xs'
-                        : 'bg-white text-stone-700 border-stone-300 hover:border-[#4D6B3E]'
-                    }`}
-                  >
-                    250 kr/mnd
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBelop(350);
-                      setCustomBelop('');
-                    }}
-                    className={`py-2 px-3 text-sm rounded-lg border font-medium text-center transition-all cursor-pointer ${
-                      belop === 350
-                        ? 'bg-[#4D6B3E] text-white border-[#4D6B3E] shadow-xs'
-                        : 'bg-white text-stone-700 border-stone-300 hover:border-[#4D6B3E]'
-                    }`}
-                  >
-                    350 kr/mnd
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBelop(0)}
-                    className={`py-2 px-3 text-sm rounded-lg border font-medium text-center transition-all cursor-pointer ${
-                      belop === 0
-                        ? 'bg-[#4D6B3E] text-white border-[#4D6B3E] shadow-xs'
-                        : 'bg-white text-stone-700 border-stone-300 hover:border-[#4D6B3E]'
-                    }`}
-                  >
-                    Valgfritt
-                  </button>
+                <div
+                  className={`grid gap-2 ${ctaConfig.showCustomOption ? 'grid-cols-3' : 'grid-cols-2'}`}
+                >
+                  {[ctaConfig.presetAmount1, ctaConfig.presetAmount2].map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => {
+                        setBelop(amount);
+                        setCustomBelop('');
+                      }}
+                      className={amountButtonClassForm(belop === amount)}
+                    >
+                      {amount} kr/mnd
+                    </button>
+                  ))}
+                  {ctaConfig.showCustomOption && (
+                    <button
+                      type="button"
+                      onClick={() => setBelop(0)}
+                      className={amountButtonClassForm(belop === 0)}
+                    >
+                      {ctaConfig.customOptionLabel}
+                    </button>
+                  )}
                 </div>
-                {belop === 0 && (
+                {belop === 0 && ctaConfig.showCustomOption && (
                   <input
                     type="number"
-                    min="100"
+                    min={ctaConfig.customAmountMin}
                     placeholder="F.eks. 500 kr"
                     value={customBelop}
                     onChange={(e) => setCustomBelop(e.target.value)}

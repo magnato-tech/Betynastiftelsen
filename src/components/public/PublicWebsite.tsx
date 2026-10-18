@@ -2,7 +2,19 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
 import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
-import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
+import {
+  clampHeroHeadlinePosYPercent,
+  getHeroCtaBottomCss,
+  getHeroCtaCardConfig,
+  getHeroHeadlineTone,
+  getHeroHeadlineWidthPercent,
+  getHeroHeightVh,
+  getHeroObjectPosition,
+  getHeroSceneBottomPaddingPx,
+  heroHasHeadlineCopy,
+  isHeroHeadlineOnImageDesktop,
+  withHeroLayoutDefaults,
+} from '../../utils/heroLayout';
 import { heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import { visibleHomeModules } from '../../utils/cmsHomeLayout';
 import { cmsPageWidthFromContent } from '../../utils/cmsPageWidth';
@@ -115,47 +127,80 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     document.getElementById(activeSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [activeSection]);
 
-  const heroHeadline = (
-    <>
-      <p className="text-xs font-semibold tracking-widest uppercase text-[#4D6B3E]">{heroKicker}</p>
-      <h1 className="mt-3 text-3xl sm:text-4xl font-serif font-bold text-[#3C3C3C] leading-[1.15] text-balance">
-        {heroTitle}
-      </h1>
-      <p className="mt-3 text-base text-stone-700 leading-relaxed">{heroSubtitle}</p>
-    </>
-  );
-
   const heroScrim = Math.min(90, Math.max(20, cmsContent.hero.scrimOpacity ?? 70));
+  const heroHeadlineTone = getHeroHeadlineTone(cmsContent.hero);
 
-  const heroHeadlineOnImage = (
-    <>
-      <p className="text-xs font-semibold tracking-widest uppercase text-[#C5D4BC] drop-shadow-sm">
-        {heroKicker}
-      </p>
-      <h1 className="mt-3 text-3xl sm:text-4xl lg:text-[2.35rem] font-serif font-bold text-white leading-[1.12] text-balance drop-shadow-md">
-        {heroTitle}
-      </h1>
-      <p className="mt-3 text-sm sm:text-base text-white/95 leading-relaxed drop-shadow-sm max-w-xl">
-        {heroSubtitle}
-      </p>
-    </>
+  const renderHeroHeadline = (tone: 'light' | 'dark') => {
+    const kickerClass =
+      tone === 'light'
+        ? 'text-xs font-semibold tracking-widest uppercase text-[#C5D4BC] drop-shadow-sm'
+        : 'text-xs font-semibold tracking-widest uppercase text-[#4D6B3E]';
+    const titleClass =
+      tone === 'light'
+        ? 'mt-3 text-3xl sm:text-4xl lg:text-[2.35rem] font-serif font-bold text-white leading-[1.12] text-balance drop-shadow-md'
+        : 'mt-3 text-3xl sm:text-4xl font-serif font-bold text-[#3C3C3C] leading-[1.15] text-balance';
+    const subtitleClass =
+      tone === 'light'
+        ? 'mt-3 text-sm sm:text-base text-white/95 leading-relaxed drop-shadow-sm'
+        : 'mt-3 text-base text-stone-700 leading-relaxed';
+    return (
+      <>
+        <p className={kickerClass}>{heroKicker}</p>
+        <h1 className={titleClass}>{heroTitle}</h1>
+        <p className={subtitleClass}>{heroSubtitle}</p>
+      </>
+    );
+  };
+
+  const headlineOnImageDesktop = isHeroHeadlineOnImageDesktop(cmsContent.hero);
+  const ctaPosX = heroConfig.ctaPosXPercent ?? 0;
+  const ctaBottomCss = getHeroCtaBottomCss(heroConfig);
+  const heroSceneBottomPadding = getHeroSceneBottomPaddingPx(heroConfig);
+  const headlinePosX = heroConfig.headlinePosXPercent ?? 42;
+  const headlinePosY = clampHeroHeadlinePosYPercent(heroConfig.headlinePosYPercent ?? 55);
+  const heroCtaConfig = getHeroCtaCardConfig(cmsContent.hero);
+  const heroImageCssHeight = `min(${heroHeightVh}vh, 92vh)`;
+  const headlineMaxW = heroConfig.headlineMaxWidthPercent ?? 52;
+  const headlineBoxWidth = getHeroHeadlineWidthPercent(headlinePosX, headlineMaxW);
+
+  const heroMotionReplayAt = heroConfig.heroMotionReplayAt ?? 0;
+  const heroZoomActive = heroConfig.imageMotion === 'slowZoom';
+  const heroCtaEnterActive = heroConfig.ctaEnter === 'fromLeft';
+
+  const heroZoomStyle = React.useMemo(
+    () => ({
+      objectPosition: heroObjectPosition,
+      transformOrigin: heroObjectPosition,
+    }),
+    [heroObjectPosition, heroMotionReplayAt]
   );
 
-  const heroImageBlock = (className = '') => (
+  const heroCtaEnterDelayStyle = React.useMemo((): React.CSSProperties => {
+    const delaySec = Math.min(6, Math.max(0, heroConfig.ctaEnterDelaySec ?? 0));
+    return { '--hero-cta-enter-delay': `${delaySec}s` } as React.CSSProperties;
+  }, [heroMotionReplayAt]);
+
+  const heroCtaCard = (
     <div
-      className={`relative w-full overflow-hidden bg-[#F6F4ED] ${className}`}
-      style={{ height: `${heroHeightVh}vh`, maxHeight: '92vh' }}
+      key={heroCtaEnterActive ? `hero-cta-motion-${heroMotionReplayAt}` : 'hero-cta-static'}
+      id="bli-fadder"
+      className={`hero-cta-card w-full max-w-[22rem] scroll-mt-24 rounded-xl bg-white shadow-xl ring-1 ring-black/5 pointer-events-auto lg:z-20 lg:w-[min(22rem,calc(100%-1.5rem))] ${heroCtaEnterActive ? 'hero-cta-enter-lg' : ''}`}
+      style={
+        {
+          '--hero-cta-left': `${ctaPosX}%`,
+          '--hero-cta-bottom': ctaBottomCss,
+          ...heroCtaEnterDelayStyle,
+        } as React.CSSProperties
+      }
     >
-      <img
-        src={heroImageSrc}
-        alt="Betyna sammen med barn i Kongo"
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ objectPosition: heroObjectPosition }}
+      <BecomeSponsorModal
+        isOpen
+        onClose={() => undefined}
+        embedded
+        heroCtaConfig={heroCtaConfig}
       />
     </div>
   );
-
-  const ctaHangPx = heroConfig.ctaOverlapPx ?? 176;
 
   const homeBlockStyle = (id: CmsHomeModuleId): React.CSSProperties => ({
     order: onHome(id) ? homeModuleOrder.indexOf(id) : 99,
@@ -170,65 +215,76 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         data-cms-section="hero"
         data-cms-label="Hovedbanner"
         style={homeBlockStyle('hero')}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('hero')}`}
+        className={`scroll-mt-24 rounded-lg transition-shadow overflow-visible ${previewMark('hero')}`}
       >
         <HomeColumn cms={cmsContent}>
-          {/* Mobil: bilde, løfte, deretter skjema */}
-          <div className="lg:hidden space-y-5">
-            {heroImageBlock()}
-            <div className="text-left">{heroHeadline}</div>
-            {heroConfig.showCtaCard && (
-              <div id="bli-fadder" className="w-full max-w-[22rem] scroll-mt-24 shadow-lg rounded-xl">
-                <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
-              </div>
-            )}
-          </div>
-
-          {/* Stor skjerm: Redd Barna / Plan — giverkort på bildet, løfte på bildet til høyre */}
-          <div
-            className="hidden lg:block relative"
-            style={{ marginBottom: heroConfig.showCtaCard ? Math.round(ctaHangPx * 0.4) : 0 }}
-          >
+          <div className="w-full overflow-visible">
             <div
               className="relative w-full overflow-visible"
-              style={{ height: `${heroHeightVh}vh`, maxHeight: '92vh' }}
+              style={{
+                minHeight: heroImageCssHeight,
+                paddingBottom: heroSceneBottomPadding,
+              }}
             >
-              <img
-                src={heroImageSrc}
-                alt="Betyna sammen med barn i Kongo"
-                className="absolute inset-0 h-full w-full object-cover"
-                style={{ objectPosition: heroObjectPosition }}
-              />
               <div
-                className="absolute inset-0 pointer-events-none"
-                aria-hidden
-                style={{
-                  background: `linear-gradient(105deg, rgba(0,0,0,${(heroScrim / 100) * 0.55}) 0%, rgba(0,0,0,${(heroScrim / 100) * 0.2}) 42%, transparent 68%)`,
-                }}
-              />
-              <div className="absolute inset-0 z-10 flex items-end pb-6">
-                <div className="grid grid-cols-12 gap-8 w-full items-end">
-                  {heroConfig.showCtaCard ? (
-                    <div className="col-span-5 flex justify-start">
-                      <div
-                        id="bli-fadder"
-                        className="w-full max-w-[22rem] scroll-mt-24 rounded-xl bg-white shadow-xl ring-1 ring-black/5 pointer-events-auto"
-                        style={{ transform: `translateY(${Math.round(ctaHangPx * 0.35)}px)` }}
-                      >
-                        <BecomeSponsorModal isOpen onClose={() => undefined} embedded />
-                      </div>
-                    </div>
-                  ) : null}
-                  <div
-                    className={`pb-2 pr-2 ${
-                      heroConfig.showCtaCard ? 'col-span-7 text-left' : 'col-span-12 text-center max-w-3xl mx-auto'
-                    }`}
-                  >
-                    {heroHeadlineOnImage}
-                  </div>
-                </div>
+                className="absolute inset-x-0 top-0 overflow-hidden bg-[#F6F4ED]"
+                style={{ height: heroImageCssHeight }}
+              >
+                <img
+                  key={heroZoomActive ? `hero-zoom-${heroMotionReplayAt}` : 'hero-zoom-static'}
+                  src={heroImageSrc}
+                  alt="Betyna sammen med barn i Kongo"
+                  className={`absolute inset-0 h-full w-full object-cover ${heroZoomActive ? 'hero-image-slow-zoom' : ''}`}
+                  style={heroZoomStyle}
+                />
               </div>
+
+              {headlineOnImageDesktop && (
+                <div
+                  className="absolute z-20 pointer-events-none px-2 text-left hidden lg:block"
+                  style={{
+                    left: `${headlinePosX}%`,
+                    top: `${headlinePosY}%`,
+                    width: `${headlineBoxWidth}%`,
+                    maxWidth: `calc(100% - ${headlinePosX}%)`,
+                  }}
+                >
+                  {heroHeadlineTone === 'light' && (
+                    <div
+                      className="rounded-lg px-1 py-2 -mx-1"
+                      style={{
+                        background: `linear-gradient(105deg, rgba(0,0,0,${(heroScrim / 100) * 0.55}) 0%, rgba(0,0,0,${(heroScrim / 100) * 0.25}) 55%, transparent 100%)`,
+                      }}
+                    >
+                      {renderHeroHeadline(heroHeadlineTone)}
+                    </div>
+                  )}
+                  {heroHeadlineTone === 'dark' && (
+                    <div className="rounded-lg px-1 py-2 -mx-1">{renderHeroHeadline(heroHeadlineTone)}</div>
+                  )}
+                </div>
+              )}
+
+              {heroConfig.showCtaCard && (
+                <div className="mt-5 lg:mt-0 lg:contents">{heroCtaCard}</div>
+              )}
             </div>
+
+            <div className="mt-5 text-left lg:hidden">
+              {heroHasHeadlineCopy(cmsContent.hero) && renderHeroHeadline('dark')}
+            </div>
+            {!headlineOnImageDesktop && heroHasHeadlineCopy(cmsContent.hero) && (
+              <div
+                className="relative z-30 mt-6 text-left hidden lg:block"
+                style={{
+                  marginLeft: `${headlinePosX}%`,
+                  width: `${headlineBoxWidth}%`,
+                  maxWidth: `calc(100% - ${headlinePosX}%)`,
+                }}
+              >
+                {renderHeroHeadline(heroHeadlineTone)}
+              </div>
+            )}
           </div>
         </HomeColumn>
       </section>

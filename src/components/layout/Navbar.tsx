@@ -5,23 +5,31 @@ import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { PortalLoginModal } from '../auth/PortalLoginModal';
 import { defaultPortalSectionForProfile } from '../../utils/portalSession';
 import { isAdminOppfolgingSection } from '../../utils/adminOppfolging';
+import { publicNavVisibility } from '../../utils/cmsHomeLayout';
+import { isFrontPageTestimonial } from '../../utils/testimonials';
+import type { CmsContent } from '../../types';
 
 interface NavbarProps {
   onOpenSponsorModal: () => void;
   activeSection: string;
   setActiveSection: (section: string) => void;
+  /** CMS for offentlig meny (bruk utkast i innebygd preview). */
+  cmsContent?: CmsContent;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenSponsorModal,
   activeSection,
   setActiveSection,
+  cmsContent: cmsContentProp,
 }) => {
   const {
     role,
     setRole,
     t,
     campaigns,
+    cmsContent: cmsFromApp,
+    stories,
     language,
     firestoreUserProfile,
     firestoreProfileLoading,
@@ -32,6 +40,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   } = useApp();
 
   const [loginOpen, setLoginOpen] = useState(false);
+
+  const cmsForNav = cmsContentProp ?? cmsFromApp;
+  const publicNav =
+    role === 'public'
+      ? publicNavVisibility(cmsForNav, {
+          hasFrontPageStories: stories.some(isFrontPageTestimonial),
+          hasActiveCampaigns: campaigns.some((c) => c.status === 'aktiv'),
+        })
+      : null;
 
   const handleOpenLogin = () => {
     setLoginOpen(true);
@@ -72,48 +89,56 @@ export const Navbar: React.FC<NavbarProps> = ({
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[#666666]">
           {role === 'public' && (
             <>
-              <button
-                onClick={() => setActiveSection('fadderordningen')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'fadderordningen' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.sponsorship', 'Fadderordningen')}
-              </button>
-              <button
-                onClick={() => setActiveSection('historier')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'historier' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.stories', 'Historier')}
-              </button>
-              {campaigns.length > 0 && (
-              <button
-                onClick={() => setActiveSection('aksjoner')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'aksjoner' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.campaigns', 'Aksjoner')}
-              </button>
+              {publicNav?.fadderordningen && (
+                <button
+                  onClick={() => setActiveSection('fadderordningen')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'fadderordningen' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.sponsorship', 'Fadderordningen')}
+                </button>
               )}
-              <button
-                onClick={() => setActiveSection('om-oss')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'om-oss' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.about', 'Om Betyna')}
-              </button>
-              <button
-                onClick={() => setActiveSection('apenhet')}
-                className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeSection === 'apenhet' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
-                }`}
-              >
-                {t('nav.transparency', 'Åpenhet')}
-              </button>
+              {publicNav?.historier && (
+                <button
+                  onClick={() => setActiveSection('historier')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'historier' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.stories', 'Historier')}
+                </button>
+              )}
+              {publicNav?.aksjoner && (
+                <button
+                  onClick={() => setActiveSection('aksjoner')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'aksjoner' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.campaigns', 'Aksjoner')}
+                </button>
+              )}
+              {publicNav?.omOss && (
+                <button
+                  onClick={() => setActiveSection('om-oss')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'om-oss' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.about', 'Om Betyna')}
+                </button>
+              )}
+              {publicNav?.apenhet && (
+                <button
+                  onClick={() => setActiveSection('apenhet')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'apenhet' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.transparency', 'Åpenhet')}
+                </button>
+              )}
             </>
           )}
 
@@ -303,7 +328,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {role === 'public' ? (
+          {role === 'public' && publicNav?.bliFadderCta ? (
             <button
               type="button"
               onClick={() => onOpenSponsorModal()}
@@ -311,7 +336,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('nav.becomeSponsor', 'Bli fadder')}
             </button>
-          ) : (
+          ) : role !== 'public' ? (
             <button
               onClick={() => setRole('public')}
               className="px-3.5 py-1.5 text-xs font-medium text-[#3C3C3C] bg-white hover:bg-[#EBE7DC] border border-[#DFD9CB] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"

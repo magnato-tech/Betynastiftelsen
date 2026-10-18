@@ -25,16 +25,26 @@ import {
 } from './utils/cmsPreviewBridge';
 import { consumePortalIntent, markPortalIntent } from './utils/portalIntent';
 import { defaultPortalSectionForProfile } from './utils/portalSession';
+import { getHeroCtaCardConfig } from './utils/heroLayout';
 
 const MainLayout: React.FC = () => {
-  const { role, setRole, setLanguage, firestoreLoading, firestoreUserProfile, enterPortalFromProfile } =
-    useApp();
+  const {
+    role,
+    setRole,
+    setLanguage,
+    firestoreLoading,
+    firestoreUserProfile,
+    enterPortalFromProfile,
+    cmsContent,
+  } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
   const [cmsPreviewDraft, setCmsPreviewDraft] = useState<CmsPreviewDraftPayload | null>(null);
   const homepageChosenFor = useRef<string | null>(null);
+  const cmsContentForNav =
+    previewFlags.embedded && cmsPreviewDraft ? cmsPreviewDraft.cmsContent : cmsContent;
 
   useEffect(() => {
     if (!previewFlags.embedded) return;
@@ -120,6 +130,7 @@ const MainLayout: React.FC = () => {
         onOpenSponsorModal={() => setIsSponsorModalOpen(true)}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        cmsContent={cmsContentForNav}
       />
 
       {/* 3. Main Content Router based on Active Role */}
@@ -151,6 +162,7 @@ const MainLayout: React.FC = () => {
       <BecomeSponsorModal
         isOpen={isSponsorModalOpen}
         onClose={() => setIsSponsorModalOpen(false)}
+        heroCtaConfig={getHeroCtaCardConfig(cmsContent.hero)}
       />
 
       <DonateCampaignModal

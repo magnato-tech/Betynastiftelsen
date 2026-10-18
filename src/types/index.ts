@@ -259,6 +259,11 @@ export interface AppNotification {
 }
 
 export type CmsHeroHeight = 'compact' | 'medium' | 'tall' | 'custom';
+export type CmsHeroImageMotion = 'none' | 'slowZoom';
+export type CmsHeroHeadlinePlacement = 'onImage' | 'belowImage';
+/** Lys/mørk tekst. auto = lys på bildet, mørk under bildet. */
+export type CmsHeroHeadlineTone = 'auto' | 'light' | 'dark';
+export type CmsHeroCtaEnter = 'none' | 'fromLeft';
 
 export interface CmsHero {
   kicker: string;
@@ -278,8 +283,58 @@ export interface CmsHero {
   focalPointY?: number;
   /** Fadder-CTA over hero med overlapp nedover. */
   showCtaCard?: boolean;
-  /** Piksel som CTA-kortet trekkes opp over bunnkanten (typisk 120–220). */
+  /** @deprecated Bruk ctaHangBelowPx — beholdes for eldre data. */
   ctaOverlapPx?: number;
+  /** Løftetekst på bildet (stor skjerm). Av = tekst under bildet. */
+  headlineOnImage?: boolean;
+  /** Plassering av løftetekst på stor skjerm. Mangler felt: bruk headlineOnImage. */
+  headlinePlacement?: CmsHeroHeadlinePlacement;
+  /** Horisontal posisjon for løftetekst på bildet (0–100 % venstre). */
+  headlinePosXPercent?: number;
+  /** Vertikal posisjon for løftetekst på bildet (0–100 % fra topp). */
+  headlinePosYPercent?: number;
+  /** Maks bredde for løftetekst (32–100 % av hero-kolonnen). */
+  headlineMaxWidthPercent?: number;
+  /** Tekstfarge. auto følger plassering (lys på bilde, mørk under). */
+  headlineTone?: CmsHeroHeadlineTone;
+  /** Valgfri sakte zoom på hero-bildet (inne i klippet lag). */
+  imageMotion?: CmsHeroImageMotion;
+  /** CTA horisontalt: 0 = venstre kant, 100 = høyre (innenfor hero). */
+  ctaPosXPercent?: number;
+  /** CTA vertikalt i hero: 0 = nederst, 100 = øverst (fra bunn av hero-rammen). */
+  ctaPosYPercent?: number;
+  /** Hvor langt CTA-kortet henger under hero-bunnen (px, 0–480). */
+  ctaHangBelowPx?: number;
+  /** Tittel på fadder-CTA-kortet på forsiden. */
+  ctaCardTitle?: string;
+  /** Ingress på fadder-CTA-kortet. */
+  ctaCardLead?: string;
+  /** Første forhåndsvalgt beløp (kr/mnd) på CTA-kortet. */
+  ctaPresetAmount1?: number;
+  /** Andre forhåndsvalgt beløp (kr/mnd). */
+  ctaPresetAmount2?: number;
+  /** Tekst på tredje knapp (valgfritt beløp). */
+  ctaCustomOptionLabel?: string;
+  /** Minste valgfrie beløp (kr). */
+  ctaCustomAmountMin?: number;
+  /** Vis knapp for valgfritt beløp. */
+  ctaShowCustomOption?: boolean;
+  /** Ingress-linje når beløp 1 er valgt (tom = standardtekst). */
+  ctaImpactLineAmount1?: string;
+  /** Ingress-linje når beløp 2 er valgt. */
+  ctaImpactLineAmount2?: string;
+  /** Ingress ved valgfritt beløp; {beløp} erstattes. */
+  ctaImpactLineCustom?: string;
+  /** Primærknapp viser valgt beløp (bruker template). */
+  ctaPrimaryButtonReflectAmount?: boolean;
+  /** Vipps-knapp med {beløp} når reflect er på. */
+  ctaPrimaryButtonTemplate?: string;
+  /** CTA glide inn fra venstre etter delay (kun stor skjerm). */
+  ctaEnter?: CmsHeroCtaEnter;
+  /** Forsinkelse før CTA-inngang (0–6 s). */
+  ctaEnterDelaySec?: number;
+  /** Økes ved «Spill av» for å restarte animasjoner uten å nullstille ved hvert utkast. */
+  heroMotionReplayAt?: number;
 }
 
 export interface CmsStep {

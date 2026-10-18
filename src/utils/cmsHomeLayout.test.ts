@@ -4,6 +4,7 @@ import { EMPTY_CMS_CONTENT } from '../db/seedPolicy';
 import {
   moveHomeModule,
   normalizeCmsHomeLayout,
+  publicNavVisibility,
   reorderHomeModule,
   setHomeModuleVisible,
   visibleHomeModules,
@@ -37,6 +38,37 @@ describe('cmsHomeLayout', () => {
     const stepsIdx = layout.findIndex((r) => r.moduleId === 'steps');
     layout = moveHomeModule(layout, 'steps', 'up');
     expect(layout.findIndex((r) => r.moduleId === 'steps')).toBe(stepsIdx - 1);
+  });
+
+  it('publicNavVisibility skjuler historier uten forsideshistorier', () => {
+    const vis = publicNavVisibility(baseCms(), {
+      hasFrontPageStories: false,
+      hasActiveCampaigns: true,
+    });
+    expect(vis.historier).toBe(false);
+    expect(vis.fadderordningen).toBe(true);
+  });
+
+  it('publicNavVisibility skjuler meny når modul er av i homeLayout', () => {
+    const cms = {
+      ...baseCms(),
+      homeLayout: setHomeModuleVisible(normalizeCmsHomeLayout(baseCms()), 'steps', false),
+    };
+    const vis = publicNavVisibility(cms, {
+      hasFrontPageStories: true,
+      hasActiveCampaigns: true,
+    });
+    expect(vis.fadderordningen).toBe(false);
+  });
+
+  it('publicNavVisibility skjuler Bli fadder når hero-CTA er av', () => {
+    const cms = {
+      ...baseCms(),
+      hero: { ...baseCms().hero, showCtaCard: false },
+    };
+    expect(
+      publicNavVisibility(cms, { hasFrontPageStories: true, hasActiveCampaigns: true }).bliFadderCta
+    ).toBe(false);
   });
 
   it('reorderHomeModule flytter modul til ny posisjon', () => {

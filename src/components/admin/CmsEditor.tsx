@@ -7,7 +7,17 @@ import { CmsMediaLibraryPanel } from './CmsMediaLibraryPanel';
 import { CmsSectionNav } from './CmsSectionNav';
 import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
 import { BETYNA_DEFAULT_HERO_IMAGE, heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
-import { getHeroHeightVh, getHeroObjectPosition, withHeroLayoutDefaults } from '../../utils/heroLayout';
+import {
+  clampHeroHeadlineMaxWidthPercent,
+  DEFAULT_HERO_CTA_BUTTONS,
+  DEFAULT_HERO_CTA_IMPACT,
+  DEFAULT_HERO_LAYOUT,
+  getHeroCtaBottomCss,
+  getHeroHeadlinePlacement,
+  getHeroHeightVh,
+  getHeroObjectPosition,
+  withHeroLayoutDefaults,
+} from '../../utils/heroLayout';
 import { CMS_PAGE_WIDTH_OPTIONS, type CmsPageWidth } from '../../utils/cmsPageWidth';
 import {
   Layout,
@@ -411,27 +421,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">Primærknapp (Handling)</label>
-                  <input
-                    type="text"
-                    value={cmsContent.hero.primaryButtonText}
-                    onChange={(e) => handleHeroTextChange('primaryButtonText', e.target.value)}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">Sekundærknapp (Lenke)</label>
-                  <input
-                    type="text"
-                    value={cmsContent.hero.secondaryButtonText}
-                    onChange={(e) => handleHeroTextChange('secondaryButtonText', e.target.value)}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
-                  />
-                </div>
-              </div>
-
               {/* Background image & preset picker with URL and Local Upload */}
               <div className="pt-2">
                 <ImagePickerField
@@ -450,12 +439,14 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 <div>
                   <h4 className="text-sm font-serif font-bold text-stone-900">Utforming på forsiden</h4>
                   <p className="text-xs text-stone-500 mt-0.5">
-                    Høyde, beskjæring (fokuspunkt) og fadder-CTA som ligger delvis over bildet.
+                    Tre lag: bilde, løftetekst og fadder-CTA styres uavhengig (stor skjerm). Mobil: bilde, tekst, CTA.
                   </p>
                 </div>
 
                 {(() => {
                   const layout = withHeroLayoutDefaults(cmsContent.hero);
+                  const headlinePlacement = getHeroHeadlinePlacement(cmsContent.hero);
+                  const hangPx = layout.ctaHangBelowPx ?? layout.ctaOverlapPx ?? 176;
                   const setLayout = (patch: Partial<CmsContent['hero']>) => {
                     updateCmsSection('hero', { ...cmsContent.hero, ...patch });
                     showNotification('Hero-utforming oppdatert!');
@@ -468,91 +459,455 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   ];
                   return (
                     <>
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-700 mb-1">Hero-høyde</label>
-                        <select
-                          value={layout.heroHeight}
-                          onChange={(e) => setLayout({ heroHeight: e.target.value as CmsHeroHeight })}
-                          className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
-                        >
-                          {heightOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
+                      <div className="space-y-3 rounded-lg border border-stone-200 bg-white p-3">
+                        <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wide">Bilde</h5>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">Hero-høyde</label>
+                          <select
+                            value={layout.heroHeight}
+                            onChange={(e) => setLayout({ heroHeight: e.target.value as CmsHeroHeight })}
+                            className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
+                          >
+                            {heightOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {layout.heroHeight === 'custom' && (
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Egendefinert høyde: {layout.heroHeightCustomVh} vh
+                            </label>
+                            <input
+                              type="range"
+                              min={28}
+                              max={92}
+                              value={layout.heroHeightCustomVh}
+                              onChange={(e) => setLayout({ heroHeightCustomVh: Number(e.target.value) })}
+                              className="w-full accent-[#4D6B3E]"
+                            />
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Fokus horisontalt: {layout.focalPointX}%
+                            </label>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={layout.focalPointX}
+                              onChange={(e) => setLayout({ focalPointX: Number(e.target.value) })}
+                              className="w-full accent-[#4D6B3E]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Fokus vertikalt: {layout.focalPointY}%
+                            </label>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={layout.focalPointY}
+                              onChange={(e) => setLayout({ focalPointY: Number(e.target.value) })}
+                              className="w-full accent-[#4D6B3E]"
+                            />
+                            <p className="text-[10px] text-stone-500 mt-1">Lavere verdi viser mer av toppen (ansikter).</p>
+                          </div>
+                        </div>
+
+                        <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={layout.imageMotion === 'slowZoom'}
+                            onChange={(e) =>
+                              setLayout({ imageMotion: e.target.checked ? 'slowZoom' : 'none' })
+                            }
+                            className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                          />
+                          Sakte zoom på bildet (subtil bevegelse)
+                        </label>
+                        <p className="text-[10px] text-stone-500 -mt-1">Kun stor skjerm. Respekterer «redusert bevegelse» i systemet.</p>
                       </div>
 
-                      {layout.heroHeight === 'custom' && (
+                      <div className="space-y-3 rounded-lg border border-stone-200 bg-white p-3">
+                        <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wide">Løftetekst</h5>
                         <div>
-                          <label className="block text-xs font-semibold text-stone-700 mb-1">
-                            Egendefinert høyde: {layout.heroHeightCustomVh} vh
-                          </label>
-                          <input
-                            type="range"
-                            min={28}
-                            max={92}
-                            value={layout.heroHeightCustomVh}
-                            onChange={(e) => setLayout({ heroHeightCustomVh: Number(e.target.value) })}
-                            className="w-full accent-[#4D6B3E]"
-                          />
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">Plassering (stor skjerm)</label>
+                          <select
+                            value={headlinePlacement}
+                            onChange={(e) => {
+                              const placement = e.target.value as 'onImage' | 'belowImage';
+                              setLayout({
+                                headlinePlacement: placement,
+                                headlineOnImage: placement === 'onImage',
+                              });
+                            }}
+                            className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
+                          >
+                            <option value="onImage">På bildet (lys tekst)</option>
+                            <option value="belowImage">Under bildet (mørk tekst)</option>
+                          </select>
+                          <p className="text-[10px] text-stone-500 mt-1">
+                            Velg <strong>Under bildet</strong> for tekst under hero (ikke bare Y nedover på bildet — da klippes teksten). Mobil viser alltid tekst under.
+                          </p>
                         </div>
-                      )}
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-semibold text-stone-700 mb-1">
-                            Fokus horisontalt: {layout.focalPointX}%
-                          </label>
-                          <input
-                            type="range"
-                            min={0}
-                            max={100}
-                            value={layout.focalPointX}
-                            onChange={(e) => setLayout({ focalPointX: Number(e.target.value) })}
-                            className="w-full accent-[#4D6B3E]"
-                          />
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">Tekstfarge</label>
+                          <select
+                            value={layout.headlineTone ?? 'auto'}
+                            onChange={(e) =>
+                              setLayout({
+                                headlineTone: e.target.value as 'auto' | 'light' | 'dark',
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900"
+                          >
+                            <option value="auto">Automatisk (lys på bilde, mørk under)</option>
+                            <option value="light">Lys tekst</option>
+                            <option value="dark">Mørk tekst</option>
+                          </select>
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-stone-700 mb-1">
-                            Fokus vertikalt: {layout.focalPointY}%
-                          </label>
-                          <input
-                            type="range"
-                            min={0}
-                            max={100}
-                            value={layout.focalPointY}
-                            onChange={(e) => setLayout({ focalPointY: Number(e.target.value) })}
-                            className="w-full accent-[#4D6B3E]"
-                          />
-                          <p className="text-[10px] text-stone-500 mt-1">Lavere verdi viser mer av toppen (ansikter).</p>
+
+                        <div className="space-y-3 rounded-lg border border-stone-100 bg-stone-50/80 p-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Tekst horisontalt (X): {layout.headlinePosXPercent ?? 42} %
+                            </label>
+                            <input
+                              type="range"
+                              min={0}
+                              max={85}
+                              value={layout.headlinePosXPercent ?? 42}
+                              onChange={(e) => setLayout({ headlinePosXPercent: Number(e.target.value) })}
+                              className="w-full accent-[#4D6B3E]"
+                            />
+                          </div>
+                          {headlinePlacement === 'onImage' && (
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                Tekst vertikalt (Y fra topp): {layout.headlinePosYPercent ?? 55} %
+                              </label>
+                              <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                value={layout.headlinePosYPercent ?? 55}
+                                onChange={(e) => setLayout({ headlinePosYPercent: Number(e.target.value) })}
+                                className="w-full accent-[#4D6B3E]"
+                              />
+                              <p className="text-[10px] text-stone-500 mt-1">
+                                Y er relativt hele hero-seksjonen (bilde + heng), ikke bare fotoet.
+                              </p>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Bredde: {layout.headlineMaxWidthPercent ?? 52} %
+                            </label>
+                            <input
+                              type="range"
+                              min={32}
+                              max={100}
+                              value={layout.headlineMaxWidthPercent ?? 52}
+                              onChange={(e) =>
+                                setLayout({
+                                  headlineMaxWidthPercent: clampHeroHeadlineMaxWidthPercent(Number(e.target.value)),
+                                })
+                              }
+                              className="w-full accent-[#4D6B3E]"
+                            />
+                            <p className="text-[10px] text-stone-500 mt-1">
+                              Bredde gjelder tekstboksen (ikke bare maks). Full kolonne: X 0 % og bredde 100 %.
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={layout.showCtaCard}
-                          onChange={(e) => setLayout({ showCtaCard: e.target.checked })}
-                          className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
-                        />
-                        Vis fadder-CTA over hero-bildet
-                      </label>
-
-                      {layout.showCtaCard && (
-                        <div>
-                          <label className="block text-xs font-semibold text-stone-700 mb-1">
-                            CTA overlapp oppover: {layout.ctaOverlapPx} px
+                      <div className="space-y-3 rounded-lg border border-stone-200 bg-white p-3">
+                        <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wide">Fadder-CTA</h5>
+                        <div className="space-y-2 rounded-lg border border-stone-100 bg-stone-50/80 p-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">Korttittel</label>
+                            <input
+                              type="text"
+                              value={cmsContent.hero.ctaCardTitle ?? ''}
+                              placeholder={DEFAULT_HERO_LAYOUT.ctaCardTitle}
+                              onChange={(e) => setLayout({ ctaCardTitle: e.target.value })}
+                              className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">Korttekst (ingress)</label>
+                            <textarea
+                              rows={2}
+                              value={cmsContent.hero.ctaCardLead ?? ''}
+                              placeholder={DEFAULT_HERO_LAYOUT.ctaCardLead}
+                              onChange={(e) => setLayout({ ctaCardLead: e.target.value })}
+                              className="w-full p-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900 resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">Beløp knapp 1 (kr)</label>
+                              <input
+                                type="number"
+                                min={50}
+                                max={20000}
+                                value={layout.ctaPresetAmount1 ?? 250}
+                                onChange={(e) =>
+                                  setLayout({ ctaPresetAmount1: Number(e.target.value) })
+                                }
+                                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">Beløp knapp 2 (kr)</label>
+                              <input
+                                type="number"
+                                min={50}
+                                max={20000}
+                                value={layout.ctaPresetAmount2 ?? 350}
+                                onChange={(e) =>
+                                  setLayout({ ctaPresetAmount2: Number(e.target.value) })
+                                }
+                                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={layout.ctaShowCustomOption !== false}
+                              onChange={(e) => setLayout({ ctaShowCustomOption: e.target.checked })}
+                              className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                            />
+                            Vis valgfritt beløp (tredje knapp)
                           </label>
-                          <input
-                            type="range"
-                            min={0}
-                            max={280}
-                            step={4}
-                            value={layout.ctaOverlapPx}
-                            onChange={(e) => setLayout({ ctaOverlapPx: Number(e.target.value) })}
-                            className="w-full accent-[#4D6B3E]"
-                          />
+                          {layout.ctaShowCustomOption !== false && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-stone-700 mb-1">Tekst tredje knapp</label>
+                                <input
+                                  type="text"
+                                  value={cmsContent.hero.ctaCustomOptionLabel ?? ''}
+                                  placeholder={DEFAULT_HERO_CTA_BUTTONS.customOptionLabel}
+                                  onChange={(e) => setLayout({ ctaCustomOptionLabel: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-stone-700 mb-1">Min. valgfritt (kr)</label>
+                                <input
+                                  type="number"
+                                  min={50}
+                                  value={layout.ctaCustomAmountMin ?? 100}
+                                  onChange={(e) =>
+                                    setLayout({ ctaCustomAmountMin: Number(e.target.value) })
+                                  }
+                                  className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Forklaring ved beløp 1 (tom = standard)
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={cmsContent.hero.ctaImpactLineAmount1 ?? ''}
+                              placeholder={DEFAULT_HERO_CTA_IMPACT.amount1}
+                              onChange={(e) => setLayout({ ctaImpactLineAmount1: e.target.value })}
+                              className="w-full p-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900 resize-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Forklaring ved beløp 2 (tom = standard)
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={cmsContent.hero.ctaImpactLineAmount2 ?? ''}
+                              placeholder={DEFAULT_HERO_CTA_IMPACT.amount2}
+                              onChange={(e) => setLayout({ ctaImpactLineAmount2: e.target.value })}
+                              className="w-full p-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900 resize-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">
+                              Forklaring valgfritt beløp ({'{beløp}'})
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={cmsContent.hero.ctaImpactLineCustom ?? ''}
+                              placeholder={DEFAULT_HERO_CTA_IMPACT.custom}
+                              onChange={(e) => setLayout({ ctaImpactLineCustom: e.target.value })}
+                              className="w-full p-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900 resize-none"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={layout.ctaPrimaryButtonReflectAmount !== false}
+                              onChange={(e) =>
+                                setLayout({ ctaPrimaryButtonReflectAmount: e.target.checked })
+                              }
+                              className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                            />
+                            Vipps-knapp viser valgt beløp
+                          </label>
+                          {layout.ctaPrimaryButtonReflectAmount !== false ? (
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                Vipps-knapp (bruk {'{beløp}'})
+                              </label>
+                              <input
+                                type="text"
+                                value={cmsContent.hero.ctaPrimaryButtonTemplate ?? ''}
+                                placeholder={DEFAULT_HERO_CTA_BUTTONS.primaryButtonTemplate}
+                                onChange={(e) => setLayout({ ctaPrimaryButtonTemplate: e.target.value })}
+                                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">Primærknapp (fast tekst)</label>
+                              <input
+                                type="text"
+                                value={cmsContent.hero.primaryButtonText}
+                                placeholder={DEFAULT_HERO_CTA_BUTTONS.primaryButtonText}
+                                onChange={(e) => setLayout({ primaryButtonText: e.target.value })}
+                                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-xs font-semibold text-stone-700 mb-1">Sekundær lenke</label>
+                            <input
+                              type="text"
+                              value={cmsContent.hero.secondaryButtonText}
+                              placeholder={DEFAULT_HERO_CTA_BUTTONS.secondaryButtonText}
+                              onChange={(e) => setLayout({ secondaryButtonText: e.target.value })}
+                              className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
+                            />
+                          </div>
+                          <p className="text-[10px] text-stone-500">
+                            Ekte Vipps-trekk krever Recurring API fra Vipps MobilePay (bestilles på salgsenheten).
+                            Inntil backend er klar lagres ønsket beløp ved innsending.
+                          </p>
                         </div>
-                      )}
+                        <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={layout.showCtaCard}
+                            onChange={(e) => setLayout({ showCtaCard: e.target.checked })}
+                            className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                          />
+                          Vis fadder-CTA over hero-bildet
+                        </label>
+
+                        {layout.showCtaCard && (
+                          <div className="space-y-3 rounded-lg border border-stone-100 bg-stone-50/80 p-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                CTA horisontalt (X): {layout.ctaPosXPercent ?? 0} %
+                              </label>
+                              <input
+                                type="range"
+                                min={0}
+                                max={75}
+                                step={1}
+                                value={layout.ctaPosXPercent ?? 0}
+                                onChange={(e) => setLayout({ ctaPosXPercent: Number(e.target.value) })}
+                                className="w-full accent-[#4D6B3E]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                CTA vertikalt (Y fra bunn): {layout.ctaPosYPercent ?? 10} %
+                              </label>
+                              <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={layout.ctaPosYPercent ?? 10}
+                                onChange={(e) => setLayout({ ctaPosYPercent: Number(e.target.value) })}
+                                className="w-full accent-[#4D6B3E]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                Heng under hero-bunn: {hangPx} px
+                              </label>
+                              <input
+                                type="range"
+                                min={0}
+                                max={480}
+                                step={4}
+                                value={hangPx}
+                                onChange={(e) => {
+                                  const px = Number(e.target.value);
+                                  setLayout({ ctaHangBelowPx: px, ctaOverlapPx: px });
+                                }}
+                                className="w-full accent-[#4D6B3E]"
+                              />
+                              <p className="text-[10px] text-stone-500 mt-1">
+                                Trekkes fra bunn-posisjonen — ikke i tillegg til Y-verdien.
+                              </p>
+                            </div>
+
+                            <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={layout.ctaEnter === 'fromLeft'}
+                                onChange={(e) =>
+                                  setLayout({ ctaEnter: e.target.checked ? 'fromLeft' : 'none' })
+                                }
+                                className="rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                              />
+                              Gli inn fra venstre etter forsinkelse
+                            </label>
+                            {layout.ctaEnter === 'fromLeft' && (
+                              <div>
+                                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                                  Forsinkelse: {layout.ctaEnterDelaySec ?? 0} s
+                                </label>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={6}
+                                  step={0.5}
+                                  value={layout.ctaEnterDelaySec ?? 0}
+                                  onChange={(e) => setLayout({ ctaEnterDelaySec: Number(e.target.value) })}
+                                  className="w-full accent-[#4D6B3E]"
+                                />
+                                <p className="text-[10px] text-stone-500 mt-1">Kun stor skjerm. Endring gjelder neste «Spill av».</p>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => setLayout({ heroMotionReplayAt: Date.now() })}
+                              className="text-xs font-semibold text-[#4D6B3E] hover:text-[#3B522F] underline-offset-2 hover:underline"
+                            >
+                              Spill av animasjon
+                            </button>
+                          </div>
+                        )}
+
+                        {headlinePlacement === 'belowImage' && hangPx > 0 && layout.showCtaCard && (
+                          <p className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                            Kortet kan dekke teksten under. Øk luft eller reduser heng.
+                          </p>
+                        )}
+                      </div>
                     </>
                   );
                 })()}
@@ -607,8 +962,11 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
 
               {withHeroLayoutDefaults(cmsContent.hero).showCtaCard && (
                 <div
-                  className="absolute left-4 right-4 z-10 rounded-lg border border-white/20 bg-white/95 text-stone-900 px-3 py-2 text-[10px] font-semibold shadow-lg"
-                  style={{ bottom: `${withHeroLayoutDefaults(cmsContent.hero).ctaOverlapPx * 0.35}px` }}
+                  className="absolute z-10 rounded-lg border border-white/20 bg-white/95 text-stone-900 px-3 py-2 text-[10px] font-semibold shadow-lg max-w-[40%]"
+                  style={{
+                    left: `${withHeroLayoutDefaults(cmsContent.hero).ctaPosXPercent ?? 0}%`,
+                    bottom: getHeroCtaBottomCss(cmsContent.hero),
+                  }}
                 >
                   Fadder-CTA (forhåndsvisning)
                 </div>

@@ -89,6 +89,34 @@ export function isHomeModuleVisible(cms: CmsContent, moduleId: CmsHomeModuleId):
   return normalizeCmsHomeLayout(cms).some((row) => row.moduleId === moduleId && row.visible);
 }
 
+export interface PublicNavVisibilityContext {
+  hasFrontPageStories: boolean;
+  hasActiveCampaigns: boolean;
+}
+
+/** Synlighet for offentlig toppmeny — samme regler som forsiden (`PublicWebsite`). */
+export function publicNavVisibility(
+  cms: CmsContent,
+  ctx: PublicNavVisibilityContext
+): {
+  fadderordningen: boolean;
+  historier: boolean;
+  aksjoner: boolean;
+  omOss: boolean;
+  apenhet: boolean;
+  bliFadderCta: boolean;
+} {
+  const showHeroCta = cms.hero.showCtaCard ?? true;
+  return {
+    fadderordningen: isHomeModuleVisible(cms, 'steps'),
+    historier: isHomeModuleVisible(cms, 'stories') && ctx.hasFrontPageStories,
+    aksjoner: isHomeModuleVisible(cms, 'behov') && ctx.hasActiveCampaigns,
+    omOss: isHomeModuleVisible(cms, 'about'),
+    apenhet: true,
+    bliFadderCta: showHeroCta,
+  };
+}
+
 export function moveHomeModule(
   layout: CmsHomeLayoutItem[],
   moduleId: CmsHomeModuleId,

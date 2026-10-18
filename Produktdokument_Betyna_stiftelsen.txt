@@ -211,7 +211,8 @@ Nettsiden skal bygge tillit, forklare arbeidet og gj?re det enkelt ? melde inter
 * Kontakt: kontaktinformasjon og skjema.
 * Bli fadder: interesseskjema; administrator tildeler barnet manuelt.
 * Innlogging for eksisterende faddere, tydelig atskilt fra offentlig innhold.
-Forsiden viser gruppebildet kunden har levert som hero-bilde. Administrator velger i CMS (Hovedbanner) synlig hoyde (lav, middels, hoy eller egendefinert vh), fokuspunkt for beskjaring (horisontalt og vertikalt i prosent), om fadder-CTA skal ligge oppaa bildet, og hvor mange piksler kortet skal overlappe nedover bildkanten. Tekst under hero kan redigeres som tidligere. Barnas navn, private profiler og historier skal ikke v?re offentlig tilgjengelige. Offentlige vitnesbyrd kan brukes fra voksne tidligere mottakere n?r informert, frivillig samtykke er dokumentert og publiseringen er godkjent.
+Forsiden viser gruppebildet kunden har levert som hero-bilde. I CMS (Hovedbanner) styres tre uavhengige lag: bilde (hoyde, fokuspunkt, valgfri sakte zoom), loftetekst (pa bildet med egen X/Y fra topp og maks-bredde, eller under bildet med mork tekst), og fadder-CTA (vis/skjul, X, Y fra bunn, heng i px som trekkes fra bunn-posisjonen ? ikke i tillegg til Y). Mobil: bilde, tekst under, CTA. Valgfri CTA-inngang fra venstre etter forsinkelse (kun stor skjerm); ?Spill av animasjon? i CMS restarter bevegelse uten at hvert utkast nullstiller loop. Ett anker #bli-fadder. Barnas navn, private profiler og historier skal ikke v?re offentlig tilgjengelige. Offentlige vitnesbyrd kan brukes fra voksne tidligere mottakere n?r informert, frivillig samtykke er dokumentert og publiseringen er godkjent.
+Offentlig toppmeny folger samme synlighetsregler som forsiden: Fadderordningen, Historier, Aksjoner og Om Betyna vises bare nar tilsvarende forsideseksjon er pa (oye i CMS-venstremeny) og, for Historier og Aksjoner, nar det finnes forsideshistorier eller aktive aksjoner. Apenhet og logo er alltid synlige. Knappen Bli fadder vises bare nar fadder-CTA er pa i hovedbanner. I CMS live forhandsvisning bruker menyen samme utkast som iframe, uten a vente pa lagring.
 
 10. Spr?k, oversettelse og AI
 Spr?kkrav
@@ -634,6 +635,36 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
+
+Arbeidsdokument - Versjon 1.101 - 18. oktober 2026
+
+18. oktober 2026, offentlig meny folger CMS
+Toppmeny for besokende filtreres med publicNavVisibility (homeLayout + innhold): skjul Fadderordningen, Historier, Aksjoner og Om Betyna nar modulen er av eller seksjonen ikke rendres; Bli fadder skjules nar hero-CTA er av. Apenhet alltid. Live preview-meny far cmsPreviewDraft via App.
+
+Arbeidsdokument - Versjon 1.100 - 18. oktober 2026
+
+18. oktober 2026, CTA-belop og Vipps-knapp i CMS
+Fadder-CTA: to forh?ndsbelop, valgfritt belop, forklaringstekster per belop, Vipps-knapp med {belop} som folger valgt sum. Ekte trekk via Vipps MobilePay Recurring API (bestilles pa salgsenhet, backend /api/vipps/recurring/agreement, flagg VITE_VIPPS_RECURRING_ENABLED) ? se src/utils/vippsRecurring.ts.
+
+Arbeidsdokument - Versjon 1.99 - 18. oktober 2026
+
+18. oktober 2026, fri loftetekst og redigerbar CTA-tekst
+Loftetekst pa stor skjerm ligger i eget lag i hero-scenen (ikke i overflow-hidden bildeboks); Y er relativt hele seksjonen. Fadder-CTA-kort: korttittel, ingress, primaerknapp og sekundaer lenke under Fadder-CTA i CMS (standardtekster nar felt er tomme).
+
+Arbeidsdokument - Versjon 1.98 - 18. oktober 2026
+
+18. oktober 2026, l?ftetekst under hero synlig
+Tekst under bildet rendres utenfor hero-klipp og etter CTA-heng; tekstfarge kan settes (auto/lys/m?rk). Y p? bildet begrenses s? tekst ikke klippes inne i bilderammen.
+
+Arbeidsdokument - Versjon 1.97 - 18. oktober 2026
+
+18. oktober 2026, hero som tre lag med animasjon
+Hovedbanner er tre CMS-grupper (bilde, loftetekst, fadder-CTA). Tekst og CTA har separate koordinater (tekst Y fra topp, CTA Y fra bunn; heng i px i calc, ikke translateY). Valgfri sakte zoom pa bildet og CTA glide inn fra venstre med forsinkelse (stor skjerm). Knapp Spill av animasjon oppdaterer heroMotionReplayAt slik at live preview ikke restarter animasjon ved hver tast. Ett #bli-fadder. Hint ved tekst under + heng > 0.
+
+Arbeidsdokument - Versjon 1.96 - 18. oktober 2026
+
+18. oktober 2026, hero-posisjon i CMS
+Pa stor skjerm kan l?ftetekst vises pa bildet eller under (avkryssing). Fadder-CTA justeres horisontalt (0?75 %), vertikalt i bildet (0?100 % fra bunn) og hvor langt kortet henger under bildet (0?480 px). Eldre overlapp-felt mappes til heng under bildet. (Erstattet av tre-lags-modellen i 1.97.)
 
 Arbeidsdokument - Versjon 1.95 - 18. oktober 2026
 
