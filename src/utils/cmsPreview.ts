@@ -1,9 +1,18 @@
-export type CmsPreviewSection = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov';
+export type CmsPreviewSection =
+  | 'hero'
+  | 'steps'
+  | 'stories'
+  | 'waiting'
+  | 'about'
+  | 'kpis'
+  | 'cta'
+  | 'behov';
 
 const SECTION_HASH: Record<CmsPreviewSection, string> = {
   hero: 'home',
   steps: 'fadderordningen',
   stories: 'historier',
+  waiting: 'venter-fadder',
   about: 'om-oss',
   kpis: 'home',
   cta: 'cta',

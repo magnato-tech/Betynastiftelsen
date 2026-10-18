@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#DFD9CB"/>
+  <circle cx="400" cy="220" r="72" fill="#A3B18A"/>
+  <ellipse cx="400" cy="420" rx="140" ry="160" fill="#4D6B3E" opacity="0.35"/>
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#3C3C3C">Illustrasjonsbilde</text>
+</svg>

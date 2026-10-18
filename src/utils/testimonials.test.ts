@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { AdultGraduateStory } from '../types';
-import { getStoryDisplayPhotos, isFrontPageTestimonial } from './testimonials';
+import {
+  getStoryDisplayPhotos,
+  getTestimonialFrontPageChecklist,
+  isFrontPageTestimonial,
+} from './testimonials';
 
 const base: AdultGraduateStory = {
   id: '1',
@@ -17,11 +21,28 @@ describe('isFrontPageTestimonial', () => {
   it('viser godkjent graduate med bilde', () => {
     expect(isFrontPageTestimonial(base)).toBe(true);
   });
-  it('skjuler barn i løpet', () => {
-    expect(isFrontPageTestimonial({ ...base, category: 'child' })).toBe(false);
+  it('tillater barn/ungdom-kategori når øvrige krav er oppfylt', () => {
+    expect(isFrontPageTestimonial({ ...base, category: 'child' })).toBe(true);
   });
   it('skjuler uten bilde', () => {
     expect(isFrontPageTestimonial({ ...base, bildeUrl: undefined })).toBe(false);
+  });
+});
+
+describe('getTestimonialFrontPageChecklist', () => {
+  it('markerer alle ok for gyldig forsideskort', () => {
+    const items = getTestimonialFrontPageChecklist(base);
+    expect(items.every((i) => i.ok)).toBe(true);
+  });
+
+  it('viser manglende bilde og samtykke', () => {
+    const items = getTestimonialFrontPageChecklist({
+      ...base,
+      bildeUrl: undefined,
+      samtykkeDokumentert: false,
+    });
+    expect(items.find((i) => i.id === 'photo')?.ok).toBe(false);
+    expect(items.find((i) => i.id === 'consent')?.ok).toBe(false);
   });
 });
 

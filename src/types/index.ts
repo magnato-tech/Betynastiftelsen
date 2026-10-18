@@ -192,6 +192,8 @@ export interface AdultGraduateStory {
   /** Voksenbilde for «da og nå»-kort. */
   voksenBildeUrl?: string;
   fremhevetPaaForside?: boolean;
+  /** Placeholder/demo-bilde — vises med «Illustrasjonsbilde» på forsiden. */
+  illustrasjonsbilde?: boolean;
   opprettetDato?: string;
 }
 
@@ -283,6 +285,8 @@ export interface CmsHero {
   focalPointY?: number;
   /** Fadder-CTA over hero med overlapp nedover. */
   showCtaCard?: boolean;
+  /** Jubileumsbadge (antall år siden 24.06.2011) øverst på hero-bildet. */
+  showAnniversaryBadge?: boolean;
   /** @deprecated Bruk ctaHangBelowPx — beholdes for eldre data. */
   ctaOverlapPx?: number;
   /** Løftetekst på bildet (stor skjerm). Av = tekst under bildet. */
@@ -388,7 +392,36 @@ export interface CmsSectionToggle {
 }
 
 /** Modultyper som kan ligge på forsiden (innholdet ligger i biblioteket). */
-export type CmsHomeModuleId = 'hero' | 'stories' | 'steps' | 'about' | 'kpis' | 'cta' | 'behov';
+export type CmsHomeModuleId =
+  | 'hero'
+  | 'stories'
+  | 'waiting'
+  | 'steps'
+  | 'about'
+  | 'kpis'
+  | 'cta'
+  | 'behov';
+
+/** Anonymt fadder-kort på forsiden — illustrasjon, ikke ekte barn. */
+export interface CmsWaitingSponsorCard {
+  id: string;
+  /** Vist kode (f.eks. COG-2026-014), ikke intern barn-id. */
+  publicCode: string;
+  alder: number;
+  sted: string;
+  bildeUrl: string;
+  /** false = kun i biblioteket */
+  publisertPaaForside?: boolean;
+}
+
+export interface CmsWaitingSponsorsSection {
+  enabled?: boolean;
+  kicker: string;
+  title: string;
+  subtitle: string;
+  topLinkText?: string;
+  footerLinkText?: string;
+}
 
 export interface CmsHomeLayoutItem {
   moduleId: CmsHomeModuleId;
@@ -408,6 +441,8 @@ export interface CmsContent {
   kpiStats: CmsKpiStat[];
   ctaBanner?: CmsCtaBanner;
   testimonialsSection?: CmsTestimonialsSection;
+  waitingSponsorsSection?: CmsWaitingSponsorsSection;
+  waitingSponsorCards?: CmsWaitingSponsorCard[];
   /** Rekkefølge og synlighet på forsiden. Mangler = standard rekkefølge + eldre av/på-felt. */
   homeLayout?: CmsHomeLayoutItem[];
   heroSection?: CmsSectionToggle;

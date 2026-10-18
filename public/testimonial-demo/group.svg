@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#EBE7DC"/>
+  <circle cx="280" cy="260" r="48" fill="#A3B18A"/>
+  <circle cx="400" cy="240" r="56" fill="#4D6B3E" opacity="0.5"/>
+  <circle cx="520" cy="270" r="44" fill="#A3B18A"/>
+  <rect x="120" y="360" width="560" height="120" rx="16" fill="#4D6B3E" opacity="0.2"/>
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#3C3C3C">Illustrasjonsbilde</text>
+</svg>

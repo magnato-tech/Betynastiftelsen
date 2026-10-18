@@ -123,7 +123,7 @@ interface AppContextType {
   addCatalogPhoto: (photo: Omit<CatalogPhoto, 'id'>) => string;
   updateCatalogPhoto: (id: string, updates: Partial<CatalogPhoto>) => void;
   mediaLibrary: MediaLibraryItem[];
-  uploadMediaLibraryItem: (file: File, label?: string) => Promise<string>;
+  uploadMediaLibraryItem: (file: File, label?: string) => Promise<{ id: string; url: string }>;
   deleteMediaLibraryItem: (id: string) => Promise<void>;
 
   addMilestone: (milestoneData: Omit<ChildMilestone, 'id' | 'opprettetDato'>) => string;
@@ -1126,7 +1126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setMediaLibrary((prev) => [entry, ...prev]);
     addAuditLog('La til mediabilde', `${displayLabel} (${id})`);
-    return id;
+    return { id, url };
   };
 
   const deleteMediaLibraryItem = async (id: string): Promise<void> => {

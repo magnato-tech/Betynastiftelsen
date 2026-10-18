@@ -17,6 +17,7 @@ export const DEFAULT_HERO_LAYOUT = {
   focalPointX: 50,
   focalPointY: 40,
   showCtaCard: true,
+  showAnniversaryBadge: false,
   ctaOverlapPx: 176,
   headlineOnImage: true,
   headlinePlacement: 'onImage' as CmsHeroHeadlinePlacement,
@@ -168,6 +169,7 @@ export function withHeroLayoutDefaults(hero: CmsHero): CmsHero {
     focalPointX: hero.focalPointX ?? DEFAULT_HERO_LAYOUT.focalPointX,
     focalPointY: hero.focalPointY ?? DEFAULT_HERO_LAYOUT.focalPointY,
     showCtaCard: hero.showCtaCard ?? DEFAULT_HERO_LAYOUT.showCtaCard,
+    showAnniversaryBadge: hero.showAnniversaryBadge ?? DEFAULT_HERO_LAYOUT.showAnniversaryBadge,
     ctaOverlapPx: hang,
     headlineOnImage: headlinePlacement === 'onImage',
     headlinePlacement,
@@ -228,6 +230,30 @@ export const HERO_EMBEDDED_CTA_APPROX_HEIGHT_PX = 360;
 const HERO_HEADLINE_BELOW_CTA_CLEARANCE_PX = 16;
 
 /** Margin over løftetekst under hero (stor skjerm). Tar hensyn til hengende CTA. */
+/** Grovt antall px per vh for scene-høyde på typisk desktop-preview. */
+const HERO_SCENE_VH_TO_PX = 10;
+
+/** Typisk høyde på løftetekst (kicker + tittel + ingress) for flyt-reserve. */
+export const HERO_HEADLINE_BLOCK_APPROX_PX = 260;
+
+export function estimateHeroSceneHeightPx(hero: CmsHero): number {
+  const vh = Math.min(92, getHeroHeightVh(hero));
+  return Math.round(vh * HERO_SCENE_VH_TO_PX) + getHeroSceneBottomPaddingPx(hero);
+}
+
+/**
+ * Ekstra høyde i dokumentflyt når løftetekst på bildet står lavt / over 100 % Y,
+ * slik neste forsideseksjon ikke legges oppå teksten.
+ */
+export function getHeroOnImageHeadlineFlowReservePx(hero: CmsHero): number {
+  if (!isHeroHeadlineOnImageDesktop(hero) || !heroHasHeadlineCopy(hero)) return 0;
+  const y = clampHeroHeadlineSceneYPercent(hero.headlinePosYPercent ?? 55);
+  const sceneH = estimateHeroSceneHeightPx(hero);
+  const topPx = (y / 100) * sceneH;
+  const bottomPx = topPx + HERO_HEADLINE_BLOCK_APPROX_PX;
+  return Math.max(0, Math.round(bottomPx - sceneH));
+}
+
 export function getHeroHeadlineBelowMarginTopPx(hero: CmsHero): number {
   const resolved = withHeroLayoutDefaults(hero);
   const gap = Math.min(

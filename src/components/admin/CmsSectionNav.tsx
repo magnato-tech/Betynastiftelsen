@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   TrendingUp,
   Upload,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { CmsContent, CmsHomeModuleId } from '../../types';
@@ -25,6 +26,7 @@ const MODULE_META: Record<
   hero: { label: 'Hovedbanner', hint: 'Første inntrykk', icon: Layout },
   steps: { label: 'Fadderordningen', hint: 'Ramme 1–2–3', icon: Layers },
   stories: { label: 'Vitnesbyrd', hint: 'Historier med samtykke', icon: MessageSquare },
+  waiting: { label: 'Venter på fadder', hint: 'Anonyme illustrasjonskort', icon: Users },
   about: { label: 'Kjernerammer', hint: 'Verdier og etikk', icon: ShieldCheck },
   kpis: { label: 'Nøkkeltall', hint: 'Faktabånd på forsiden', icon: TrendingUp },
   cta: { label: 'Fadderoppfordring', hint: 'Handlingsbånd', icon: Megaphone },
@@ -37,6 +39,7 @@ interface CmsSectionNavProps {
   onSelectTab: (tab: CmsSubTab) => void;
   onUpdateLayout: (layout: CmsContent['homeLayout']) => void;
   storiesCount: number;
+  waitingCardsCount: number;
   campaignsCount: number;
   previewOpen: boolean;
 }
@@ -47,6 +50,7 @@ export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
   onSelectTab,
   onUpdateLayout,
   storiesCount,
+  waitingCardsCount,
   campaignsCount,
   previewOpen,
 }) => {
@@ -59,6 +63,7 @@ export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
 
   const countFor = (id: CmsHomeModuleId): string | null => {
     if (id === 'stories') return storiesCount > 0 ? ` (${storiesCount})` : null;
+    if (id === 'waiting') return waitingCardsCount > 0 ? ` (${waitingCardsCount})` : null;
     if (id === 'behov') return campaignsCount > 0 ? ` (${campaignsCount})` : null;
     return null;
   };

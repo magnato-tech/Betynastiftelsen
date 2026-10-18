@@ -2,11 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdultGraduateStory, CmsTestimonialsSection, TestimonialCategory } from '../../types';
 import {
+  FRONT_PAGE_TESTIMONIAL_ADMIN_HELP,
   getTestimonialFrontPageBlockers,
+  getTestimonialFrontPageChecklist,
   isFrontPageTestimonial,
+  resolvePublicImageUrl,
   withTestimonialsSectionDefaults,
 } from '../../utils/testimonials';
+import { buildTestimonialPhotoFields } from '../../utils/testimonialPhotoSave';
 import { normalizeCmsHomeLayout, setHomeModuleVisible } from '../../utils/cmsHomeLayout';
+import {
+  TESTIMONIAL_FIELD_PHOTO_PRESETS,
+  TESTIMONIAL_ILLUSTRATION_PHOTO_PRESETS,
+  isTestimonialIllustrationImageUrl,
+  testimonialPresetUrlForSrc,
+  type TestimonialPhotoPreset,
+} from '../../utils/testimonialPhotoPresets';
 import { TestimonialStoryCard } from '../public/TestimonialStoryCard';
 import {
   Quote,
@@ -30,6 +41,7 @@ import {
   Scissors,
   ShieldCheck,
   AlertCircle,
+  Info,
 } from 'lucide-react';
 
 interface TestimonialEditorProps {
@@ -37,7 +49,8 @@ interface TestimonialEditorProps {
 }
 
 export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPublicSite }) => {
-  const { stories, addStory, updateStory, deleteStory, cmsContent, updateCmsSection } = useApp();
+  const { stories, addStory, updateStory, deleteStory, cmsContent, updateCmsSection, uploadMediaLibraryItem } =
+    useApp();
   const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
   const frontPagePreview = stories.filter(isFrontPageTestimonial);
 
@@ -47,6 +60,12 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [frontPageExplain, setFrontPageExplain] = useState<{
+    story?: AdultGraduateStory;
+    blockers: string[];
+    justMarkedForFront: boolean;
+    helpOnly?: boolean;
+  } | null>(null);
 
   // Form fields
   const [formCategory, setFormCategory] = useState<TestimonialCategory>('donor');
@@ -63,27 +82,62 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
   const [formConsent, setFormConsent] = useState(true);
   const [formApproved, setFormApproved] = useState(true);
   const [formFeatured, setFormFeatured] = useState(true);
+  const [formIllustration, setFormIllustration] = useState(false);
 
   // Photo tab inside modal
-  const [photoTab, setPhotoTab] = useState<'upload' | 'presets' | 'url'>('presets');
+  const [photoTab, setPhotoTab] = useState<'upload' | 'presets' | 'illustrations' | 'url'>('presets');
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
-  const curatedPhotoPresets = [
-    {
-      id: 'fullsizer',
-      name: 'Jente som trenger symaskin (FullSizeR.jpg)',
-      url: 'FullSizeR.jpg',
-      category: 'child',
-      desc: 'Innsendt feltbilde av ung kvinne/jente i Brazzaville klar for yrkesopplæring',
-    },
-    {
-      id: 'img1194',
-      name: 'Barn og koordinator (IMG_1194.jpg)',
-      url: 'IMG_1194.jpg',
-      category: 'child',
-      desc: 'Innsendt feltbilde av elevgruppen samlet med lokal feltkoordinator',
-    },
-  ];
+  const testimonialPreviewSrc = (url: string) => {
+    const trimmed = url.trim();
+    if (trimmed.startsWith('data:') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return resolvePublicImageUrl(trimmed) ?? testimonialPresetUrlForSrc(trimmed);
+  };
+
+  const selectPhotoPreset = (preset: TestimonialPhotoPreset) => {
+    setFormImageUrl(preset.url);
+    setFormIllustration(Boolean(preset.illustration));
+    if (formCategory === 'graduate') {
+      setFormVoksenBildeUrl(preset.url);
+    } else {
+      setFormVoksenBildeUrl('');
+    }
+  };
+
+  const renderPhotoPresetGrid = (presets: TestimonialPhotoPreset[]) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+      {presets.map((p) => (
+        <div
+          key={p.id}
+          onClick={() => selectPhotoPreset(p)}
+          className={`p-2 rounded-lg border text-left cursor-pointer transition-colors flex items-center gap-2.5 ${
+            formImageUrl === p.url
+              ? 'bg-[#4D6B3E]/10 border-[#4D6B3E]'
+              : 'bg-white border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <div className="w-10 h-10 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
+            <img
+              src={testimonialPresetUrlForSrc(p.url)}
+              alt={p.name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-stone-800 text-[11px] truncate">{p.name}</p>
+            <p className="text-[10px] text-stone-500 line-clamp-2">{p.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const filteredStories = useMemo(() => {
     return stories.filter((st) => {
@@ -125,6 +179,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setFormConsent(true);
     setFormApproved(true);
     setFormFeatured(true);
+    setFormIllustration(false);
     setUploadError(null);
   };
 
@@ -147,17 +202,21 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setFormYear(st.aarFullfort || new Date().getFullYear());
     setFormText(st.historie);
     setFormEdu(st.utdanningslop || '');
-    setFormImageUrl(st.bildeUrl || '');
+    const category = st.category || 'graduate';
+    setFormImageUrl(st.bildeUrl || st.voksenBildeUrl || '');
     setFormBarneBildeUrl(st.barneBildeUrl || '');
-    setFormVoksenBildeUrl(st.voksenBildeUrl || st.bildeUrl || '');
+    setFormVoksenBildeUrl(category === 'graduate' ? st.voksenBildeUrl || st.bildeUrl || '' : '');
     setFormConsent(st.samtykkeDokumentert);
     setFormApproved(st.godkjentAvAdmin);
     setFormFeatured(st.fremhevetPaaForside ?? true);
+    setFormIllustration(
+      st.illustrasjonsbilde ?? isTestimonialIllustrationImageUrl(st.bildeUrl ?? st.voksenBildeUrl)
+    );
     setUploadError(null);
     setIsModalOpen(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError(null);
     const file = e.target.files?.[0];
     if (!file) return;
@@ -172,15 +231,23 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const dataUrl = loadEvent.target?.result as string;
-      setFormImageUrl(dataUrl);
-    };
-    reader.onerror = () => {
-      setUploadError('Kunne ikke lese bildefilen. Vennligst prøv igjen.');
-    };
-    reader.readAsDataURL(file);
+    setPhotoUploading(true);
+    try {
+      const label = formName.trim() ? `Vitnesbyrd: ${formName.trim()}` : 'Vitnesbyrd';
+      const { url } = await uploadMediaLibraryItem(file, label);
+      setFormImageUrl(url);
+      setFormIllustration(false);
+      if (formCategory === 'graduate') {
+        setFormVoksenBildeUrl(url);
+      } else {
+        setFormVoksenBildeUrl('');
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Kunne ikke laste opp bildefilen. Prøv igjen.');
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
   };
 
   const patchTestimonialsSection = (patch: Partial<CmsTestimonialsSection>) => {
@@ -221,9 +288,13 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     e.preventDefault();
     if (!formName.trim() || !formText.trim()) return;
 
-    const voksenUrl = (formVoksenBildeUrl || formImageUrl).trim() || undefined;
-    const barneUrl = formCategory === 'graduate' ? formBarneBildeUrl.trim() || undefined : undefined;
-    const primaryUrl = voksenUrl || barneUrl;
+    const photoFields = buildTestimonialPhotoFields({
+      category: formCategory,
+      formImageUrl,
+      formBarneBildeUrl,
+      formVoksenBildeUrl,
+    });
+    const primaryUrl = photoFields.bildeUrl;
 
     if (formCategory !== 'child' && formApproved && formFeatured && !primaryUrl) {
       setUploadError('Legg inn minst ett bilde for å vise kortet på forsiden.');
@@ -240,12 +311,13 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       utdanningslop: formEdu.trim() || undefined,
       historie: formText.trim(),
       aarFullfort: typeof formYear === 'number' ? formYear : new Date().getFullYear(),
-      bildeUrl: primaryUrl,
-      barneBildeUrl: barneUrl,
-      voksenBildeUrl: voksenUrl,
+      bildeUrl: photoFields.bildeUrl,
+      barneBildeUrl: photoFields.barneBildeUrl,
+      voksenBildeUrl: photoFields.voksenBildeUrl,
       samtykkeDokumentert: formConsent,
       godkjentAvAdmin: formApproved,
       fremhevetPaaForside: formFeatured,
+      illustrasjonsbilde: formIllustration,
       opprettetDato: new Date().toISOString().slice(0, 10),
     };
 
@@ -270,20 +342,32 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const showFrontPageBlockerExplain = (
+    st: AdultGraduateStory,
+    justMarkedForFront: boolean
+  ) => {
+    const blockers = getTestimonialFrontPageBlockers(st);
+    if (blockers.length === 0) return false;
+    setFrontPageExplain({ story: st, blockers, justMarkedForFront });
+    return true;
+  };
+
   const handleToggleFeatured = (st: AdultGraduateStory) => {
-    if (st.category === 'child') {
-      setToastMessage('Barn/ungdom kan ikke vises på forsiden.');
+    const nextState = !(st.fremhevetPaaForside ?? true);
+    updateStory(st.id, { fremhevetPaaForside: nextState });
+    if (!nextState) {
+      setToastMessage(`"${st.navn}" er skjult fra forsiden.`);
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
-    const nextState = !(st.fremhevetPaaForside ?? true);
-    updateStory(st.id, { fremhevetPaaForside: nextState });
-    setToastMessage(
-      nextState
-        ? `"${st.navn}" er merket for forsiden (vises når bilde, samtykke og godkjenning er på plass).`
-        : `"${st.navn}" er skjult fra forsiden.`
-    );
+    const updated: AdultGraduateStory = { ...st, fremhevetPaaForside: true };
+    if (showFrontPageBlockerExplain(updated, true)) return;
+    setToastMessage(`"${st.navn}" vises nå på forsiden.`);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleExplainBlockersClick = (st: AdultGraduateStory) => {
+    showFrontPageBlockerExplain(st, false);
   };
 
   const getCategoryMeta = (cat: TestimonialCategory = 'graduate') => {
@@ -318,10 +402,26 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
       {/* CMS: seksjon på forsiden */}
       <div className="bg-white p-6 md:p-8 rounded-2xl border border-stone-200 shadow-xs space-y-5">
         <div>
-          <h3 className="text-base font-serif font-bold text-stone-900">Ekte vitnesbyrd på forsiden</h3>
+          <div className="flex items-start gap-2">
+            <h3 className="text-base font-serif font-bold text-stone-900">Ekte vitnesbyrd på forsiden</h3>
+            <button
+              type="button"
+              className="mt-0.5 p-1 rounded-md text-stone-500 hover:text-[#4D6B3E] hover:bg-stone-100 cursor-pointer shrink-0"
+              title={FRONT_PAGE_TESTIMONIAL_ADMIN_HELP}
+              aria-label="Forklaring om forsidesynlighet"
+              onClick={() =>
+                setFrontPageExplain({ blockers: [], justMarkedForFront: false, helpOnly: true })
+              }
+            >
+              <Info className="w-4 h-4" />
+            </button>
+          </div>
           <p className="text-xs text-stone-600 mt-1 max-w-2xl">
             Rediger overskrift og rutenett. Kortene under bygges fra godkjente vitnesbyrd med bilde nedenfor — voksne
-            mottakere og faddere. Barn i løpet (kategori barn) vises ikke offentlig.
+            mottakere og faddere. Hva som vises på forsiden styres med bilde, samtykke, godkjenning og På forsiden/Skjult.
+          </p>
+          <p className="text-[11px] text-stone-500 mt-2 max-w-2xl leading-relaxed">
+            {FRONT_PAGE_TESTIMONIAL_ADMIN_HELP}
           </p>
         </div>
         <label className="flex items-center gap-2 text-xs text-stone-800 cursor-pointer">
@@ -509,6 +609,16 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
         </div>
       </div>
 
+      <p className="text-[11px] text-stone-600 flex items-start gap-1.5 -mt-2">
+        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#4D6B3E]" aria-hidden />
+        <span>
+          <strong className="font-semibold text-stone-700">På forsiden</strong> /{' '}
+          <strong className="font-semibold text-stone-700">Skjult</strong> velger om kortet skal med.{' '}
+          <strong className="font-semibold text-amber-800">Oransje merke</strong> betyr at krav mangler — klikk for
+          forklaring.
+        </span>
+      </p>
+
       {/* 3. Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredStories.map((st) => {
@@ -516,7 +626,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
           const Icon = meta.icon;
           const onFrontPage = isFrontPageTestimonial(st);
           const blockers = getTestimonialFrontPageBlockers(st);
-          const wantsFront = st.fremhevetPaaForside !== false && st.category !== 'child';
+          const wantsFront = st.fremhevetPaaForside !== false;
 
           return (
             <div
@@ -538,25 +648,27 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                       type="button"
                       onClick={() => handleToggleFeatured(st)}
                       className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                      title="Vises på forsiden (klikk for å skjule)"
+                      title="Kortet vises på forsiden. Klikk for å skjule (det blir i biblioteket)."
                     >
                       <Eye className="w-3 h-3" />
                       <span>På forsiden</span>
                     </button>
                   ) : wantsFront && blockers.length > 0 ? (
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-900 max-w-[9rem] text-left"
-                      title={blockers.join(' · ')}
+                    <button
+                      type="button"
+                      onClick={() => handleExplainBlockersClick(st)}
+                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-900 max-w-[9rem] text-left cursor-pointer hover:bg-amber-100"
+                      title={`Kan ikke vises på forsiden ennå: ${blockers.join(' · ')}`}
                     >
                       <AlertCircle className="w-3 h-3 shrink-0" />
                       {blockers[0]}
-                    </span>
+                    </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleToggleFeatured(st)}
                       className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded cursor-pointer bg-stone-100 text-stone-500 hover:bg-stone-200"
-                      title="Skjult fra forsiden (klikk for å vise)"
+                      title="Skjult fra forsiden. Klikk for å merke for forsiden — du får forklaring hvis bilde, samtykke eller godkjenning mangler."
                     >
                       <EyeOff className="w-3 h-3" />
                       <span>Skjult</span>
@@ -569,7 +681,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   {st.bildeUrl ? (
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
                       <img
-                        src={st.bildeUrl}
+                        src={testimonialPreviewSrc(st.bildeUrl)}
                         alt={st.navn}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
@@ -756,15 +868,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                     <span>Fullført elev</span>
                   </button>
                 </div>
-                {formCategory === 'child' && (
-                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>
-                      Vitnesbyrd i kategorien barn/ungdom lagres internt, men vises ikke på den offentlige forsiden.
-                      Bruk «Fullført elev» eller fadder for salgskort med bilde.
-                    </span>
-                  </p>
-                )}
               </div>
 
               {/* Name & Role */}
@@ -868,7 +971,11 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   {formImageUrl && (
                     <button
                       type="button"
-                      onClick={() => setFormImageUrl('')}
+                      onClick={() => {
+                        setFormImageUrl('');
+                        setFormIllustration(false);
+                        if (formCategory !== 'graduate') setFormVoksenBildeUrl('');
+                      }}
                       className="text-[11px] text-rose-600 hover:underline cursor-pointer"
                     >
                       Fjern bilde
@@ -881,7 +988,7 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   <div className="flex items-center gap-3 p-2.5 bg-white rounded-lg border border-stone-200">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
                       <img
-                        src={formImageUrl}
+                        src={testimonialPreviewSrc(formImageUrl)}
                         alt="Forhåndsvisning"
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
@@ -893,35 +1000,48 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                     <div className="min-w-0 text-xs">
                       <p className="font-semibold text-stone-800 truncate">Aktivt bilde valgt</p>
                       <p className="text-stone-500 text-[11px] truncate font-mono">{formImageUrl.slice(0, 45)}...</p>
-                      <span className="text-[10px] text-emerald-700 font-medium">Klar til publisering</span>
+                      <span className="text-[10px] text-emerald-700 font-medium">
+                        {formIllustration ? 'Illustrasjonsbilde (demo)' : 'Klar til publisering'}
+                      </span>
                     </div>
                   </div>
                 )}
 
                 {/* Subtabs for photo sources */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-stone-200 text-xs">
+                <div className="flex flex-wrap items-center gap-1 bg-white p-1 rounded-lg border border-stone-200 text-[11px]">
                   <button
                     type="button"
                     onClick={() => setPhotoTab('presets')}
-                    className={`flex-1 py-1 rounded text-center font-medium transition-colors cursor-pointer ${
+                    className={`flex-1 min-w-[7rem] py-1 rounded text-center font-medium transition-colors cursor-pointer ${
                       photoTab === 'presets' ? 'bg-[#4D6B3E] text-white shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    Feltbilder fra Kongo & Maler
+                    Feltbilder
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoTab('illustrations')}
+                    className={`flex-1 min-w-[7rem] py-1 rounded text-center font-medium transition-colors cursor-pointer ${
+                      photoTab === 'illustrations'
+                        ? 'bg-[#4D6B3E] text-white shadow-2xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    Illustrasjonsbilder
                   </button>
                   <button
                     type="button"
                     onClick={() => setPhotoTab('upload')}
-                    className={`flex-1 py-1 rounded text-center font-medium transition-colors cursor-pointer ${
+                    className={`flex-1 min-w-[7rem] py-1 rounded text-center font-medium transition-colors cursor-pointer ${
                       photoTab === 'upload' ? 'bg-[#4D6B3E] text-white shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    Last opp fil fra maskin
+                    Last opp fil
                   </button>
                   <button
                     type="button"
                     onClick={() => setPhotoTab('url')}
-                    className={`flex-1 py-1 rounded text-center font-medium transition-colors cursor-pointer ${
+                    className={`flex-1 min-w-[7rem] py-1 rounded text-center font-medium transition-colors cursor-pointer ${
                       photoTab === 'url' ? 'bg-[#4D6B3E] text-white shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
@@ -929,36 +1049,15 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                   </button>
                 </div>
 
-                {/* Tab 1: Presets & Feltbilder */}
-                {photoTab === 'presets' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    {curatedPhotoPresets.map((p) => (
-                      <div
-                        key={p.id}
-                        onClick={() => setFormImageUrl(p.url)}
-                        className={`p-2 rounded-lg border text-left cursor-pointer transition-colors flex items-center gap-2.5 ${
-                          formImageUrl === p.url
-                            ? 'bg-[#4D6B3E]/10 border-[#4D6B3E]'
-                            : 'bg-white border-stone-200 hover:bg-stone-50'
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
-                          <img
-                            src={p.url}
-                            alt={p.name}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-stone-800 text-[11px] truncate">{p.name}</p>
-                          <p className="text-[10px] text-stone-500 truncate">{p.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+                {photoTab === 'presets' && renderPhotoPresetGrid(TESTIMONIAL_FIELD_PHOTO_PRESETS)}
+
+                {photoTab === 'illustrations' && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-stone-600">
+                      Midlertidige demo-bilder til layout er på plass. Erstatt med ekte foto når det foreligger — forsiden
+                      viser «Illustrasjonsbilde» under bildet.
+                    </p>
+                    {renderPhotoPresetGrid(TESTIMONIAL_ILLUSTRATION_PHOTO_PRESETS)}
                   </div>
                 )}
 
@@ -971,9 +1070,11 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                     <input
                       type="file"
                       accept="image/*"
+                      disabled={photoUploading}
                       onChange={handleFileUpload}
-                      className="block mx-auto text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-[#4D6B3E] file:text-white file:cursor-pointer"
+                      className="block mx-auto text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-[#4D6B3E] file:text-white file:cursor-pointer disabled:opacity-50"
                     />
+                    {photoUploading && <p className="text-[11px] text-stone-500">Laster opp bilde…</p>}
                     {uploadError && <p className="text-rose-600 text-[11px]">{uploadError}</p>}
                   </div>
                 )}
@@ -987,12 +1088,28 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                         type="url"
                         placeholder="https://... eller filnavn (FullSizeR.jpg, IMG_1194.jpg)"
                         value={formImageUrl}
-                        onChange={(e) => setFormImageUrl(e.target.value)}
+                        onChange={(e) => {
+                          setFormImageUrl(e.target.value);
+                          setFormIllustration(false);
+                        }}
                         className="w-full pl-8 pr-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
                       />
                     </div>
                   </div>
                 )}
+
+                <label className="flex items-start gap-2 text-xs text-stone-700 cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={formIllustration}
+                    onChange={(e) => setFormIllustration(e.target.checked)}
+                    className="mt-0.5 rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                  />
+                  <span>
+                    Merk som illustrasjonsbilde (vises som «Illustrasjonsbilde» under bildet på forsiden — ikke ekte
+                    portrett)
+                  </span>
+                </label>
               </div>
 
               {formCategory === 'graduate' && (
@@ -1119,6 +1236,106 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {frontPageExplain && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="front-page-explain-title"
+        >
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <h4
+                id="front-page-explain-title"
+                className="text-base font-serif font-bold text-stone-900 leading-snug"
+              >
+                {frontPageExplain.helpOnly
+                  ? 'Slik fungerer forsidesynlighet'
+                  : frontPageExplain.justMarkedForFront
+                    ? 'Merket for forsiden — men vises ikke ennå'
+                    : `Hvorfor «${frontPageExplain.story?.navn ?? 'kortet'}» ikke er på forsiden`}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setFrontPageExplain(null)}
+                className="p-1 rounded-lg text-stone-500 hover:bg-stone-100 cursor-pointer"
+                aria-label="Lukk"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {frontPageExplain.justMarkedForFront && (
+              <p className="text-sm text-stone-700 leading-relaxed">
+                Du trykket <strong>Skjult</strong> for å ta kortet med. Valget er lagret, men rutenettet over
+                oppdateres bare når alle krav under er oppfylt.
+              </p>
+            )}
+
+            {!frontPageExplain.helpOnly && (
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Alle punktene må være avkrysset før kortet telles i rutenettet over. Endre via{' '}
+                <strong>Rediger kort</strong>.
+              </p>
+            )}
+            {frontPageExplain.helpOnly && (
+              <p className="text-xs text-stone-600 leading-relaxed">{FRONT_PAGE_TESTIMONIAL_ADMIN_HELP}</p>
+            )}
+
+            <ul className="rounded-xl border border-stone-200 bg-stone-50/80 p-3 space-y-2 text-sm">
+              {(frontPageExplain.story
+                ? getTestimonialFrontPageChecklist(frontPageExplain.story)
+                : getTestimonialFrontPageChecklist({
+                    id: '',
+                    navn: '',
+                    historie: '',
+                    category: 'graduate',
+                    samtykkeDokumentert: false,
+                    godkjentAvAdmin: false,
+                    fremhevetPaaForside: true,
+                  })
+              ).map((item) => (
+                <li key={item.id} className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    readOnly
+                    checked={frontPageExplain.helpOnly ? false : item.ok}
+                    className="mt-0.5 rounded border-stone-300 text-[#4D6B3E] pointer-events-none"
+                    aria-label={item.label}
+                  />
+                  <span className={item.ok && !frontPageExplain.helpOnly ? 'text-stone-800' : 'text-stone-600'}>
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-wrap justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setFrontPageExplain(null)}
+                className="px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
+              >
+                Lukk
+              </button>
+              {frontPageExplain.story && !frontPageExplain.helpOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const s = frontPageExplain.story!;
+                    setFrontPageExplain(null);
+                    openEditModal(s);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#4D6B3E] hover:bg-[#3B522F] rounded-lg cursor-pointer"
+                >
+                  Rediger kort
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

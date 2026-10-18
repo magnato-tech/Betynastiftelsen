@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#F6F4ED"/>
+  <rect x="140" y="180" width="520" height="280" rx="12" fill="#DFD9CB" stroke="#A3B18A" stroke-width="4"/>
+  <rect x="200" y="240" width="180" height="120" rx="8" fill="#4D6B3E" opacity="0.25"/>
+  <rect x="420" y="220" width="200" height="160" rx="8" fill="#4D6B3E" opacity="0.35"/>
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#3C3C3C">Illustrasjonsbilde</text>
+</svg>

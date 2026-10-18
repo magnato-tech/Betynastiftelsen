@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
+import { WaitingSponsorsEditor } from './WaitingSponsorsEditor';
+import { getPublishedWaitingSponsorCards } from '../../utils/waitingSponsors';
 import { CmsLivePreview } from './CmsLivePreview';
 import { CmsMediaLibraryPanel } from './CmsMediaLibraryPanel';
 import { CmsSectionNav } from './CmsSectionNav';
@@ -19,6 +21,7 @@ import {
   withHeroLayoutDefaults,
 } from '../../utils/heroLayout';
 import { CMS_PAGE_WIDTH_OPTIONS, type CmsPageWidth } from '../../utils/cmsPageWidth';
+import { HeroAnniversaryBadge } from '../public/HeroAnniversaryBadge';
 import {
   Layout,
   Layers,
@@ -351,6 +354,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           onSelectTab={setActiveSubTab}
           onUpdateLayout={(homeLayout) => updateCmsSection('homeLayout', homeLayout)}
           storiesCount={stories.length}
+          waitingCardsCount={getPublishedWaitingSponsorCards(cmsContent).length}
           campaignsCount={campaigns.length}
           previewOpen={previewOpen}
         />
@@ -489,6 +493,22 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                             />
                           </div>
                         )}
+
+                        <label className="flex items-start gap-2 text-xs text-stone-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={layout.showAnniversaryBadge}
+                            onChange={(e) => setLayout({ showAnniversaryBadge: e.target.checked })}
+                            className="mt-0.5 rounded border-stone-300 text-[#4D6B3E] focus:ring-[#4D6B3E]"
+                          />
+                          <span>
+                            <span className="font-semibold">Vis jubileumsbadge på hero-bildet</span>
+                            <span className="block text-[10px] text-stone-500 mt-0.5">
+                              Viser automatisk antall år siden 24. juni 2011 (f.eks. «15 år» i 2026). Ingen ekstra
+                              tekst på forsiden.
+                            </span>
+                          </span>
+                        </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -997,6 +1017,12 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 style={{ opacity: (cmsContent.hero.scrimOpacity || 75) / 100 }}
               />
 
+              {withHeroLayoutDefaults(cmsContent.hero).showAnniversaryBadge && (
+                <div className="absolute top-2 right-2 z-20">
+                  <HeroAnniversaryBadge className="!min-w-0 px-2 py-1 scale-75 origin-top-right" />
+                </div>
+              )}
+
               {withHeroLayoutDefaults(cmsContent.hero).showCtaCard && (
                 <div
                   className="absolute z-10 rounded-lg border border-white/20 bg-white/95 text-stone-900 px-3 py-2 text-[10px] font-semibold shadow-lg max-w-[40%]"
@@ -1110,6 +1136,10 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
          ========================================================================= */}
       {activeSubTab === 'stories' && (
         <TestimonialEditor onViewPublicSite={() => setPreviewOpen(true)} />
+      )}
+
+      {activeSubTab === 'waiting' && (
+        <WaitingSponsorsEditor onViewPublicSite={() => setPreviewOpen(true)} />
       )}
 
       {/* =========================================================================

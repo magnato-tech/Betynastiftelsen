@@ -41,6 +41,10 @@ export function storyHasPublicPhoto(story: AdultGraduateStory): boolean {
   );
 }
 
+/** Forklaring til admin (infoboks / modal) om forsidesynlighet. */
+export const FRONT_PAGE_TESTIMONIAL_ADMIN_HELP =
+  'Kun kort som oppfyller alle krav telles i rutenettet over: bilde, dokumentert samtykke, admin-godkjenning, og ikke merket skjult. Kategori (fadder, barn/ungdom, fullført elev) begrenser ikke forsiden — admin velger selv. «På forsiden» og «Skjult» styrer om kortet skal med. Kolonnevalg 2/3 er layout når nok kort er klare.';
+
 /** Godkjent vitnesbyrd som kan vises på forsiden (runde 3). */
 export function isFrontPageTestimonial(story: AdultGraduateStory): boolean {
   return getTestimonialFrontPageBlockers(story).length === 0;
@@ -49,9 +53,6 @@ export function isFrontPageTestimonial(story: AdultGraduateStory): boolean {
 /** Hvorfor et vitnesbyrd ikke vises på forsiden (tom = vises). */
 export function getTestimonialFrontPageBlockers(story: AdultGraduateStory): string[] {
   const reasons: string[] = [];
-  if (story.category === 'child') {
-    reasons.push('Barn/ungdom vises ikke på forsiden');
-  }
   if (!story.samtykkeDokumentert) {
     reasons.push('Mangler dokumentert samtykke');
   }
@@ -65,6 +66,38 @@ export function getTestimonialFrontPageBlockers(story: AdultGraduateStory): stri
     reasons.push('Skjult fra forsiden');
   }
   return reasons;
+}
+
+export type TestimonialFrontPageCheckItem = {
+  id: string;
+  label: string;
+  ok: boolean;
+};
+
+/** Status for alle krav til forsiden (samme regler som blockers). */
+export function getTestimonialFrontPageChecklist(story: AdultGraduateStory): TestimonialFrontPageCheckItem[] {
+  return [
+    {
+      id: 'photo',
+      label: 'Minst ett bilde',
+      ok: storyHasPublicPhoto(story),
+    },
+    {
+      id: 'consent',
+      label: 'Dokumentert samtykke',
+      ok: Boolean(story.samtykkeDokumentert),
+    },
+    {
+      id: 'approved',
+      label: 'Godkjent av admin',
+      ok: Boolean(story.godkjentAvAdmin),
+    },
+    {
+      id: 'featured',
+      label: 'Valgt for forsiden (ikke skjult)',
+      ok: story.fremhevetPaaForside !== false,
+    },
+  ];
 }
 
 export type StoryDisplayPhotos = {

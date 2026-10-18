@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AdultGraduateStory } from '../../types';
 import { getStoryDisplayPhotos } from '../../utils/testimonials';
+import { isTestimonialIllustrationImageUrl } from '../../utils/testimonialPhotoPresets';
 
 interface TestimonialStoryCardProps {
   story: AdultGraduateStory;
@@ -8,6 +9,10 @@ interface TestimonialStoryCardProps {
 
 export const TestimonialStoryCard: React.FC<TestimonialStoryCardProps> = ({ story }) => {
   const photos = getStoryDisplayPhotos(story);
+  const showIllustrationLabel =
+    story.illustrasjonsbilde ||
+    isTestimonialIllustrationImageUrl(story.bildeUrl) ||
+    isTestimonialIllustrationImageUrl(story.voksenBildeUrl);
   const caption = [story.rolle || story.naavaerendeYrke, story.sted].filter(Boolean).join(' · ');
   const context = story.utdanningslop?.trim();
 
@@ -39,12 +44,19 @@ export const TestimonialStoryCard: React.FC<TestimonialStoryCardProps> = ({ stor
           </figure>
         </div>
       ) : photos.single ? (
-        <img
-          src={photos.single}
-          alt={story.navn}
-          referrerPolicy="no-referrer"
-          className="w-full aspect-[4/3] object-cover"
-        />
+        <figure>
+          <img
+            src={photos.single}
+            alt={story.navn}
+            referrerPolicy="no-referrer"
+            className="w-full aspect-[4/3] object-cover"
+          />
+          {showIllustrationLabel && (
+            <figcaption className="text-center text-[11px] text-stone-500 py-1.5 bg-[#F6F4ED] border-t border-[#DFD9CB]">
+              Illustrasjonsbilde
+            </figcaption>
+          )}
+        </figure>
       ) : null}
 
       <div className="p-4 space-y-2 flex-1 flex flex-col">

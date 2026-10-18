@@ -30,6 +30,7 @@ export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
   hero: 'home',
   steps: 'fadderordningen',
   stories: 'historier',
+  waiting: 'venter-fadder',
   about: 'om-oss',
   kpis: 'cms-kpi',
   cta: 'cta',

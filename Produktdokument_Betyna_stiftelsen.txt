@@ -636,6 +636,41 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
 
+Arbeidsdokument - Versjon 1.111 - 18. oktober 2026
+
+18. oktober 2026, redigering venter-på-fadder-kort
+Popup med live kortforhåndsvisning, norsk bildeopplasting, synlighet På forsiden/Skjult, radklikk og slett-bekreftelse.
+
+Arbeidsdokument - Versjon 1.110 - 18. oktober 2026
+
+18. oktober 2026, jubileumsbadge i hero
+CMS Hovedbanner: av/på for badge som viser antall år siden 24. juni 2011 (oppdateres automatisk, f.eks. 15 år i 2026).
+
+Arbeidsdokument - Versjon 1.109 - 18. oktober 2026
+
+18. oktober 2026, modul Disse venter på fadder
+Ny forsidemodul i CMS-biblioteket: anonyme kort med illustrasjonsbilde (merket Anonymisert og Illustrasjonsbilde), kode, alder og sted — ikke koblet til ekte barnefoto på nettsiden. Admin legger inn kort eller fire demo-kort; rekkefølge styres som andre moduler.
+
+Arbeidsdokument - Versjon 1.108 - 18. oktober 2026
+
+18. oktober 2026, vitnesbyrd-bilde lagres riktig
+Lagring av hovedbilde for barn/fadder bruker ikke lenger gammelt voksenbilde-felt. Opplasting fra PC gaar via mediabibliotek (Storage-URL). Illustrasjonsdemo er innebygd data-URL.
+
+Arbeidsdokument - Versjon 1.107 - 18. oktober 2026
+
+18. oktober 2026, illustrasjonsbilder for vitnesbyrd
+I Rediger vitnesbyrd kan admin velge midlertidige demo-bilder under fanen Illustrasjonsbilder (SVG i public/testimonial-demo), eller merke eget bilde med illustrasjonsbilde. Forsiden viser teksten Illustrasjonsbilde under bildet til ekte foto er pa plass.
+
+Arbeidsdokument - Versjon 1.106 - 18. oktober 2026
+
+18. oktober 2026, vitnesbyrd kategori uten auto-blokk
+Kategori barn/ungdom blokkerer ikke lenger forsiden automatisk; admin styrer med bilde, samtykke, godkjenning og Pa forsiden/Skjult.
+
+Arbeidsdokument - Versjon 1.105 - 18. oktober 2026
+
+18. oktober 2026, vitnesbyrd forklaring i CMS
+Admin: infotekst og (i), popup ved Skjult nar krav mangler, klikkbar oransje merke med liste (bilde, samtykke, godkjenning, ikke skjult).
+
 Arbeidsdokument - Versjon 1.104 - 18. oktober 2026
 
 18. oktober 2026, hoyere CMS-preview

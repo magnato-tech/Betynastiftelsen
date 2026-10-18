@@ -9,6 +9,7 @@ import {
   getHeroHeadlineBelowMarginTopPx,
   getHeroHeadlineTone,
   getHeroHeadlineWidthPercent,
+  getHeroOnImageHeadlineFlowReservePx,
   getHeroHeightVh,
   getHeroObjectPosition,
   getHeroSceneBottomPaddingPx,
@@ -28,6 +29,12 @@ import {
 import type { CmsPreviewSection } from '../../utils/cmsPreview';
 import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionDefaults } from '../../utils/testimonials';
 import { TestimonialStoryCard } from './TestimonialStoryCard';
+import { HeroAnniversaryBadge } from './HeroAnniversaryBadge';
+import { WaitingSponsorsSection } from './WaitingSponsorsSection';
+import {
+  getPublishedWaitingSponsorCards,
+  withWaitingSponsorsSectionDefaults,
+} from '../../utils/waitingSponsors';
 import {
   GraduationCap,
   BookOpen,
@@ -104,6 +111,8 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const heroObjectPosition = getHeroObjectPosition(heroConfig);
   const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
   const frontPageStories = stories.filter(isFrontPageTestimonial);
+  const waitingSection = withWaitingSponsorsSectionDefaults(cmsContent.waitingSponsorsSection);
+  const waitingCards = getPublishedWaitingSponsorCards(cmsContent);
   const testimonialGridClass =
     frontPageStories.length === 1
       ? 'grid grid-cols-1 gap-6 max-w-2xl mx-auto'
@@ -160,6 +169,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   };
 
   const headlineOnImageDesktop = isHeroHeadlineOnImageDesktop(cmsContent.hero);
+  const heroHeadlineFlowReservePx = getHeroOnImageHeadlineFlowReservePx(cmsContent.hero);
   const ctaPosX = heroConfig.ctaPosXPercent ?? 0;
   const ctaBottomCss = getHeroCtaBottomCss(heroConfig);
   const heroSceneBottomPadding = getHeroSceneBottomPaddingPx(heroConfig);
@@ -215,7 +225,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   });
 
   return (
-    <div className="flex flex-col gap-10 pb-16">
+    <div className="flex flex-col gap-10 pb-16 isolate">
       {/* 1. HERO SECTION */}
       <section
         id="home"
@@ -225,7 +235,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('hero'),
           ...(heroPreviewFillsViewport ? { minHeight: CMS_PREVIEW_HERO_MIN_HEIGHT_CSS } : {}),
         }}
-        className={`scroll-mt-24 rounded-lg transition-shadow overflow-visible ${previewMark('hero')}`}
+        className={`relative z-0 scroll-mt-24 rounded-lg transition-shadow overflow-visible ${previewMark('hero')}`}
       >
         <HomeColumn cms={cmsContent}>
           <div className="w-full overflow-visible">
@@ -247,6 +257,11 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                   className={`absolute inset-0 h-full w-full object-cover ${heroZoomActive ? 'hero-image-slow-zoom' : ''}`}
                   style={heroZoomStyle}
                 />
+                {heroConfig.showAnniversaryBadge && (
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
+                    <HeroAnniversaryBadge />
+                  </div>
+                )}
               </div>
 
               {headlineOnImageDesktop && (
@@ -280,6 +295,14 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               )}
             </div>
 
+            {heroHeadlineFlowReservePx > 0 && (
+              <div
+                className="hidden lg:block w-full shrink-0"
+                style={{ height: heroHeadlineFlowReservePx }}
+                aria-hidden
+              />
+            )}
+
             <div className="mt-5 text-left lg:hidden">
               {heroHasHeadlineCopy(cmsContent.hero) && renderHeroHeadline('dark')}
             </div>
@@ -309,7 +332,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('stories'),
           display: onHome('stories') && frontPageStories.length > 0 ? undefined : 'none',
         }}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('stories')}`}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('stories')}`}
       >
         <HomeColumn cms={cmsContent}>
           <div className="mb-8 w-full">
@@ -338,13 +361,33 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         </HomeColumn>
       </section>
 
+      <section
+        id="venter-fadder"
+        data-cms-section="waiting"
+        data-cms-label="Disse venter på fadder"
+        style={{
+          ...homeBlockStyle('waiting'),
+          display: onHome('waiting') && waitingCards.length > 0 ? undefined : 'none',
+        }}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow ${previewMark('waiting')}`}
+      >
+        <HomeColumn cms={cmsContent}>
+          <WaitingSponsorsSection
+            section={waitingSection}
+            cards={waitingCards.slice(0, 4)}
+            onBliFadder={scrollToBliFadder}
+            onSeeAll={scrollToBliFadder}
+          />
+        </HomeColumn>
+      </section>
+
       {/* 3. FADDERORDNINGEN (Slik fungerer det) */}
       <section
         id="fadderordningen"
         data-cms-section="steps"
         data-cms-label="Fadderordningen"
         style={homeBlockStyle('steps')}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('steps')}`}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('steps')}`}
       >
         <HomeColumn cms={cmsContent}>
         <div className="mb-12 w-full">
@@ -481,7 +524,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('kpis'),
           display: onHome('kpis') && cmsContent.kpiStats.length > 0 ? undefined : 'none',
         }}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('kpis')}`}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('kpis')}`}
       >
         <HomeColumn cms={cmsContent}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -505,7 +548,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         data-cms-section="about"
         data-cms-label="Kjernerammer"
         style={homeBlockStyle('about')}
-        className={`scroll-mt-24 transition-shadow ${previewMark('about')}`}
+        className={`relative z-10 scroll-mt-24 transition-shadow bg-[#F6F4ED] ${previewMark('about')}`}
       >
         <div className="bg-[#4D6B3E]/10 border-y border-[#DFD9CB] py-10 sm:py-12">
           <HomeColumn cms={cmsContent} className="space-y-8">
@@ -669,7 +712,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('behov'),
           display: onHome('behov') && activeCampaigns.length > 0 ? undefined : 'none',
         }}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('behov')}`}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('behov')}`}
       >
         {activeCampaigns.length > 0 && (
           <HomeColumn cms={cmsContent}>
@@ -751,7 +794,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           ...homeBlockStyle('cta'),
           display: onHome('cta') && ctaBanner?.title?.trim() ? undefined : 'none',
         }}
-        className={`scroll-mt-24 rounded-lg transition-shadow ${previewMark('cta')}`}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('cta')}`}
       >
         {ctaBanner && (
           <HomeColumn cms={cmsContent}>

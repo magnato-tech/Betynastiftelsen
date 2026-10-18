@@ -4,6 +4,7 @@ import { cmsSectionEnabled } from './cmsSections';
 export const CMS_HOME_MODULE_LABELS: Record<CmsHomeModuleId, string> = {
   hero: 'Hovedbanner',
   stories: 'Vitnesbyrd',
+  waiting: 'Disse venter på fadder',
   steps: 'Fadderordningen',
   kpis: 'Nøkkeltall',
   about: 'Kjernerammer',
@@ -15,6 +16,7 @@ export const CMS_HOME_MODULE_LABELS: Record<CmsHomeModuleId, string> = {
 export const DEFAULT_CMS_HOME_LAYOUT: CmsHomeLayoutItem[] = [
   { moduleId: 'hero', visible: true },
   { moduleId: 'stories', visible: true },
+  { moduleId: 'waiting', visible: true },
   { moduleId: 'steps', visible: true },
   { moduleId: 'behov', visible: true },
   { moduleId: 'kpis', visible: true },
@@ -25,6 +27,7 @@ export const DEFAULT_CMS_HOME_LAYOUT: CmsHomeLayoutItem[] = [
 const MODULE_IDS: CmsHomeModuleId[] = [
   'hero',
   'stories',
+  'waiting',
   'steps',
   'kpis',
   'about',
@@ -46,6 +49,8 @@ function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
       return cmsSectionEnabled(cms.ctaSection) && Boolean(cms.ctaBanner?.title?.trim());
     case 'stories':
       return cms.testimonialsSection?.enabled !== false;
+    case 'waiting':
+      return cms.waitingSponsorsSection?.enabled !== false;
     case 'behov':
       return true;
     default:
