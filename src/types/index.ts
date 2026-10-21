@@ -1,7 +1,7 @@
 export type UserRole = 'public' | 'sponsor' | 'coordinator' | 'admin';
 export type AppLanguage = 'no' | 'fr';
 
-export type ChildStatus = 'aktiv' | 'avsluttet' | 'arkivert';
+export type ChildStatus = 'aktiv' | 'avsluttet' | 'arkivert' | 'utkast';
 
 export interface Coordinator {
   id: string;

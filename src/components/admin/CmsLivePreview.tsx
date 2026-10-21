@@ -7,7 +7,7 @@ import {
   cmsPreviewHash,
   type CmsPreviewSection,
 } from '../../utils/cmsPreview';
-import { CMS_PREVIEW_READY, postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
+import { CMS_PREVIEW_READY, CMS_PREVIEW_SELECT_SECTION, postCmsPreviewDraft, type CmsPreviewDraftPayload } from '../../utils/cmsPreviewBridge';
 import {
   CMS_PREVIEW_DESKTOP_WIDTH,
   computeCmsPreviewScale,
@@ -25,6 +25,7 @@ interface CmsLivePreviewProps {
   cmsContent: CmsContent;
   stories: AdultGraduateStory[];
   campaigns: Campaign[];
+  onSelectSection?: (section: CmsPreviewSection) => void;
 }
 
 export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
@@ -33,6 +34,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
   cmsContent,
   stories,
   campaigns,
+  onSelectSection,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -70,6 +72,17 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
     window.addEventListener('message', onReady);
     return () => window.removeEventListener('message', onReady);
   }, [pushDraft]);
+
+  useEffect(() => {
+    const onSelect = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === CMS_PREVIEW_SELECT_SECTION && event.data?.section) {
+        onSelectSection?.(event.data.section);
+      }
+    };
+    window.addEventListener('message', onSelect);
+    return () => window.removeEventListener('message', onSelect);
+  }, [onSelectSection]);
 
   useEffect(() => {
     const win = iframeRef.current?.contentWindow;
@@ -154,7 +167,7 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
 
         <div className="flex items-center gap-1.5">
           <a
-            href={buildNewTabPreviewUrl(section)}
+            href={buildNewTabPreviewUrl(section ?? undefined)}
             target="_blank"
             rel="noopener noreferrer"
             className="px-2.5 py-1 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-50 font-medium flex items-center gap-1"

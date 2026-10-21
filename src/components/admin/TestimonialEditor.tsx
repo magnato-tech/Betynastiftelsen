@@ -19,6 +19,8 @@ import {
   type TestimonialPhotoPreset,
 } from '../../utils/testimonialPhotoPresets';
 import { TestimonialStoryCard } from '../public/TestimonialStoryCard';
+import { RichTextEditor } from './RichTextEditor';
+import { SafeHtml } from '../common/SafeHtml';
 import {
   Quote,
   Plus,
@@ -711,7 +713,14 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
 
                 {/* Quote */}
                 <blockquote className="p-3.5 bg-[#F6F4ED] rounded-xl border border-[#A3B18A]/40 text-xs sm:text-sm text-[#3C3C3C] italic font-serif leading-relaxed">
-                  «{st.historie}»
+                  {st.historie.trim().startsWith('<') ? (
+                    <SafeHtml
+                      html={st.historie}
+                      className="not-italic font-sans rich-html"
+                    />
+                  ) : (
+                    `«${st.historie}»`
+                  )}
                 </blockquote>
 
                 {/* Context Details */}
@@ -933,19 +942,14 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
               </div>
 
               {/* Sitat / Historie */}
-              <div>
-                <label className="block font-semibold text-stone-700 mb-1">
-                  Sitat / Vitnesbyrd (vises som hovedtekst) *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Skriv det personlige sitatet eller vitnesbyrdet..."
-                  value={formText}
-                  onChange={(e) => setFormText(e.target.value)}
-                  className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E] resize-none"
-                />
-              </div>
+              <RichTextEditor
+                label="Sitat / Vitnesbyrd (vises som hovedtekst) *"
+                sublabel="Formatér med fet, kursiv, understreking, sitat eller punktliste."
+                placeholder="Skriv det personlige sitatet eller vitnesbyrdet..."
+                content={formText}
+                onChange={setFormText}
+                minHeight="120px"
+              />
 
               {/* Utdypende kontekst */}
               <div>

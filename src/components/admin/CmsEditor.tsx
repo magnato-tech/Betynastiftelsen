@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
@@ -7,7 +7,9 @@ import { getPublishedWaitingSponsorCards } from '../../utils/waitingSponsors';
 import { CmsLivePreview } from './CmsLivePreview';
 import { CmsMediaLibraryPanel } from './CmsMediaLibraryPanel';
 import { CmsSectionNav } from './CmsSectionNav';
-import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner } from '../../types';
+import { RichTextEditor } from './RichTextEditor';
+import { CmsPreviewSection } from '../../utils/cmsPreview';
+import { AdultGraduateStory, Campaign, CmsContent, CmsHeroHeight, CmsStep, CmsPrincipleCard, CmsKpiStat, CmsCtaBanner, CmsHomeModuleId } from '../../types';
 import { BETYNA_DEFAULT_HERO_IMAGE, heroImageSrcFromUrl } from '../../utils/cmsHeroImage';
 import {
   clampHeroHeadlineMaxWidthPercent,
@@ -45,7 +47,7 @@ import {
   Megaphone,
 } from 'lucide-react';
 
-type CmsSubTab = 'hero' | 'steps' | 'stories' | 'about' | 'kpis' | 'cta' | 'behov' | 'media';
+type CmsSubTab = CmsHomeModuleId | 'media';
 
 interface CmsEditorProps {
   initialSubTab?: CmsSubTab;
@@ -90,6 +92,21 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
   const showNotification = (msg: string) => {
     setSaveToast(msg);
     setTimeout(() => setSaveToast(null), 3500);
+  };
+
+  const formContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectSectionFromPreview = (section: CmsPreviewSection) => {
+    setActiveSubTab(section as CmsSubTab);
+    // Smooth scroll to top of editing form panel
+    formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Focus first editable input in the form
+    setTimeout(() => {
+      const firstInput = formContainerRef.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+        'input:not([type="hidden"]), textarea, select'
+      );
+      firstInput?.focus();
+    }, 150);
   };
 
   // 1. HERO UPDATE HANDLERS
@@ -359,7 +376,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           previewOpen={previewOpen}
         />
 
-        <div className="min-w-0 flex-1 w-full space-y-6">
+        <div ref={formContainerRef} className="min-w-0 flex-1 w-full space-y-6">
       {/* =========================================================================
           TAB 1: HOVEDBANNER (HERO BANNER)
          ========================================================================= */}
@@ -415,15 +432,13 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Ingress / Forklarende tekst *</label>
-                <textarea
-                  rows={3}
-                  value={cmsContent.hero.subtitle}
-                  onChange={(e) => handleHeroTextChange('subtitle', e.target.value)}
-                  className="w-full p-3 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E] resize-none font-sans leading-relaxed"
-                />
-              </div>
+              <RichTextEditor
+                label="Ingress / Forklarende tekst *"
+                sublabel="Formatér med fet, kursiv, lenker eller punktlister."
+                content={cmsContent.hero.subtitle}
+                onChange={(html) => handleHeroTextChange('subtitle', html)}
+                minHeight="90px"
+              />
 
               {/* Background image & preset picker with URL and Local Upload */}
               <div className="pt-2">
@@ -1102,15 +1117,12 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">Forklaringstekst *</label>
-                    <textarea
-                      rows={3}
-                      value={step.description}
-                      onChange={(e) => handleStepTextChange(idx, 'description', e.target.value)}
-                      className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] resize-none font-sans leading-relaxed"
-                    />
-                  </div>
+                  <RichTextEditor
+                    label="Forklaringstekst *"
+                    content={step.description}
+                    onChange={(html) => handleStepTextChange(idx, 'description', html)}
+                    minHeight="80px"
+                  />
 
                   {/* Image Picker for Step */}
                   <div className="pt-2 border-t border-stone-100">
@@ -1194,15 +1206,12 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">Beskrivelsestekst *</label>
-                    <textarea
-                      rows={3}
-                      value={card.description}
-                      onChange={(e) => handlePrincipleTextChange(idx, 'description', e.target.value)}
-                      className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800 focus:outline-hidden focus:border-[#4D6B3E] resize-none font-sans leading-relaxed"
-                    />
-                  </div>
+                  <RichTextEditor
+                    label="Beskrivelsestekst *"
+                    content={card.description}
+                    onChange={(html) => handlePrincipleTextChange(idx, 'description', html)}
+                    minHeight="80px"
+                  />
 
                   {/* Optional Image for Principle Card */}
                   <div className="pt-2 border-t border-stone-100">
@@ -1519,6 +1528,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               cmsContent={cmsContent}
               stories={stories}
               campaigns={campaigns}
+              onSelectSection={handleSelectSectionFromPreview}
             />
           </div>
         )}

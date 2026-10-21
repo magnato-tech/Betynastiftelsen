@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
 import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
+import { SafeHtml } from '../common/SafeHtml';
 import {
   clampHeroHeadlineSceneYPercent,
   getHeroCtaBottomCss,
@@ -24,6 +25,7 @@ import type { CmsContent, CmsHomeModuleId } from '../../types';
 import {
   CMS_PREVIEW_ACTIVE_CLASS,
   CMS_PREVIEW_HERO_MIN_HEIGHT_CSS,
+  postCmsPreviewSelectSection,
   type CmsPreviewDraftPayload,
 } from '../../utils/cmsPreviewBridge';
 import type { CmsPreviewSection } from '../../utils/cmsPreview';
@@ -95,6 +97,30 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const heroPreviewFillsViewport =
     cmsPreviewEmbedded && highlightedSection === 'hero';
 
+  // Embedded CMS Preview: Klikk på en seksjon åpner redigering i editoren til venstre
+  useEffect(() => {
+    if (!cmsPreviewEmbedded) return;
+    document.body.classList.add('cms-embedded-preview');
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const sectionEl = target?.closest('[data-cms-section]');
+      if (!sectionEl) return;
+      const section = sectionEl.getAttribute('data-cms-section') as CmsPreviewSection | null;
+      if (section) {
+        e.preventDefault();
+        e.stopPropagation();
+        postCmsPreviewSelectSection(window.parent, section);
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => {
+      document.body.classList.remove('cms-embedded-preview');
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [cmsPreviewEmbedded]);
+
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');
 
@@ -163,7 +189,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <>
         <p className={kickerClass}>{heroKicker}</p>
         <h1 className={titleClass}>{heroTitle}</h1>
-        <p className={subtitleClass}>{heroSubtitle}</p>
+        <SafeHtml
+          html={heroSubtitle}
+          className={`${subtitleClass} rich-html ${tone === 'light' ? 'rich-html-contrast' : ''}`}
+        />
       </>
     );
   };
@@ -426,9 +455,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     {step.number}
                   </div>
                   <h3 className="text-lg font-serif font-bold text-stone-900">{stepTitle}</h3>
-                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans">
-                    {stepDesc}
-                  </p>
+                  <SafeHtml
+                    html={stepDesc}
+                    className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans rich-html"
+                  />
                 </div>
               </div>
             );
@@ -626,7 +656,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                     )}
                     <IconComp className="w-5 h-5 text-[#4D6B3E] mb-1" />
                     <h3 className="text-base font-serif font-bold text-stone-900">{cardTitle}</h3>
-                    <p className="text-xs text-stone-600 leading-relaxed font-sans mt-1">{cardDesc}</p>
+                    <SafeHtml
+                      html={cardDesc}
+                      className="text-xs text-stone-600 leading-relaxed font-sans mt-1 rich-html"
+                    />
                   </div>
                 </div>
               );
@@ -800,7 +833,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <HomeColumn cms={cmsContent}>
             <div className="w-full rounded-2xl border border-[#DFD9CB] bg-white p-8 md:p-10 text-center shadow-xs">
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">{ctaBanner.title}</h2>
-              <p className="mt-3 text-sm text-stone-600 max-w-2xl mx-auto leading-relaxed">{ctaBanner.subtitle}</p>
+              <SafeHtml
+                html={ctaBanner.subtitle}
+                className="mt-3 text-sm text-stone-600 max-w-2xl mx-auto leading-relaxed rich-html"
+              />
               <button
                 type="button"
                 onClick={scrollToBliFadder}

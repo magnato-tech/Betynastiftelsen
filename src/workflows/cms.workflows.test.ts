@@ -41,6 +41,6 @@ describe('CMS arbeidsflyt: bibliotek og forside', () => {
         { moduleId: 'behov', visible: true },
       ],
     };
-    expect(visibleHomeModules(cms)).not.toContain('stories');
+    expect(visibleHomeModules(cms as any)).not.toContain('stories');
   });
 });

@@ -15,7 +15,7 @@ describe('planScopedPortalChanges', () => {
   };
 
   it('koordinator skriver bare egne barn og sender ikke sletting', () => {
-    const snapshot: AppDataSnapshot = {
+    const snapshot = {
       children: [
         {
           id: 'child-1',
@@ -60,7 +60,7 @@ describe('planScopedPortalChanges', () => {
     const baselines = {
       children: baselineOf([]),
     };
-    const { changes } = planScopedPortalChanges(coordinatorProfile, baselines, snapshot);
+    const { changes } = planScopedPortalChanges(coordinatorProfile, baselines, snapshot as any);
     expect(changes.every((c) => c.kind === 'set')).toBe(true);
     expect(changes.some((c) => c.id === 'child-1')).toBe(true);
     expect(changes.some((c) => c.id === 'child-2')).toBe(false);
@@ -75,7 +75,7 @@ describe('planScopedPortalChanges', () => {
       sponsorId: 'sponsor-9',
       createdAt: '',
     };
-    const snapshot: AppDataSnapshot = {
+    const snapshot = {
       inquiries: [
         {
           id: 'inq-1',
@@ -100,7 +100,7 @@ describe('planScopedPortalChanges', () => {
       ],
     };
     const baselines = { inquiries: new Map() };
-    const { changes } = planScopedPortalChanges(sponsorProfile, baselines, snapshot);
+    const { changes } = planScopedPortalChanges(sponsorProfile, baselines, snapshot as unknown as AppDataSnapshot);
     expect(changes).toHaveLength(1);
     expect(changes[0]).toMatchObject({
       kind: 'set',

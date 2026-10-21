@@ -3,6 +3,7 @@ import type { CmsPreviewSection } from './cmsPreview';
 
 export const CMS_PREVIEW_MESSAGE = 'betyna-cms-draft';
 export const CMS_PREVIEW_READY = 'betyna-cms-ready';
+export const CMS_PREVIEW_SELECT_SECTION = 'betyna-cms-select-section';
 
 export interface CmsPreviewDraftPayload {
   cmsContent: CmsContent;
@@ -23,6 +24,10 @@ export function isCmsPreviewMessage(data: unknown): data is { type: string; draf
 
 export function postCmsPreviewDraft(target: Window, draft: CmsPreviewDraftPayload): void {
   target.postMessage({ type: CMS_PREVIEW_MESSAGE, draft }, window.location.origin);
+}
+
+export function postCmsPreviewSelectSection(target: Window, section: CmsPreviewSection): void {
+  target.postMessage({ type: CMS_PREVIEW_SELECT_SECTION, section }, window.location.origin);
 }
 
 /** data-cms-section på forsiden ↔ CMS-fane */

@@ -78,6 +78,36 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
+/* Interaktiv klikk-og-hover-opplevelse i forhåndsvisning */
+body.cms-embedded-preview [data-cms-section] {
+  cursor: pointer !important;
+  transition: outline 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  position: relative;
+}
+
+body.cms-embedded-preview [data-cms-section]:hover {
+  outline: 2px dashed #4d6b3e !important;
+  outline-offset: 4px;
+}
+
+body.cms-embedded-preview [data-cms-section]:not(.cms-preview-active):hover::before {
+  content: 'Klikk for å redigere ' attr(data-cms-label);
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 50;
+  background: #2d4026;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 @keyframes hero-slow-zoom {
   0%,
   100% {
@@ -127,4 +157,47 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* TipTap ProseMirror Editor & Rich Text HTML Output */
+.ProseMirror {
+  outline: none;
+}
+.ProseMirror p, .rich-html p {
+  margin-bottom: 0.5em;
+}
+.ProseMirror p:last-child, .rich-html p:last-child {
+  margin-bottom: 0;
+}
+.ProseMirror ul, .rich-html ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.ProseMirror ol, .rich-html ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.ProseMirror li, .rich-html li {
+  margin-bottom: 0.25rem;
+}
+.ProseMirror blockquote, .rich-html blockquote {
+  border-left: 3px solid #4D6B3E;
+  padding-left: 0.75rem;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: #57534e;
+}
+.ProseMirror a, .rich-html a {
+  color: #4D6B3E;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.rich-html-contrast a {
+  color: #ffffff;
+  text-decoration: underline;
 }

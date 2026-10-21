@@ -1099,7 +1099,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCatalogPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   };
 
-  const uploadMediaLibraryItem = async (file: File, label?: string): Promise<string> => {
+  const uploadMediaLibraryItem = async (file: File, label?: string): Promise<{ id: string; url: string }> => {
     if (!file.type.startsWith('image/')) {
       throw new Error('Kun bildefiler kan lastes opp');
     }

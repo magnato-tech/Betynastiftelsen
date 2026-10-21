@@ -127,7 +127,7 @@ describe('heroLayout', () => {
   it('belowImage margin øker med gap og CTA', () => {
     const below = {
       ...baseHero(),
-      headlinePlacement: 'belowImage',
+      headlinePlacement: 'belowImage' as const,
       headlineBelowGapPx: 40,
       showCtaCard: true,
       ctaHangBelowPx: 176,

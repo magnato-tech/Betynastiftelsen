@@ -32,7 +32,7 @@ describe('cmsHeroImage', () => {
           'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80',
       },
     };
-    const next = migrateCmsHeroStock(cms);
+    const next = migrateCmsHeroStock(cms as any);
     expect(next.hero.backgroundImageUrl).toBe(BETYNA_DEFAULT_HERO_IMAGE);
     expect(next.hero.backgroundPreset).toBe('custom');
   });
