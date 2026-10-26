@@ -33,6 +33,7 @@ const kariRow: PersonRow = {
   coordinatorId: 'k1',
   distrikt: 'Test',
   isBootstrapOnly: false,
+  archived: false,
 };
 
 const adminRow: PersonRow = {
@@ -42,6 +43,7 @@ const adminRow: PersonRow = {
   role: 'admin',
   loginStatus: 'aktiv',
   isBootstrapOnly: true,
+  archived: false,
 };
 
 const setApp = (extra: Record<string, unknown> = {}) => {
@@ -101,7 +103,7 @@ describe('personkort: sletting', () => {
       coordinators: [makeCoordinator({ id: 'k1', fornavn: 'Kari', etternavn: 'Nordmann' })],
     });
     renderCard(kariRow);
-    gaTilFane('Avslutt / slett');
+    gaTilFane('Arkiver / slett');
 
     const knapp = screen.getByRole('button', { name: 'Slett for godt' });
     const felt = screen.getByLabelText(/Skriv fullt navn/);
@@ -132,7 +134,7 @@ describe('personkort: sletting', () => {
       ],
     });
     renderCard(kariRow);
-    gaTilFane('Avslutt / slett');
+    gaTilFane('Arkiver / slett');
 
     expect(screen.getByText(/Personen har koblinger og kan ikke slettes/)).toBeTruthy();
     expect(screen.getByText('2 barn')).toBeTruthy();
@@ -145,11 +147,43 @@ describe('personkort: sletting', () => {
 
   it('administratorer får ingen slettedel', () => {
     renderCard(adminRow);
-    gaTilFane('Avslutt / slett');
+    gaTilFane('Arkiver / slett');
 
-    expect(screen.getByText('Administratorer kan ikke avsluttes eller slettes her.')).toBeTruthy();
+    expect(screen.getByText('Administratorer kan ikke arkiveres eller slettes her.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Slett for godt' })).toBeNull();
     expect(screen.queryByLabelText(/Skriv fullt navn/)).toBeNull();
+  });
+});
+
+describe('personkort: arkivering', () => {
+  it('bruker Arkiver-tekster og ingen Avslutt-tekster', () => {
+    renderCard(kariRow);
+    expect(screen.getByRole('tab', { name: 'Arkiver / slett' })).toBeTruthy();
+    gaTilFane('Arkiver / slett');
+    expect(screen.getByRole('button', { name: 'Arkiver Kari Nordmann' })).toBeTruthy();
+    expect(screen.queryByText(/Avslutt/)).toBeNull();
+  });
+
+  it('viser Gjenopprett og Arkivert-merke for arkivert person', () => {
+    setApp({
+      coordinators: [makeCoordinator({ id: 'k1', fornavn: 'Kari', etternavn: 'Nordmann', aktiv: false })],
+    });
+    renderCard(kariRow);
+    expect(screen.getByText('Arkivert')).toBeTruthy();
+    gaTilFane('Arkiver / slett');
+    expect(screen.getByRole('button', { name: 'Gjenopprett' })).toBeTruthy();
+  });
+
+  it('viser hint om å arkivere i stedet når sletting er blokkert av lenker', () => {
+    setApp({
+      coordinators: [makeCoordinator({ id: 'k1', fornavn: 'Kari', etternavn: 'Nordmann' })],
+      childrenList: [makeChild({ id: 'c1', koordinatorId: 'k1', status: 'aktiv' })],
+    });
+    renderCard(kariRow);
+    gaTilFane('Arkiver / slett');
+    expect(
+      screen.getByText('Arkiver personen i stedet – da forsvinner den fra listen, men historikken beholdes.')
+    ).toBeTruthy();
   });
 });
 
@@ -207,6 +241,7 @@ describe('personkort: opplysninger', () => {
       loginStatus: 'ikke-invitert',
       sponsorId: 's1',
       isBootstrapOnly: false,
+      archived: false,
     });
 
     fireEvent.change(screen.getByLabelText('Månedsbeløp (kr)'), { target: { value: '350' } });

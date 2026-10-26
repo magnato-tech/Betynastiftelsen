@@ -42,7 +42,7 @@ const FANER: { id: Fane; label: string }[] = [
   { id: 'opplysninger', label: 'Opplysninger' },
   { id: 'innlogging', label: 'Innlogging' },
   { id: 'logg', label: 'Logg' },
-  { id: 'avslutt', label: 'Avslutt / slett' },
+  { id: 'avslutt', label: 'Arkiver / slett' },
 ];
 
 interface Felt {
@@ -136,7 +136,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
       : sponsor
         ? sponsorSubject(sponsor)
         : undefined;
-  const avsluttet = coordinator ? !coordinator.aktiv : sponsor ? !!sponsor.avsluttet : false;
+  const arkivert = coordinator ? !coordinator.aktiv : sponsor ? !!sponsor.avsluttet : false;
 
   // Startverdier for skjemaet. Alt holdes som tekst og gjøres om ved lagring.
   const startVerdi = useMemo(() => {
@@ -269,7 +269,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     setAvsluttBusy(true);
     setAvsluttFeil(null);
     try {
-      if (avsluttet) await reactivatePerson(subject);
+      if (arkivert) await reactivatePerson(subject);
       else await deactivatePerson(subject);
     } catch (err) {
       setAvsluttFeil(err instanceof Error ? err.message : 'Kunne ikke endre status.');
@@ -321,8 +321,8 @@ export const PersonCard: React.FC<PersonCardProps> = ({
             </h3>
             <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-stone-600">
               <span>{ROLE_LABEL[row.role]}</span>
-              {avsluttet && (
-                <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-medium">Avsluttet</span>
+              {arkivert && (
+                <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-medium">Arkivert</span>
               )}
             </div>
           </div>
@@ -590,19 +590,20 @@ export const PersonCard: React.FC<PersonCardProps> = ({
             </div>
           )}
 
-          {/* 4. Avslutt / slett */}
+          {/* 4. Arkiver / slett */}
           {fane === 'avslutt' && (
             <div role="tabpanel" id="panel-avslutt" aria-labelledby="fane-avslutt" className="space-y-4 text-xs">
               {erAdmin ? (
-                <p className="text-stone-600">Administratorer kan ikke avsluttes eller slettes her.</p>
+                <p className="text-stone-600">Administratorer kan ikke arkiveres eller slettes her.</p>
               ) : !subject ? (
                 <p className="text-stone-500">Fant ikke personen i listen over koordinatorer eller faddere.</p>
               ) : (
                 <>
                   <section className="rounded-lg border border-red-200 bg-red-50/50 p-3 space-y-2">
-                    <h4 className="font-semibold text-stone-900">Avslutt</h4>
+                    <h4 className="font-semibold text-stone-900">Arkiver</h4>
                     <p className="text-stone-600">
-                      Avslutning sperrer innlogging. All historikk og alle koblinger beholdes.
+                      Arkivering sperrer innlogging og skjuler personen fra listen. All historikk og alle koblinger
+                      beholdes.
                     </p>
                     <button
                       type="button"
@@ -610,7 +611,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                       disabled={avsluttBusy}
                       className="px-3 py-1.5 rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {avsluttBusy ? 'Lagrer…' : avsluttet ? 'Gjenåpne' : `Avslutt ${subject.navn}`}
+                      {avsluttBusy ? 'Lagrer…' : arkivert ? 'Gjenopprett' : `Arkiver ${subject.navn}`}
                     </button>
                     {avsluttFeil && <p role="alert" className="text-red-900">{avsluttFeil}</p>}
                   </section>
@@ -629,6 +630,9 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                             </li>
                           ))}
                         </ul>
+                        <p className="text-stone-600">
+                          Arkiver personen i stedet – da forsvinner den fra listen, men historikken beholdes.
+                        </p>
                       </>
                     ) : (
                       <p className="text-stone-600">Dette kan ikke angres.</p>

@@ -21,6 +21,8 @@ export interface PersonRow {
   sponsorId?: string;
   distrikt?: string;
   isBootstrapOnly: boolean;
+  /** Arkivert: koordinator med aktiv=false, eller fadder med satt avsluttet-dato. */
+  archived: boolean;
 }
 
 const ROLE_ORDER: Record<PersonRole, number> = { admin: 0, coordinator: 1, sponsor: 2 };
@@ -86,6 +88,10 @@ export function buildPeopleRows(
       name = row.email.split('@')[0];
     }
 
+    // Arkivering styres av selve koordinator-/fadderposten, ikke av innloggingsraden.
+    const archived =
+      row.role === 'coordinator' ? coord?.aktiv === false : row.role === 'sponsor' ? !!sp?.avsluttet : false;
+
     rows.push({
       key: `dir:${row.email}`,
       name,
@@ -97,6 +103,7 @@ export function buildPeopleRows(
       sponsorId: row.sponsorId || sp?.id,
       distrikt: coord?.distrikt,
       isBootstrapOnly: false,
+      archived,
     });
   }
 
@@ -113,6 +120,7 @@ export function buildPeopleRows(
       role: 'admin',
       loginStatus: 'aktiv',
       isBootstrapOnly: true,
+      archived: false,
     });
   }
 
@@ -128,6 +136,7 @@ export function buildPeopleRows(
       coordinatorId: c.id,
       distrikt: c.distrikt,
       isBootstrapOnly: false,
+      archived: c.aktiv === false,
     });
   }
 
@@ -142,6 +151,7 @@ export function buildPeopleRows(
       loginStatus: 'ikke-invitert',
       sponsorId: s.id,
       isBootstrapOnly: false,
+      archived: !!s.avsluttet,
     });
   }
 

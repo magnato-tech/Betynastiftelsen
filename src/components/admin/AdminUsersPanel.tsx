@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { Archive, ArchiveRestore } from 'lucide-react';
 import { db } from '../../config/firebase';
 import { BOOTSTRAP_ADMIN_EMAILS } from '../../config/bootstrapAdmins';
 import { useApp } from '../../context/AppContext';
@@ -16,6 +17,8 @@ import {
   type PersonRow,
   type PersonRole,
 } from '../../utils/peopleDirectory';
+import { coordinatorSubject, sponsorSubject } from '../../utils/personLog';
+import type { PersonLogSubject } from '../../types';
 import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
 import { PersonCard, ROLE_LABEL } from './PersonCard';
 
@@ -25,13 +28,15 @@ export interface AdminUsersPanelProps {
   onOpenChild?: (childId: string) => void;
 }
 
-type RoleFilter = 'alle' | PersonRole;
+/** «arkivert» viser kun arkiverte personer. Alle andre filtre viser aktive. */
+type RoleFilter = 'alle' | PersonRole | 'arkivert';
 
 const FILTERS: { value: RoleFilter; label: string }[] = [
   { value: 'alle', label: 'Alle' },
   { value: 'admin', label: 'Administratorer' },
   { value: 'coordinator', label: 'Koordinatorer' },
   { value: 'sponsor', label: 'Faddere' },
+  { value: 'arkivert', label: 'Arkivert' },
 ];
 
 export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
@@ -47,6 +52,8 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     updateUserDirectoryStatus,
     inviteUserToDirectory,
     addSponsor,
+    deactivatePerson,
+    reactivatePerson,
   } = useApp();
 
   const [showAddSponsor, setShowAddSponsor] = useState(false);
@@ -63,7 +70,19 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   const [statusBusy, setStatusBusy] = useState(false);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('alle');
   const [inviteBusyKey, setInviteBusyKey] = useState<string | null>(null);
-  const [inviteNote, setInviteNote] = useState<string | null>(null);
+  const [notat, setNotat] = useState<string | null>(null);
+  // Avkrysning for massehandlinger. Nøkler fra personlisten.
+  const [valgte, setValgte] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [rowBusyKey, setRowBusyKey] = useState<string | null>(null);
+  // Angre-tilbud etter enkeltarkivering. Gjelder i 5 sekunder.
+  const [angre, setAngre] = useState<{ navn: string; subject: PersonLogSubject } | null>(null);
+
+  useEffect(() => {
+    if (!angre) return;
+    const t = window.setTimeout(() => setAngre(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [angre]);
 
   useEffect(() => {
     if (!db || !firestoreEnabled || !firestoreUserEmail) {
@@ -91,16 +110,33 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     [rows, coordinators, sponsors]
   );
 
-  const counts = useMemo(() => {
-    const c: Record<RoleFilter, number> = { alle: peopleRows.length, admin: 0, coordinator: 0, sponsor: 0 };
-    for (const r of peopleRows) c[r.role] += 1;
-    return c;
-  }, [peopleRows]);
+  // Arkiverte skjules fra alle vanlige visninger og telles bare under «Arkivert».
+  const aktiveRader = useMemo(() => peopleRows.filter((r) => !r.archived), [peopleRows]);
+  const arkiverteRader = useMemo(() => peopleRows.filter((r) => r.archived), [peopleRows]);
 
-  const visibleRows = useMemo(
-    () => (roleFilter === 'alle' ? peopleRows : peopleRows.filter((r) => r.role === roleFilter)),
-    [peopleRows, roleFilter]
-  );
+  const counts = useMemo(() => {
+    const c: Record<RoleFilter, number> = {
+      alle: aktiveRader.length,
+      admin: 0,
+      coordinator: 0,
+      sponsor: 0,
+      arkivert: arkiverteRader.length,
+    };
+    for (const r of aktiveRader) c[r.role] += 1;
+    return c;
+  }, [aktiveRader, arkiverteRader]);
+
+  const visibleRows = useMemo(() => {
+    if (roleFilter === 'arkivert') return arkiverteRader;
+    if (roleFilter === 'alle') return aktiveRader;
+    return aktiveRader.filter((r) => r.role === roleFilter);
+  }, [roleFilter, aktiveRader, arkiverteRader]);
+
+  const erArkivVisning = roleFilter === 'arkivert';
+  // Admin-rader kan ikke velges eller arkiveres her.
+  const velgbare = visibleRows.filter((r) => r.role !== 'admin');
+  const valgteRader = visibleRows.filter((r) => valgte.has(r.key));
+  const alleValgt = velgbare.length > 0 && velgbare.every((r) => valgte.has(r.key));
 
   useEffect(() => {
     if (focusEmail) {
@@ -113,6 +149,35 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   }, [focusEmail, onClearFocus, peopleRows]);
 
   const selected = selectedKey ? peopleRows.find((r) => r.key === selectedKey) : undefined;
+
+  // Koordinator- eller fadderposten til raden. Admin har ingen slik post.
+  const subjectFor = (row: PersonRow): PersonLogSubject | undefined => {
+    if (row.role === 'coordinator' && row.coordinatorId) {
+      const c = coordinators.find((x) => x.id === row.coordinatorId);
+      return c ? coordinatorSubject(c) : undefined;
+    }
+    if (row.role === 'sponsor' && row.sponsorId) {
+      const s = sponsors.find((x) => x.id === row.sponsorId);
+      return s ? sponsorSubject(s) : undefined;
+    }
+    return undefined;
+  };
+
+  const changeVisning = (f: RoleFilter) => {
+    setRoleFilter(f);
+    setValgte(new Set());
+  };
+
+  const toggleValgt = (key: string) => {
+    setValgte((prev) => {
+      const neste = new Set(prev);
+      if (neste.has(key)) neste.delete(key);
+      else neste.add(key);
+      return neste;
+    });
+  };
+
+  const toggleAlle = () => setValgte(alleValgt ? new Set() : new Set(velgbare.map((r) => r.key)));
 
   const persistStatus = async (row: PersonRow, status: UserDirectoryStatus) => {
     const email = emailToDirectoryDocId(row.email);
@@ -146,7 +211,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     if (!row.email) return;
     setInviteBusyKey(row.key);
     setLoadError(null);
-    setInviteNote(null);
+    setNotat(null);
     try {
       const entry: FirestoreUserDirectoryEntry = {
         email: row.email,
@@ -156,11 +221,88 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       if (row.role === 'coordinator' && row.coordinatorId) entry.coordinatorId = row.coordinatorId;
       if (row.role === 'sponsor' && row.sponsorId) entry.sponsorId = row.sponsorId;
       await inviteUserToDirectory(entry);
-      setInviteNote(`Invitasjon lagret for ${row.name}`);
+      setNotat(`Invitasjon lagret for ${row.name}`);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Kunne ikke lagre invitasjonen.');
     } finally {
       setInviteBusyKey(null);
+    }
+  };
+
+  // Arkiverer én person. Angre-tilbudet vises i en banner over tabellen.
+  const arkiverRad = async (row: PersonRow) => {
+    const subject = subjectFor(row);
+    if (!subject) return;
+    setRowBusyKey(row.key);
+    setLoadError(null);
+    setNotat(null);
+    try {
+      await deactivatePerson(subject);
+      setAngre({ navn: row.name, subject });
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Kunne ikke arkivere personen.');
+    } finally {
+      setRowBusyKey(null);
+    }
+  };
+
+  const gjenopprettRad = async (row: PersonRow) => {
+    const subject = subjectFor(row);
+    if (!subject) return;
+    setRowBusyKey(row.key);
+    setLoadError(null);
+    setNotat(null);
+    try {
+      await reactivatePerson(subject);
+      setNotat(`${row.name} er gjenopprettet`);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Kunne ikke gjenopprette personen.');
+    } finally {
+      setRowBusyKey(null);
+    }
+  };
+
+  const angreArkivering = async () => {
+    if (!angre) return;
+    const { navn, subject } = angre;
+    setAngre(null);
+    setLoadError(null);
+    try {
+      await reactivatePerson(subject);
+      setNotat(`${navn} er gjenopprettet`);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Kunne ikke angre arkiveringen.');
+    }
+  };
+
+  // Arkiverer eller gjenoppretter alle valgte, etter hverandre.
+  const kjorMassehandling = async () => {
+    const arkiver = !erArkivVisning;
+    const mål = valgteRader
+      .map((row) => ({ row, subject: subjectFor(row) }))
+      .filter((x): x is { row: PersonRow; subject: PersonLogSubject } => !!x.subject);
+    if (mål.length === 0) return;
+    if (arkiver && !window.confirm(`Arkivere ${mål.length} personer? De skjules fra listen og mister innlogging. Kan angres under Arkivert.`)) {
+      return;
+    }
+    setBulkBusy(true);
+    setLoadError(null);
+    setNotat(null);
+    setAngre(null);
+    let ferdig = 0;
+    try {
+      for (const { subject } of mål) {
+        if (arkiver) await deactivatePerson(subject);
+        else await reactivatePerson(subject);
+        ferdig += 1;
+      }
+      setNotat(arkiver ? `${ferdig} arkivert` : `${ferdig} gjenopprettet`);
+      setValgte(new Set());
+    } catch (err) {
+      const melding = err instanceof Error ? err.message : 'Kunne ikke endre alle personene.';
+      setLoadError(`${melding} (${ferdig} av ${mål.length} ble utført.)`);
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -177,8 +319,20 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       {loadError && (
         <p className="text-xs text-red-900 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{loadError}</p>
       )}
-      {inviteNote && (
-        <p className="text-xs text-green-900 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{inviteNote}</p>
+      {notat && (
+        <p className="text-xs text-green-900 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{notat}</p>
+      )}
+      {angre && (
+        <p className="text-xs text-green-900 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex flex-wrap items-center gap-2">
+          <span>{angre.navn} er arkivert.</span>
+          <button
+            type="button"
+            onClick={() => void angreArkivering()}
+            className="font-medium underline cursor-pointer"
+          >
+            Angre
+          </button>
+        </p>
       )}
 
       <div className="inline-flex flex-wrap rounded-lg border border-stone-300 overflow-hidden text-xs">
@@ -188,7 +342,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
             <button
               key={f.value}
               type="button"
-              onClick={() => setRoleFilter(f.value)}
+              onClick={() => changeVisning(f.value)}
               aria-pressed={active}
               className={`px-3 py-1.5 font-medium cursor-pointer border-r border-stone-300 last:border-r-0 ${
                 active ? 'bg-[#4D6B3E] text-white' : 'bg-white text-stone-700 hover:bg-stone-50'
@@ -201,10 +355,41 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       </div>
 
       <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
+        {valgteRader.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-stone-50 border-b border-stone-200 text-xs">
+            <span className="font-medium text-stone-800">{valgteRader.length} valgt</span>
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={() => void kjorMassehandling()}
+              className="px-2.5 py-1 rounded-md bg-[#4D6B3E] text-white font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {bulkBusy ? 'Lagrer…' : erArkivVisning ? 'Gjenopprett valgte' : 'Arkiver valgte'}
+            </button>
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={() => setValgte(new Set())}
+              className="text-stone-600 hover:underline cursor-pointer disabled:opacity-40"
+            >
+              Fjern valg
+            </button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 text-stone-600 border-b border-stone-200 uppercase tracking-wider font-semibold">
               <tr>
+                <th className="py-2.5 px-4 w-8">
+                  <input
+                    type="checkbox"
+                    aria-label="Velg alle synlige"
+                    checked={alleValgt}
+                    disabled={velgbare.length === 0}
+                    onChange={toggleAlle}
+                    className="cursor-pointer accent-[#4D6B3E]"
+                  />
+                </th>
                 <th className="py-2.5 px-4">Navn</th>
                 <th className="py-2.5 px-4">E-post</th>
                 <th className="py-2.5 px-4">Rolle</th>
@@ -212,51 +397,93 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {visibleRows.map((row) => (
-                <tr
-                  key={row.key}
-                  className="hover:bg-stone-50/80 cursor-pointer"
-                  onClick={() => setSelectedKey(row.key)}
-                >
-                  <td className="py-2.5 px-4 font-medium text-stone-900">{row.name}</td>
-                  <td className="py-2.5 px-4 text-stone-600">
-                    {row.email || <span className="text-stone-400">—</span>}
-                  </td>
-                  <td className="py-2.5 px-4 text-stone-700">{ROLE_LABEL[row.role]}</td>
-                  <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
-                    {row.loginStatus === 'ikke-invitert' ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-stone-500">Ikke invitert</span>
-                        <button
-                          type="button"
-                          disabled={!row.email || inviteBusyKey !== null}
-                          title={!row.email ? 'Mangler e-post' : undefined}
-                          onClick={() => void inviteRow(row)}
-                          className="px-2 py-1 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          {inviteBusyKey === row.key ? 'Lagrer…' : 'Inviter'}
-                        </button>
+              {visibleRows.map((row) => {
+                const erAdmin = row.role === 'admin';
+                const dempet = erArkivVisning ? 'text-stone-500' : '';
+                return (
+                  <tr
+                    key={row.key}
+                    className="hover:bg-stone-50/80 cursor-pointer"
+                    onClick={() => setSelectedKey(row.key)}
+                  >
+                    <td className="py-2.5 px-4 w-8" onClick={(e) => e.stopPropagation()}>
+                      {!erAdmin && (
+                        <input
+                          type="checkbox"
+                          aria-label={`Velg ${row.name}`}
+                          checked={valgte.has(row.key)}
+                          onChange={() => toggleValgt(row.key)}
+                          className="cursor-pointer accent-[#4D6B3E]"
+                        />
+                      )}
+                    </td>
+                    <td className={`py-2.5 px-4 font-medium ${dempet || 'text-stone-900'}`}>{row.name}</td>
+                    <td className={`py-2.5 px-4 ${dempet || 'text-stone-600'}`}>
+                      {row.email || <span className="text-stone-400">—</span>}
+                    </td>
+                    <td className={`py-2.5 px-4 ${dempet || 'text-stone-700'}`}>{ROLE_LABEL[row.role]}</td>
+                    <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {row.loginStatus === 'ikke-invitert' ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-stone-500">Ikke invitert</span>
+                            <button
+                              type="button"
+                              disabled={!row.email || inviteBusyKey !== null}
+                              title={!row.email ? 'Mangler e-post' : undefined}
+                              onClick={() => void inviteRow(row)}
+                              className="px-2 py-1 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              {inviteBusyKey === row.key ? 'Lagrer…' : 'Inviter'}
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={row.loginStatus}
+                            disabled={statusBusy}
+                            onChange={(e) => void changeStatus(row, e.target.value as UserDirectoryStatus)}
+                            className="px-2 py-1 rounded-md border border-stone-300 bg-white text-stone-800"
+                            aria-label={`Innlogging for ${row.email || row.name}`}
+                          >
+                            <option value="aktiv">aktiv</option>
+                            <option value="invitert">invitert</option>
+                            <option value="sperret">sperret</option>
+                          </select>
+                        )}
+
+                        {!erAdmin && !erArkivVisning && (
+                          <button
+                            type="button"
+                            disabled={rowBusyKey !== null || bulkBusy}
+                            onClick={() => void arkiverRad(row)}
+                            aria-label={`Arkiver ${row.name}`}
+                            title={`Arkiver ${row.name}`}
+                            className="p-1.5 rounded-md border border-stone-300 text-stone-600 hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <Archive className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {!erAdmin && erArkivVisning && (
+                          <button
+                            type="button"
+                            disabled={rowBusyKey !== null || bulkBusy}
+                            onClick={() => void gjenopprettRad(row)}
+                            aria-label={`Gjenopprett ${row.name}`}
+                            title={`Gjenopprett ${row.name}`}
+                            className="p-1.5 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <ArchiveRestore className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                    ) : (
-                      <select
-                        value={row.loginStatus}
-                        disabled={statusBusy}
-                        onChange={(e) => void changeStatus(row, e.target.value as UserDirectoryStatus)}
-                        className="px-2 py-1 rounded-md border border-stone-300 bg-white text-stone-800"
-                        aria-label={`Innlogging for ${row.email || row.name}`}
-                      >
-                        <option value="aktiv">aktiv</option>
-                        <option value="invitert">invitert</option>
-                        <option value="sperret">sperret</option>
-                      </select>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
               {visibleRows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-4 px-4 text-stone-500">
-                    Ingen personer i denne gruppen.
+                  <td colSpan={5} className="py-4 px-4 text-stone-500">
+                    {erArkivVisning ? 'Ingen arkiverte personer.' : 'Ingen personer i denne gruppen.'}
                   </td>
                 </tr>
               )}

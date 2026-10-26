@@ -121,4 +121,46 @@ describe('buildPeopleRows', () => {
     const keys = rows.map((r) => r.key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  it('archived: koordinator med aktiv=false og fadder med avsluttet er arkivert', () => {
+    const rows = buildPeopleRows(
+      [],
+      [
+        coord({ id: 'c1', fornavn: 'Aktiv', etternavn: 'Person', aktiv: true }),
+        coord({ id: 'c2', fornavn: 'Inaktiv', etternavn: 'Person', aktiv: false }),
+      ],
+      [
+        sponsor({ id: 's1', navn: 'Aktiv Fadder' }),
+        sponsor({ id: 's2', navn: 'Avsluttet Fadder', avsluttet: '2026-05-01' }),
+      ],
+      []
+    );
+    const byId = (id: string) => rows.find((r) => r.coordinatorId === id || r.sponsorId === id);
+    expect(byId('c1')?.archived).toBe(false);
+    expect(byId('c2')?.archived).toBe(true);
+    expect(byId('s1')?.archived).toBe(false);
+    expect(byId('s2')?.archived).toBe(true);
+  });
+
+  it('archived for innloggingsrader følger koblet koordinator/fadder, ikke raden selv', () => {
+    const dir: DirectoryRow[] = [
+      { id: 'kari@example.no', email: 'kari@example.no', role: 'coordinator', status: 'aktiv', coordinatorId: 'c1' },
+      { id: 'ola@example.no', email: 'ola@example.no', role: 'sponsor', status: 'aktiv', sponsorId: 's1' },
+      { id: 'ny@example.no', email: 'ny@example.no', role: 'sponsor', status: 'aktiv' },
+    ];
+    const rows = buildPeopleRows(
+      dir,
+      [coord({ id: 'c1', fornavn: 'Kari', etternavn: 'Nordmann', aktiv: false })],
+      [sponsor({ id: 's1', navn: 'Ola', avsluttet: '2026-01-01' })],
+      []
+    );
+    expect(rows.find((r) => r.email === 'kari@example.no')?.archived).toBe(true);
+    expect(rows.find((r) => r.email === 'ola@example.no')?.archived).toBe(true);
+    expect(rows.find((r) => r.email === 'ny@example.no')?.archived).toBe(false);
+  });
+
+  it('admin-rader er aldri arkivert', () => {
+    const rows = buildPeopleRows([], [], [], ['boss@example.no']);
+    expect(rows[0].archived).toBe(false);
+  });
 });
