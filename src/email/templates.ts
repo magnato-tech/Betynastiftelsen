@@ -3,7 +3,8 @@ export type SystemTemplateId =
   | 'report_approved'
   | 'inquiry_answered'
   | 'payment_registered'
-  | 'magic_link';
+  | 'magic_link'
+  | 'sponsor_invitation';
 
 export interface SystemEmailTemplate {
   id: SystemTemplateId;
@@ -41,6 +42,13 @@ export const SYSTEM_EMAIL_TEMPLATES: SystemEmailTemplate[] = [
     subject: 'Vi har registrert innbetalingen din',
     body: 'Hei {navn},\n\nInnbetalingen er registrert manuelt hos Betyna. Du ser den under betalingsoversikten i portalen.\n\nVennlig hilsen\nBetyna',
     note: 'Når admin merker innbetaling som avstemt, hvis det er slått på under Innstillinger. Ikke Vipps-kvittering.',
+  },
+  {
+    id: 'sponsor_invitation',
+    title: 'Velkomst og innlogging (onboarding)',
+    subject: 'Velkommen som fadder i Betyna',
+    body: 'Hei {navn},\n\nVelkommen som fadder i Betyna! Du følger nå et barn i Brazzaville, og du kan logge inn i portalen for å se hvordan det går.\n\nVennlig hilsen\nBetyna',
+    note: 'Sendes fra onboarding når admin har godkjent fadderen og tildelt barn. Gir samtidig innlogging. Teksten i utkastet kan redigeres før utsending.',
   },
   {
     id: 'magic_link',

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AppNotification } from '../../types';
+import { buildOnboardingTasks } from '../../utils/sponsorOnboarding';
 import {
   Bell,
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
   Award,
   X,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
 
 interface NotificationCenterProps {
@@ -28,6 +30,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
     markNotificationAsRead,
     markAllNotificationsAsRead,
     deleteNotification,
+    sponsors,
+    childrenList,
   } = useApp();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +52,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // Admin-oppgaver for fadder i onboarding. Beregnes fra data, ikke lagret som varsler.
+  const oppgaver = role === 'admin' ? buildOnboardingTasks(sponsors ?? [], childrenList ?? []) : [];
+  const badgeCount = unreadNotificationCount + oppgaver.length;
 
   const filteredNotifications = currentRoleNotifications.filter((n) => {
     if (filter === 'unread') return !n.read;
@@ -95,9 +103,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
         className="relative p-2 text-[#3C3C3C] hover:text-stone-900 hover:bg-stone-200/60 rounded-lg transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#4D6B3E]"
       >
         <Bell className="w-4 h-4" />
-        {unreadNotificationCount > 0 && (
+        {badgeCount > 0 && (
           <span className="absolute -top-1 -right-1 px-1.5 py-0.2 bg-[#4D6B3E] text-white rounded-full text-[10px] font-mono font-bold leading-tight tabular-nums shadow-xs">
-            {unreadNotificationCount}
+            {badgeCount}
           </span>
         )}
       </button>
@@ -171,6 +179,29 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
           {/* List */}
           <div className="max-h-80 overflow-y-auto divide-y divide-stone-100 bg-white">
+            {oppgaver.length > 0 && (
+              <div className="px-3.5 py-2 bg-[#4D6B3E]/10 text-[10px] font-semibold uppercase tracking-wide text-[#4D6B3E]">
+                {isFr ? 'Tâches' : 'Oppgaver'}
+              </div>
+            )}
+            {oppgaver.map((oppgave) => (
+              <div key={oppgave.id} className="p-3.5 flex items-start gap-3 hover:bg-stone-50">
+                <ClipboardList className="w-4 h-4 text-[#4D6B3E] shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1 pr-4">
+                  <h4 className="font-semibold text-[#3C3C3C] text-xs leading-snug">{oppgave.title}</h4>
+                  <button
+                    onClick={() => {
+                      onNavigateSection?.('brukere', 'sponsor:' + oppgave.sponsorId);
+                      setIsOpen(false);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] text-[#4D6B3E] hover:text-[#3B522F] font-semibold pt-1 cursor-pointer"
+                  >
+                    <span>{isFr ? 'Ouvrir' : 'Åpne'}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
             {filteredNotifications.map((n) => (
               <div
                 key={n.id}
@@ -231,7 +262,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
               </div>
             ))}
 
-            {filteredNotifications.length === 0 && (
+            {filteredNotifications.length === 0 && oppgaver.length === 0 && (
               <div className="py-8 px-4 text-center text-stone-400 space-y-1">
                 <CheckCircle2 className="w-5 h-5 mx-auto text-stone-300 mb-1" />
                 <p className="text-xs font-medium text-stone-600">

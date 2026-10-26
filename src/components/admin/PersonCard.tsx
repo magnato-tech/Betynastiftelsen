@@ -5,8 +5,11 @@ import { useApp } from '../../context/AppContext';
 import type { UserDirectoryStatus } from '../../db/firestoreProfile';
 import type { AppDataSnapshot } from '../../db/appDataSnapshot';
 import type { PersonRole, PersonRow, PersonLoginStatus } from '../../utils/peopleDirectory';
+import { onboardingDirectoryStatus } from '../../utils/peopleDirectory';
 import { coordinatorSubject, logForPerson, sponsorSubject } from '../../utils/personLog';
 import { linksToCoordinator, linksToSponsor } from '../../utils/dataIntegrity';
+import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding';
+import { SponsorOnboardingPanel } from './SponsorOnboardingPanel';
 import type { Coordinator, PersonLogSubject, Sponsor } from '../../types';
 
 export const ROLE_LABEL: Record<PersonRole, string> = {
@@ -36,7 +39,10 @@ const SAMLING_LABEL: Record<string, string> = {
   campaigns: 'kampanjer',
 };
 
-type Fane = 'opplysninger' | 'logg' | 'avslutt';
+type Fane = 'ny' | 'opplysninger' | 'logg' | 'avslutt';
+
+/** Fanen «Ny fadder» finnes bare for faddere i onboarding, og står først. */
+const NY_FANE: { id: Fane; label: string } = { id: 'ny', label: 'Ny fadder' };
 
 const FANER: { id: Fane; label: string }[] = [
   { id: 'opplysninger', label: 'Opplysninger' },
@@ -85,6 +91,8 @@ export interface PersonCardProps {
   statusBusy: boolean;
   inviteBusy: boolean;
   onOpenChild?: (childId: string) => void;
+  /** Satt ved åpning fra varsel: åpner direkte på fanen «Ny fadder». */
+  startFane?: 'ny';
 }
 
 export const PersonCard: React.FC<PersonCardProps> = ({
@@ -95,6 +103,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
   statusBusy,
   inviteBusy,
   onOpenChild,
+  startFane,
 }) => {
   const {
     coordinators,
@@ -118,8 +127,6 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     paymentAllocations,
   } = useApp();
 
-  const [fane, setFane] = useState<Fane>('opplysninger');
-
   // Personen kortet gjelder. Admin identifiseres med normalisert e-post.
   const coordinator: Coordinator | undefined =
     row.role === 'coordinator' && row.coordinatorId
@@ -127,6 +134,19 @@ export const PersonCard: React.FC<PersonCardProps> = ({
       : undefined;
   const sponsor: Sponsor | undefined =
     row.role === 'sponsor' && row.sponsorId ? sponsors.find((s) => s.id === row.sponsorId) : undefined;
+
+  // Onboarding gjelder bare faddere. Null betyr at fanen «Ny fadder» ikke vises.
+  const onboardingStep = sponsor
+    ? onboardingStepOf(sponsor, childrenList, onboardingDirectoryStatus(row))
+    : null;
+  const harNyFane = onboardingStep !== null;
+  const alleFaner: { id: Fane; label: string }[] = harNyFane ? [NY_FANE, ...FANER] : FANER;
+
+  // Åpner på «Ny fadder» når det finnes en åpen oppgave, eller når kortet er åpnet fra et varsel.
+  const [fane, setFane] = useState<Fane>(
+    startFane ?? (onboardingStep && isOpenAdminTask(onboardingStep) ? 'ny' : 'opplysninger')
+  );
+  const aktivFane: Fane = fane === 'ny' && !harNyFane ? 'opplysninger' : fane;
   const erAdmin = row.role === 'admin';
   const subject: PersonLogSubject | undefined = erAdmin
     ? { type: 'admin', id: row.email, navn: row.name }
@@ -336,8 +356,8 @@ export const PersonCard: React.FC<PersonCardProps> = ({
         </div>
 
         <div role="tablist" aria-label="Personkort" className="shrink-0 flex flex-wrap border-b border-stone-200 px-2">
-          {FANER.map((f) => {
-            const aktiv = fane === f.id;
+          {alleFaner.map((f) => {
+            const aktiv = aktivFane === f.id;
             return (
               <button
                 key={f.id}
@@ -360,8 +380,15 @@ export const PersonCard: React.FC<PersonCardProps> = ({
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 text-sm text-stone-800">
+          {/* 0. Ny fadder: guidet onboarding (kun faddere i onboarding) */}
+          {aktivFane === 'ny' && sponsor && onboardingStep && (
+            <div role="tabpanel" id="panel-ny" aria-labelledby="fane-ny" className="space-y-4">
+              <SponsorOnboardingPanel sponsor={sponsor} step={onboardingStep} />
+            </div>
+          )}
+
           {/* 1. Opplysninger (med Innlogging-kort til høyre) */}
-          {fane === 'opplysninger' && (
+          {aktivFane === 'opplysninger' && (
             <div
               role="tabpanel"
               id="panel-opplysninger"
@@ -529,7 +556,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
           )}
 
           {/* 2. Logg */}
-          {fane === 'logg' && (
+          {aktivFane === 'logg' && (
             <div role="tabpanel" id="panel-logg" aria-labelledby="fane-logg" className="space-y-4">
               {subject ? (
                 <>
@@ -599,7 +626,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
           )}
 
           {/* 4. Arkiver / slett */}
-          {fane === 'avslutt' && (
+          {aktivFane === 'avslutt' && (
             <div role="tabpanel" id="panel-avslutt" aria-labelledby="fane-avslutt" className="space-y-4 text-xs">
               {erAdmin ? (
                 <p className="text-stone-600">Administratorer kan ikke arkiveres eller slettes her.</p>

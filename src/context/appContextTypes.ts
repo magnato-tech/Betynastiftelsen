@@ -121,6 +121,15 @@ export interface AppContextType {
       vippsPatch?: Pick<Sponsor, 'vippsAgreementId' | 'vippsConfirmationUrl' | 'vippsAgreementStatus'>;
     }
   ) => string;
+  /** Onboarding av nye fadder fra nettsiden: godkjenn → tildel barn → send velkomst (gir innlogging). */
+  approveSponsorOnboarding: (sponsorId: string) => void;
+  /** Avviser påmeldingen: steg «avvist» og fadderen arkiveres. */
+  rejectSponsorOnboarding: (sponsorId: string) => Promise<void>;
+  assignChildInOnboarding: (sponsorId: string, childId: string) => void;
+  /** Sender velkomst-e-posten og gir innlogging. sent:false ved 503 (e-post ikke satt opp), da ligger den i køen. */
+  sendSponsorWelcome: (sponsorId: string, mail: { subject: string; body: string }) => Promise<{ sent: boolean; message: string }>;
+  /** Kalles når fadderen har logget inn første gang. */
+  markSponsorOnboardingDone: (sponsorId: string) => void;
   addSponsor: (data: {
     navn: string;
     epost: string;

@@ -14,6 +14,7 @@ import type {
   CatalogPhoto,
   MediaLibraryItem,
   AppNotification,
+  EmailOutboxItem,
 } from '../types';
 import type { SeedLock } from '../db/seedPolicy';
 import { contentIsLocked } from '../db/seedPolicy';
@@ -28,6 +29,9 @@ import type { PaymentAllocation, PersonLogSubject, RecurringCharge } from '../ty
 import { coordinatorSubject, sponsorSubject } from '../utils/personLog';
 import { assertNotAdmin, describeChanges, validateDeletePerson } from '../utils/personActions';
 import { linksToCoordinator, linksToSponsor } from '../utils/dataIntegrity';
+import { plainTextToHtml } from '../utils/sponsorOnboarding';
+import { postBetynaEmail } from '../email/client';
+import type { FirestoreUserDirectoryEntry } from '../db/firestoreProfile';
 
 export type AppActionsDeps = {
   contentLock: SeedLock | null;
@@ -83,6 +87,9 @@ export type AppActionsDeps = {
   setDirectoryStatusForEmail: (email: string, status: 'aktiv' | 'sperret') => Promise<void>;
   deleteDirectoryForEmail: (email: string) => Promise<void>;
   queueSponsorSystemEmail: (templateId: SystemTemplateId, sponsor: Sponsor | undefined, relatedId: string) => void;
+  inviteUserToDirectory: (entry: FirestoreUserDirectoryEntry) => Promise<void>;
+  addEmailOutboxItem: (item: Omit<EmailOutboxItem, 'id' | 'createdAt'>) => EmailOutboxItem;
+  updateEmailOutboxItem: (id: string, updates: Partial<EmailOutboxItem>) => void;
 };
 
 export function createAppActions(deps: AppActionsDeps) {
@@ -129,6 +136,9 @@ export function createAppActions(deps: AppActionsDeps) {
     setDirectoryStatusForEmail,
     deleteDirectoryForEmail,
     queueSponsorSystemEmail,
+    inviteUserToDirectory,
+    addEmailOutboxItem,
+    updateEmailOutboxItem,
   } = deps;
 
   const addChild = (childData: Partial<Child>) => {
@@ -243,7 +253,12 @@ export function createAppActions(deps: AppActionsDeps) {
     setSponsors((prev) =>
       prev.map((s) => {
         const ids = childIdsOfSponsor(s);
-        if (s.id === sponsorId) return { ...s, tildeltBarnIds: addChildId(ids, childId) };
+        if (s.id === sponsorId) {
+          // Godkjent fadder som får barn går videre til «barn tildelt».
+          const avansert =
+            s.onboarding?.steg === 'godkjent' ? { onboarding: { ...s.onboarding, steg: 'barn_tildelt' as const } } : {};
+          return { ...s, tildeltBarnIds: addChildId(ids, childId), ...avansert };
+        }
         if (ids.includes(childId)) return { ...s, tildeltBarnIds: removeChildId(ids, childId) };
         return s;
       })
@@ -842,6 +857,7 @@ export function createAppActions(deps: AppActionsDeps) {
       startDato: new Date().toISOString().slice(0, 10),
       tildeltBarnIds: [],
       registrertKilde: 'nettside',
+      onboarding: { steg: 'ny' },
     };
 
     setSponsors((prev) => [...prev, newSponsor]);
@@ -855,7 +871,8 @@ export function createAppActions(deps: AppActionsDeps) {
       dato: new Date().toISOString().slice(0, 10),
       type: 'fadderbidrag',
       metode: data.betalingsmetode,
-      status: 'fullfort',
+      // Venter: beløpet er ikke betalt før det er registrert/trukket.
+      status: 'forventet',
       referanse: `${data.betalingsmetode.toUpperCase()}-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`,
     };
     setPayments((prev) => [newPayment, ...prev]);
@@ -866,6 +883,117 @@ export function createAppActions(deps: AppActionsDeps) {
     );
 
     return newSponsorId;
+  };
+
+  const nåDato = () => new Date().toISOString().slice(0, 10);
+
+  /** Admin godkjenner ny fadder fra nettsiden. Neste steg er å tildele barn. */
+  const approveSponsorOnboarding = (sponsorId: string) => {
+    const s = sponsors.find((x) => x.id === sponsorId);
+    if (!s) return;
+    setSponsors((prev) =>
+      prev.map((x) =>
+        x.id === sponsorId ? { ...x, onboarding: { ...x.onboarding, steg: 'godkjent', godkjentDato: nåDato() } } : x
+      )
+    );
+    addAuditLog('Fadder godkjent', `${s.navn} er godkjent. Neste steg: tildel barn.`, adminActor(), sponsorSubject(s));
+  };
+
+  /** Admin avviser en påmelding: steget settes til avvist, og fadderen arkiveres (samme som avslutt). */
+  const rejectSponsorOnboarding = async (sponsorId: string) => {
+    const s = sponsors.find((x) => x.id === sponsorId);
+    if (!s) return;
+    setSponsors((prev) =>
+      prev.map((x) => (x.id === sponsorId ? { ...x, onboarding: { ...x.onboarding, steg: 'avvist' } } : x))
+    );
+    addAuditLog('Fadderpåmelding avvist', `${s.navn} ble avvist og arkivert.`, adminActor(), sponsorSubject(s));
+    await deactivatePerson(sponsorSubject(s));
+  };
+
+  /** Tildeler barn i onboarding. Går til «barn tildelt», med mindre fadderen allerede er invitert, ferdig eller avvist. */
+  const assignChildInOnboarding = (sponsorId: string, childId: string) => {
+    assignSponsorToChild(childId, sponsorId);
+    setSponsors((prev) =>
+      prev.map((x) => {
+        if (x.id !== sponsorId) return x;
+        const steg = x.onboarding?.steg;
+        if (steg === 'invitert' || steg === 'ferdig' || steg === 'avvist') return x;
+        return { ...x, onboarding: { ...x.onboarding, steg: 'barn_tildelt' } };
+      })
+    );
+  };
+
+  /**
+   * Sender velkomst-e-posten (redigert utkast) og gir innlogging. Ved 503 (e-post ikke satt opp)
+   * ligger e-posten i køen og steget blir værende på «barn tildelt».
+   */
+  const sendSponsorWelcome = async (
+    sponsorId: string,
+    mail: { subject: string; body: string }
+  ): Promise<{ sent: boolean; message: string }> => {
+    const s = sponsors.find((x) => x.id === sponsorId);
+    if (!s) return { sent: false, message: 'Fant ikke fadderen.' };
+    const epost = s.epost.trim().toLowerCase();
+    const row = addEmailOutboxItem({
+      kind: 'system',
+      subject: mail.subject,
+      body: plainTextToHtml(mail.body),
+      toEmails: [epost],
+      relatedId: s.id,
+      templateId: 'sponsor_invitation',
+      status: 'venter_nøkkel',
+      note: 'Velkomst-e-post fra onboarding.',
+    });
+    try {
+      // Innlogging gis bare hvis personen ikke allerede har en rad i userDirectory.
+      const eksisterende = await directoryRowsForPerson(sponsorSubject(s), epost);
+      if (eksisterende.length === 0) {
+        await inviteUserToDirectory({ email: epost, role: 'sponsor', sponsorId: s.id, displayName: s.navn });
+      }
+      const { status, json } = await postBetynaEmail({
+        kind: 'system',
+        subject: mail.subject,
+        html: row.body,
+        emails: [epost],
+        relatedId: s.id,
+        templateId: 'sponsor_invitation',
+      });
+      if (status === 200 && json.ok) {
+        updateEmailOutboxItem(row.id, { status: 'sendt', note: json.id ? `Resend ${json.id}` : 'Sendt' });
+        const nå = new Date().toISOString();
+        setSponsors((prev) =>
+          prev.map((x) =>
+            x.id === sponsorId ? { ...x, onboarding: { ...x.onboarding, steg: 'invitert', invitasjonSendt: nå } } : x
+          )
+        );
+        addAuditLog('Velkomst-e-post sendt', `Til ${epost}. Innlogging er gitt.`, adminActor(), sponsorSubject(s));
+        return { sent: true, message: `Velkomst-e-post sendt til ${epost}` };
+      }
+      if (status === 503) {
+        // E-post ikke satt opp: e-posten venter i køen, og innlogging er gitt.
+        return {
+          sent: false,
+          message:
+            'E-posttjenesten er ikke satt opp. E-posten ligger i e-postkøen (Innstillinger → E-post). Innlogging er gitt.',
+        };
+      }
+      updateEmailOutboxItem(row.id, { status: 'feilet', note: json.message });
+      return { sent: false, message: json.message || 'Kunne ikke sende e-posten.' };
+    } catch (e) {
+      const melding = e instanceof Error ? e.message : 'Kunne ikke sende e-posten.';
+      updateEmailOutboxItem(row.id, { status: 'feilet', note: melding });
+      return { sent: false, message: melding };
+    }
+  };
+
+  /** Fadderen har logget inn første gang (userDirectory er 'aktiv'). Onboarding er ferdig. */
+  const markSponsorOnboardingDone = (sponsorId: string) => {
+    const s = sponsors.find((x) => x.id === sponsorId);
+    if (!s) return;
+    setSponsors((prev) =>
+      prev.map((x) => (x.id === sponsorId ? { ...x, onboarding: { ...x.onboarding, steg: 'ferdig', ferdigDato: nåDato() } } : x))
+    );
+    addAuditLog('Onboarding fullført', `${s.navn} har logget inn for første gang.`, adminActor(), sponsorSubject(s));
   };
 
   const addSponsor = (data: {
@@ -1185,6 +1313,11 @@ export function createAppActions(deps: AppActionsDeps) {
     forwardInquiryToCoordinator,
     coordinatorReplyToInquiry,
     registerNewSponsorInterest,
+    approveSponsorOnboarding,
+    rejectSponsorOnboarding,
+    assignChildInOnboarding,
+    sendSponsorWelcome,
+    markSponsorOnboardingDone,
     addSponsor,
     donateToCampaign,
     addCampaign,

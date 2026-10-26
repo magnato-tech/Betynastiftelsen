@@ -254,11 +254,12 @@ describe('Offentlig fadderregistrering (nettside)', () => {
     m.run((a) => a.registerNewSponsorInterest(data));
     expect(m.app.auditLogs[0].detaljer).toContain('Admin må koble barn manuelt');
   });
-  it('KJENT AVVIK F-25: registrering oppretter en betaling med status "fullfort" uten at noe er betalt', () => {
+  it('registrering oppretter en betaling med status "forventet" (ikke betalt ennå)', () => {
     const m = mountApp();
     m.run((a) => a.registerNewSponsorInterest(data));
     expect(m.app.payments).toHaveLength(1);
-    expect(m.app.payments[0]).toMatchObject({ status: 'fullfort', belop: 350, type: 'fadderbidrag' });
+    expect(m.app.payments[0]).toMatchObject({ status: 'forventet', belop: 350, type: 'fadderbidrag' });
+    expect(m.app.payments[0].status).not.toBe('fullfort');
     expect(m.app.payments[0].referanse).toMatch(/^VIPPS-202610-\d{4}$/);
   });
   it('KJENT AVVIK F-25: registrering validerer ikke e-post, navn eller beloep', () => {

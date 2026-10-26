@@ -130,6 +130,17 @@ export interface Sponsor {
   vippsAgreementId?: string;
   vippsConfirmationUrl?: string;
   vippsAgreementStatus?: VippsAgreementStatus;
+  /** Guidet onboarding av nye fadderne (fra nettside til innlogging). Mangler = ingen onboarding-data. */
+  onboarding?: SponsorOnboarding;
+}
+
+export type SponsorOnboardingStep = 'ny' | 'godkjent' | 'barn_tildelt' | 'invitert' | 'ferdig' | 'avvist';
+
+export interface SponsorOnboarding {
+  steg: SponsorOnboardingStep;
+  godkjentDato?: string;
+  invitasjonSendt?: string;
+  ferdigDato?: string;
 }
 
 /** Historisk kobling fadder–barn (andel i øre per måned). */

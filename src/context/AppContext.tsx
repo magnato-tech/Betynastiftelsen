@@ -124,6 +124,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         directoryRowsForPerson: session.directoryRowsForPerson,
         setDirectoryStatusForEmail: session.setDirectoryStatusForEmail,
         deleteDirectoryForEmail: session.deleteDirectoryForEmail,
+        inviteUserToDirectory: session.inviteUserToDirectory,
+        addEmailOutboxItem: session.addEmailOutboxItem,
+        updateEmailOutboxItem: session.updateEmailOutboxItem,
       }),
     [content, session]
   );

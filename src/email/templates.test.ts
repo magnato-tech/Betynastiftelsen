@@ -4,10 +4,10 @@ import { parseEmailPayload } from './payload';
 import { portalSectionForTemplate } from './autoSendPrefs';
 import { fillTemplate, SYSTEM_EMAIL_TEMPLATES, type SystemTemplateId } from './templates';
 
-const IDS: SystemTemplateId[] = ['sponsor_welcome', 'report_approved', 'inquiry_answered', 'payment_registered', 'magic_link'];
+const IDS: SystemTemplateId[] = ['sponsor_welcome', 'report_approved', 'inquiry_answered', 'payment_registered', 'magic_link', 'sponsor_invitation'];
 
 describe('e-postmaler', () => {
-  it('har de fem forventede malene, uten duplikater', () => {
+  it('har de seks forventede malene, uten duplikater', () => {
     expect(SYSTEM_EMAIL_TEMPLATES.map((t) => t.id).sort()).toEqual([...IDS].sort());
   });
   it.each(IDS)('%s har tittel, emne, tekst og forklaring', (id) => {

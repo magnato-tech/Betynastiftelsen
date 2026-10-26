@@ -2,6 +2,7 @@ import type { Coordinator, Sponsor } from '../types';
 import type { FirestoreUserDirectoryEntry, UserDirectoryStatus } from '../db/firestoreProfile';
 import { emailToDirectoryDocId } from '../db/firestoreUser';
 import { normalizeUserDirectoryStatus } from '../db/userDirectoryStatus';
+import type { SponsorDirectoryStatus } from './sponsorOnboarding';
 
 /** Rad fra Firestore-samlingen userDirectory (innloggingsinvitasjon). */
 export type DirectoryRow = FirestoreUserDirectoryEntry & { id: string };
@@ -23,6 +24,12 @@ export interface PersonRow {
   isBootstrapOnly: boolean;
   /** Arkivert: koordinator med aktiv=false, eller fadder med satt avsluttet-dato. */
   archived: boolean;
+}
+
+/** Innloggingsstatus for onboarding-beregningen. Null når personen ikke har innloggingsrad. */
+export function onboardingDirectoryStatus(row: PersonRow): SponsorDirectoryStatus {
+  if (!row.directory || row.loginStatus === 'ikke-invitert') return null;
+  return row.loginStatus;
 }
 
 const ROLE_ORDER: Record<PersonRole, number> = { admin: 0, coordinator: 1, sponsor: 2 };

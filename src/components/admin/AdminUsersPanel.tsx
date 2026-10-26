@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Archive, ArchiveRestore } from 'lucide-react';
 import { db } from '../../config/firebase';
@@ -13,25 +13,30 @@ import {
 import { emailToDirectoryDocId } from '../../db/firestoreUser';
 import {
   buildPeopleRows,
+  onboardingDirectoryStatus,
   type DirectoryRow,
   type PersonRow,
   type PersonRole,
 } from '../../utils/peopleDirectory';
 import { coordinatorSubject, sponsorSubject } from '../../utils/personLog';
-import type { PersonLogSubject } from '../../types';
+import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding';
+import type { PersonLogSubject, SponsorOnboardingStep } from '../../types';
 import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
 import { PersonCard, ROLE_LABEL } from './PersonCard';
 
 export interface AdminUsersPanelProps {
   focusEmail?: string | null;
+  /** Fadder-id fra et varsel (bjella). Åpner personkortet på fanen «Ny fadder». */
+  focusSponsorId?: string | null;
   onClearFocus?: () => void;
   onOpenChild?: (childId: string) => void;
 }
 
-/** «arkivert» viser kun arkiverte personer. Alle andre filtre viser aktive. */
-type RoleFilter = 'alle' | PersonRole | 'arkivert';
+/** «nye» viser faddere med åpen onboarding-oppgave. «arkivert» viser kun arkiverte personer. Andre filtre viser aktive. */
+type RoleFilter = 'alle' | PersonRole | 'arkivert' | 'nye';
 
 const FILTERS: { value: RoleFilter; label: string }[] = [
+  { value: 'nye', label: 'Nye' },
   { value: 'alle', label: 'Alle' },
   { value: 'admin', label: 'Administratorer' },
   { value: 'coordinator', label: 'Koordinatorer' },
@@ -41,12 +46,14 @@ const FILTERS: { value: RoleFilter; label: string }[] = [
 
 export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   focusEmail,
+  focusSponsorId,
   onClearFocus,
   onOpenChild,
 }) => {
   const {
     sponsors,
     coordinators,
+    childrenList,
     firestoreEnabled,
     firestoreUserEmail,
     updateUserDirectoryStatus,
@@ -54,6 +61,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     addSponsor,
     deactivatePerson,
     reactivatePerson,
+    markSponsorOnboardingDone,
   } = useApp();
 
   const [showAddSponsor, setShowAddSponsor] = useState(false);
@@ -67,6 +75,8 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   const [rows, setRows] = useState<DirectoryRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  // Raden som skal åpnes på fanen «Ny fadder» (fra varsel). Nullstilles ved vanlig klikk.
+  const [nyFaneKey, setNyFaneKey] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('alle');
   const [inviteBusyKey, setInviteBusyKey] = useState<string | null>(null);
@@ -114,23 +124,40 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   const aktiveRader = useMemo(() => peopleRows.filter((r) => !r.archived), [peopleRows]);
   const arkiverteRader = useMemo(() => peopleRows.filter((r) => r.archived), [peopleRows]);
 
+  // Onboarding-steg per fadderrad. Rader uten fadder (eller utenom onboarding) får null.
+  const stepByKey = useMemo(() => {
+    const m = new Map<string, SponsorOnboardingStep | null>();
+    for (const row of peopleRows) {
+      const sp = row.role === 'sponsor' && row.sponsorId ? sponsors.find((s) => s.id === row.sponsorId) : undefined;
+      if (sp) m.set(row.key, onboardingStepOf(sp, childrenList, onboardingDirectoryStatus(row)));
+    }
+    return m;
+  }, [peopleRows, sponsors, childrenList]);
+
+  const harApnOppgave = (row: PersonRow): boolean => isOpenAdminTask(stepByKey.get(row.key) ?? null);
+
   const counts = useMemo(() => {
     const c: Record<RoleFilter, number> = {
+      nye: 0,
       alle: aktiveRader.length,
       admin: 0,
       coordinator: 0,
       sponsor: 0,
       arkivert: arkiverteRader.length,
     };
-    for (const r of aktiveRader) c[r.role] += 1;
+    for (const r of aktiveRader) {
+      c[r.role] += 1;
+      if (isOpenAdminTask(stepByKey.get(r.key) ?? null)) c.nye += 1;
+    }
     return c;
-  }, [aktiveRader, arkiverteRader]);
+  }, [aktiveRader, arkiverteRader, stepByKey]);
 
   const visibleRows = useMemo(() => {
     if (roleFilter === 'arkivert') return arkiverteRader;
     if (roleFilter === 'alle') return aktiveRader;
+    if (roleFilter === 'nye') return aktiveRader.filter((r) => isOpenAdminTask(stepByKey.get(r.key) ?? null));
     return aktiveRader.filter((r) => r.role === roleFilter);
-  }, [roleFilter, aktiveRader, arkiverteRader]);
+  }, [roleFilter, aktiveRader, arkiverteRader, stepByKey]);
 
   const erArkivVisning = roleFilter === 'arkivert';
   // Admin-rader kan ikke velges eller arkiveres her.
@@ -144,11 +171,43 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       const target = emailToDirectoryDocId(focusEmail);
       const hit = peopleRows.find((r) => r.email === target);
       setSelectedKey(hit ? hit.key : `dir:${target}`);
+      setNyFaneKey(null);
       onClearFocus?.();
     }
   }, [focusEmail, onClearFocus, peopleRows]);
 
-  const selected = selectedKey ? peopleRows.find((r) => r.key === selectedKey) : undefined;
+  // Fra varselklokken: åpne fadderens personkort på fanen «Ny fadder».
+  useEffect(() => {
+    if (!focusSponsorId) return;
+    const hit = peopleRows.find((r) => r.role === 'sponsor' && r.sponsorId === focusSponsorId);
+    if (hit) {
+      setSelectedKey(personIdentity(hit));
+      setNyFaneKey(hit.key);
+    }
+    onClearFocus?.();
+  }, [focusSponsorId, onClearFocus, peopleRows]);
+
+  // Innlogget første gang (status aktiv): marker onboarding som ferdig, én gang per fadder.
+  const markerteFerdig = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const row of peopleRows) {
+      if (row.role !== 'sponsor' || !row.sponsorId) continue;
+      const sp = sponsors.find((s) => s.id === row.sponsorId);
+      if (!sp?.onboarding || sp.onboarding.steg !== 'invitert') continue;
+      if (onboardingDirectoryStatus(row) !== 'aktiv') continue;
+      if (markerteFerdig.current.has(sp.id)) continue;
+      markerteFerdig.current.add(sp.id);
+      markSponsorOnboardingDone(sp.id);
+    }
+  }, [peopleRows, sponsors, markSponsorOnboardingDone]);
+
+  // Raden bytter nøkkel (sponsor:<id> → dir:<e-post>) når personen får innlogging.
+  // Kortet skal da bli stående åpent, så vi matcher også på fadder-/koordinator-id.
+  const personIdentity = (row: PersonRow) =>
+    row.sponsorId ? `sponsor:${row.sponsorId}` : row.coordinatorId ? `coord:${row.coordinatorId}` : row.key;
+  const selected = selectedKey
+    ? peopleRows.find((r) => r.key === selectedKey || personIdentity(r) === selectedKey)
+    : undefined;
 
   // Koordinator- eller fadderposten til raden. Admin har ingen slik post.
   const subjectFor = (row: PersonRow): PersonLogSubject | undefined => {
@@ -348,6 +407,9 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                 active ? 'bg-[#4D6B3E] text-white' : 'bg-white text-stone-700 hover:bg-stone-50'
               }`}
             >
+              {f.value === 'nye' && counts.nye > 0 && (
+                <span aria-hidden="true" className="inline-block w-1.5 h-1.5 mr-1.5 mb-0.5 rounded-full bg-amber-500" />
+              )}
               {f.label} ({counts[f.value]})
             </button>
           );
@@ -404,7 +466,10 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                   <tr
                     key={row.key}
                     className="hover:bg-stone-50/80 cursor-pointer"
-                    onClick={() => setSelectedKey(row.key)}
+                    onClick={() => {
+                      setSelectedKey(personIdentity(row));
+                      setNyFaneKey(null);
+                    }}
                   >
                     <td className="py-2.5 px-4 w-8" onClick={(e) => e.stopPropagation()}>
                       {!erAdmin && (
@@ -417,7 +482,20 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                         />
                       )}
                     </td>
-                    <td className={`py-2.5 px-4 font-medium ${dempet || 'text-stone-900'}`}>{row.name}</td>
+                    <td className={`py-2.5 px-4 font-medium ${dempet || 'text-stone-900'}`}>
+                      <span className="inline-flex flex-wrap items-center gap-2">
+                        {row.name}
+                        {harApnOppgave(row) && (
+                          <span
+                            aria-label="Ny fadder – trenger behandling"
+                            title="Ny fadder – trenger behandling"
+                            className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-semibold uppercase tracking-wide"
+                          >
+                            Ny
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className={`py-2.5 px-4 ${dempet || 'text-stone-600'}`}>
                       {row.email || <span className="text-stone-400">—</span>}
                     </td>
@@ -570,6 +648,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
 
       {selected && (
         <PersonCard
+          key={personIdentity(selected)}
           row={selected}
           onClose={() => setSelectedKey(null)}
           onChangeStatus={changeStatus}
@@ -577,6 +656,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
           statusBusy={statusBusy}
           inviteBusy={inviteBusyKey === selected.key}
           onOpenChild={onOpenChild}
+          startFane={nyFaneKey === selected.key ? 'ny' : undefined}
         />
       )}
     </div>

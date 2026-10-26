@@ -519,7 +519,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeSection === 'brukere' && (
         <AdminUsersPanel
           focusEmail={usersFocusEmail}
-          onClearFocus={() => setUsersFocusEmail(null)}
+          focusSponsorId={focusEntityId?.startsWith('sponsor:') ? focusEntityId.slice('sponsor:'.length) : null}
+          onClearFocus={() => {
+            setUsersFocusEmail(null);
+            onClearFocus?.();
+          }}
           onOpenChild={(childId) => {
             setChildrenFocusId(childId);
             setActiveSection('barn');
