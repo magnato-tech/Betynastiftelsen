@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { childIdsOfSponsor, childrenOfSponsor } from '../../utils/sponsorChildren';
 import { formatOreAsKr, paymentAmountKr } from '../../utils/paymentLedger';
 import { VisualCard } from '../common/VisualCard';
+import { maskContactInfo, sponsorSchoolText } from '../../utils/childPrivacy';
 import { ChildHistoryTimeline } from '../common/ChildHistoryTimeline';
 import {
   Heart,
@@ -282,7 +283,7 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
             <VisualCard
               type="child"
               title={`${child.fornavn} · ${new Date().getFullYear() - child.fodselsaar} år`}
-              subtitle={child.skoleNavn}
+              subtitle={sponsorSchoolText(child)}
               aspectRatio="4/3"
               customImageUrl={child.publisertFotoUrl}
             />
@@ -300,7 +301,7 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
                 </div>
                 <div className="py-2 flex justify-between">
                   <dt className="text-stone-500">Skolested</dt>
-                  <dd className="text-right text-stone-800 max-w-[200px]">{child.skoleNavn}</dd>
+                  <dd className="text-right text-stone-800 max-w-[200px]">{sponsorSchoolText(child)}</dd>
                 </div>
                 <div className="py-2 flex justify-between">
                   <dt className="text-stone-500">Fødselsår</dt>
@@ -360,8 +361,8 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
                     <span aria-hidden="true">·</span>
                     <span className="text-emerald-700 font-medium">Godkjent av stiftelsen</span>
                   </div>
-                  <h4 className="text-base font-serif font-bold text-stone-900">{childReports[0].tittelNorsk}</h4>
-                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-sans">{childReports[0].innholdNorsk}</p>
+                  <h4 className="text-base font-serif font-bold text-stone-900">{maskContactInfo(childReports[0].tittelNorsk)}</h4>
+                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-sans">{maskContactInfo(childReports[0].innholdNorsk)}</p>
                   <div className="pt-2 flex flex-wrap gap-4 text-xs text-stone-600 border-t border-stone-100">
                     <div>
                       <span className="font-semibold text-stone-800">Skoleprestasjon: </span>
@@ -407,10 +408,10 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
                     </span>
                   </div>
                   <h4 className="text-sm font-serif font-bold text-stone-900">
-                    {childMilestones[0].tittelNorsk}
+                    {maskContactInfo(childMilestones[0].tittelNorsk)}
                   </h4>
                   <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                    {childMilestones[0].beskrivelseNorsk}
+                    {maskContactInfo(childMilestones[0].beskrivelseNorsk)}
                   </p>
                   <div className="pt-2 flex items-center justify-between text-[11px] text-stone-500 border-t border-stone-200/60">
                     <span>Loggført av feltkoordinator</span>
@@ -475,7 +476,15 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
 
           {/* Render ChildHistoryTimeline component */}
           <ChildHistoryTimeline
-            milestones={childMilestones}
+            // Kontaktinfo i milepæltekster sladdes før fadderen ser dem.
+            milestones={childMilestones.map((m) => ({
+              ...m,
+              tittelNorsk: maskContactInfo(m.tittelNorsk),
+              beskrivelseNorsk: maskContactInfo(m.beskrivelseNorsk),
+              tittelFransk: maskContactInfo(m.tittelFransk),
+              beskrivelseFransk: maskContactInfo(m.beskrivelseFransk),
+              merknad: m.merknad ? maskContactInfo(m.merknad) : m.merknad,
+            }))}
             childName={child.fornavn}
             childCode={child.internKode}
             isCoordinatorView={false}
@@ -512,8 +521,8 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
                   </div>
                 </div>
 
-                <h3 className="text-lg font-serif font-bold text-stone-900">{report.tittelNorsk}</h3>
-                <p className="text-sm text-stone-700 leading-relaxed font-sans">{report.innholdNorsk}</p>
+                <h3 className="text-lg font-serif font-bold text-stone-900">{maskContactInfo(report.tittelNorsk)}</h3>
+                <p className="text-sm text-stone-700 leading-relaxed font-sans">{maskContactInfo(report.innholdNorsk)}</p>
 
                 <div className="pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-600">
                   <div className="flex items-center gap-4">
@@ -617,7 +626,7 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
                       <span>Svar fra Betyna stiftelsen</span>
                       <span>{inq.svarDato}</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-emerald-950 font-sans leading-relaxed">{inq.svarTekst}</p>
+                    <p className="text-xs sm:text-sm text-emerald-950 font-sans leading-relaxed">{maskContactInfo(inq.svarTekst)}</p>
                   </div>
                 ) : (
                   <p className="text-xs text-stone-500 italic">

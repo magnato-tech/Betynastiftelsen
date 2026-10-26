@@ -2,7 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import type { Child, Coordinator, InquiryStatus, Report, ReportStatus } from '../../types';
+import type { Child, Coordinator, InquiryStatus, Report, ReportStatus, SkoleType } from '../../types';
+import { skoleTypeLabel, sponsorSchoolText } from '../../utils/childPrivacy';
+
+const SKOLE_TYPER: SkoleType[] = [
+  'offentlig_barneskole',
+  'privat_barneskole',
+  'offentlig_ungdomsskole',
+  'privat_ungdomsskole',
+  'videregaende',
+  'yrkesskole',
+];
 import { InquiryWorkPanel } from './InquiryWorkPanel';
 import { AdminContentWorkbench } from './AdminContentWorkbench';
 import { ChildHistoryTimeline } from '../common/ChildHistoryTimeline';
@@ -83,6 +93,9 @@ interface Opplysninger {
   fodselsaar: number;
   kjonn: 'gutt' | 'jente';
   skoleNavn: string;
+  /** Tom streng = ikke valgt (fadderen ser da «Skole i …»). */
+  skoleType: SkoleType | '';
+  skoleBy: string;
   klassetrinn: string;
   interesser: string;
   behovSammendrag: string;
@@ -97,6 +110,8 @@ const tilOpplysninger = (c: Child): Opplysninger => ({
   fodselsaar: c.fodselsaar,
   kjonn: c.kjonn,
   skoleNavn: c.skoleNavn,
+  skoleType: c.skoleType ?? '',
+  skoleBy: c.skoleBy ?? '',
   klassetrinn: c.klassetrinn,
   interesser: c.interesser.join(', '),
   behovSammendrag: c.behovSammendrag,
@@ -119,6 +134,8 @@ const byggPatch = (base: Opplysninger, draft: Opplysninger): Partial<Child> => {
   if (draft.fodselsaar !== base.fodselsaar) patch.fodselsaar = draft.fodselsaar;
   if (draft.kjonn !== base.kjonn) patch.kjonn = draft.kjonn;
   if (draft.skoleNavn.trim() !== base.skoleNavn) patch.skoleNavn = draft.skoleNavn.trim();
+  if (draft.skoleType && draft.skoleType !== base.skoleType) patch.skoleType = draft.skoleType;
+  if (draft.skoleBy.trim() !== base.skoleBy) patch.skoleBy = draft.skoleBy.trim();
   if (draft.klassetrinn.trim() !== base.klassetrinn) patch.klassetrinn = draft.klassetrinn.trim();
   if (parseInteresser(draft.interesser).join('\n') !== parseInteresser(base.interesser).join('\n')) {
     patch.interesser = parseInteresser(draft.interesser);
@@ -1037,8 +1054,38 @@ export const ChildPage: React.FC<ChildPageProps> = ({ child, onOpenSponsorByEmai
                   </select>
                 </label>
                 <label className="space-y-1 text-stone-700">
-                  <span className="font-medium">Skole</span>
+                  <span className="font-medium">Skolens navn (internt)</span>
                   <input value={draft.skoleNavn} onChange={(e) => oppdater('skoleNavn', e.target.value)} className={inputKlasse} />
+                  <span className="block text-[11px] text-stone-500">Vises aldri for fadderen.</span>
+                </label>
+                <label className="space-y-1 text-stone-700">
+                  <span className="font-medium">Skoletype (vises for fadder)</span>
+                  <select
+                    value={draft.skoleType}
+                    onChange={(e) => oppdater('skoleType', e.target.value as SkoleType | '')}
+                    className={inputKlasse}
+                  >
+                    <option value="" disabled>
+                      Velg skoletype …
+                    </option>
+                    {SKOLE_TYPER.map((t) => (
+                      <option key={t} value={t}>
+                        {skoleTypeLabel(t)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="space-y-1 text-stone-700">
+                  <span className="font-medium">By (vises for fadder)</span>
+                  <input
+                    value={draft.skoleBy}
+                    placeholder="Brazzaville"
+                    onChange={(e) => oppdater('skoleBy', e.target.value)}
+                    className={inputKlasse}
+                  />
+                  <span className="block text-[11px] text-stone-500">
+                    Fadderen ser: {sponsorSchoolText({ skoleType: draft.skoleType || undefined, skoleBy: draft.skoleBy || undefined } as Child)}
+                  </span>
                 </label>
                 <label className="space-y-1 text-stone-700">
                   <span className="font-medium">Klassetrinn</span>

@@ -131,7 +131,7 @@ describe('Opplysninger', () => {
     const lagre = screen.getByRole('button', { name: 'Lagre endringer' }) as HTMLButtonElement;
     expect(lagre.disabled).toBe(true);
 
-    fireEvent.change(screen.getByLabelText('Skole'), { target: { value: 'Ny skole' } });
+    fireEvent.change(screen.getByLabelText(/Skolens navn/), { target: { value: 'Ny skole' } });
     expect(lagre.disabled).toBe(false);
 
     fireEvent.click(lagre);

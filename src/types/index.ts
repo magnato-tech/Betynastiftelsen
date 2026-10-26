@@ -13,6 +13,15 @@ export interface Coordinator {
   aktiv: boolean;
 }
 
+/** Skoletype, som fadderen ser i stedet for skolens navn (jf. sponsorSchoolText i utils/childPrivacy). */
+export type SkoleType =
+  | 'offentlig_barneskole'
+  | 'privat_barneskole'
+  | 'offentlig_ungdomsskole'
+  | 'privat_ungdomsskole'
+  | 'videregaende'
+  | 'yrkesskole';
+
 export interface Child {
   id: string;
   internKode: string; // f.eks. BET-CD-01
@@ -20,6 +29,10 @@ export interface Child {
   fodselsaar: number;
   kjonn: 'gutt' | 'jente';
   skoleNavn: string;
+  /** Skoletype for visning til fadder. Mangler = generisk «Skole i <by>». */
+  skoleType?: SkoleType;
+  /** By som vises til fadder (standard Brazzaville). */
+  skoleBy?: string;
   klassetrinn: string;
   interesser: string[];
   bakgrunnskontekst: string; // Verdig og nøktern beskrivelse
