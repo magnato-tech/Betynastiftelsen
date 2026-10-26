@@ -7,7 +7,7 @@ En trygg og tillitsvekkende plattform som f?lger barn i Kongo gjennom utdannings
 
 Status: Arbeidsutkast. Fadderside, administratork? og koordinatorskjema er avklart 14. oktober 2026. Forsiden bruker gruppebildet kunden har levert. Tildeling, betalingsregistrering, sp?rsm?lsk? og resten av den offentlige siden er ikke tegnet ferdig.
 M?lgruppe: Stiftelsens ledelse, administrator, koordinatorer og utviklere.
-Viktig: Juridiske krav, ekte Vipps-integrasjon og automatisk bankavstemming er fortsatt ?pne beslutninger. Bel?p, innlogging og innholdsflyten for fadderen er besluttet.
+Viktig: Juridiske krav og automatisk bankavstemming er fortsatt ?pne beslutninger. Vipps Recurring er teknisk forberedt mot apitest (produksjon n?r avtale og n?kler er p? plass). Bel?p, innlogging og innholdsflyten for fadderen er besluttet.
 
 
 Innhold
@@ -163,20 +163,32 @@ N?r siden ?pnes og n?r den avsluttes
 * N?r barnets utdanning er avsluttet, blir siden en rolig avslutning. Historikken blir liggende for fadderen. Det er ingen automatisk kobling til et annet barn.
 
 7. ?konomi og betaling
-M?nedsbel?pet er besluttet som to faste niv?er: 250 kroner og 350 kroner.
+M?nedsbel?pet er besluttet som to faste niv?er: 250 kroner og 350 kroner (CMS kan ogs? vise valgfritt bel?p).
 
-Neste versjon av betaling
-* Interesserte melder seg via skjema.
-* Administrator registrerer Vipps og bank manuelt.
-* Ekte Vipps-betaling og automatisk trekk er ikke en del av denne versjonen.
-* Automatisk trekk skal ikke sl?s p? f?r betalingsavtalen og den tekniske integrasjonen er bekreftet.
-* Tildeling av barn og betalingsflaten tegnes etter innholdsk?en.
+Vipps faste trekk (Recurring API v3)
+* ?n Vipps-avtale per fadder; bel?p i hele ?re; m?nedlig belastning opprettes av Betyna (ikke automatisk ved ACTIVE).
+* Nettsiden: skjema med navn, e-post, telefon og samtykke f?r redirect til vippsConfirmationUrl; PENDING lagres ved opprettelse.
+* Retur-URL kaller bare GET p? avtale ? ingen aktivering fra redirect alene. Webhook + GET f?r bokf?ring.
+* Firestore: sponsorAssignments, recurringCharges, payments (amountOre), paymentAllocations (barn + felles buffer).
+* Innbetaling status fullfort ved CHARGED; avstemt n?r admin har sett mot bank; refusjon via Vipps-status (REFUNDED / PARTIALLY_REFUNDED).
+* Admin ?konomi: KPI Forventet, Trukket, Fordelt, Avstemt; filter p? fadder eller barn (ikke begge); system/vippsChargeJob for m?nedsjobb.
+* Fadderportal: avtalestatus, trekk per m?ned og fordeling p? egne barn + felles buffer.
+* Koordinator: leser paymentAllocations for egne barn (ikke payments/recurringCharges med fadderdata).
+* Server: /api/vipps/* i Vite lokalt; n?kler kun i servermilj? (apitest.vipps.no i test). VIPPS_MOCK for utvikling uten n?kler.
+
+Manuell betaling
+* AvtaleGiro og bank registreres som i dag (kilde manuell), uten Vipps charge-id. Aksjonsbidrag beholder aksjonId.
 
 Krav som fortsatt gjelder
-* Registrere avtalt fadderbel?p.
 * Skille ordin?re fadderbidrag fra bidrag til ekstraordin?re aksjoner.
-* Unng? ? lagre kort- eller betalingshemmeligheter i egen database.
-* Knytte en registrert betaling til riktig fadder.
+* Aldri lagre Vipps-n?kler i nettleser eller Firestore.
+* Knytte innbetaling og fordeling til riktig fadder og barn.
+
+Go-live sjekkliste (f?r produksjon)
+* Recurring bestilt p? salgsenhet; testn?kler og senere produksjonsn?kler.
+* HTTPS for merchantRedirectUrl og webhook.
+* M?nedsjobb (Cloud Scheduler + funksjon) minst ?n dag f?r due.
+* Firestore-regler og emulatortester for nye samlinger.
 
 Avslutning av fadderforhold
 N?r barnet avslutter utdanningen, avsluttes fadderforholdet p? faddersiden som en rolig avslutning. Historikken blir liggende for fadderen. Arkivering m? fortsatt v?re personvernmessig forsvarlig. Tilbud om ? st?tte et annet barn er ikke besluttet.
@@ -635,6 +647,11 @@ Kunden viste at Bli fadder paa betyna.no bare sa at skjemaet ikke lagrer, uten f
 
 16. oktober 2026, vitnesbyrd som bildekort hoeyt paa forsiden
 Kunden vil at seksjonen Ekte vitnesbyrd skal ligge hoeyt paa forsiden, rett under hovedbanneret, som kort med bilde og tekst. Kortene fylles av vitnesbyrdene admin skriver i CMS (navn, tekst, bilde). De vises ogsaa paa betyna.no, ikke bare i utviklermodus. Eksempelbildet med landvalg (Bangladesh, Uganda, Peru) er bare form, ikke innhold.
+
+Arbeidsdokument - Versjon 1.112 - 18. oktober 2026
+
+18. oktober 2026, Vipps faste trekk og betalingsregister
+Implementert datamodell (sponsorAssignments, recurringCharges, paymentAllocations, utvidet payments/sponsors), serverklient mot Recurring API v3, dev-ruter /api/vipps, skjemaflyt med telefon f?r redirect, admin-avstemming med fadder/barn-filter og fadderportal med fordeling. Enhetstester og Firestore-matrise for nye samlinger. Kapittel 7 oppdatert med go-live-sjekkliste.
 
 Arbeidsdokument - Versjon 1.111 - 18. oktober 2026
 

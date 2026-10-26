@@ -20,17 +20,22 @@ service cloud.firestore {
       return signedIn()
         && exists(/databases/$(database)/documents/userDirectory/$(authEmailLower()));
     }
+    // Sperret i userDirectory = ingen tilgang via rollen i users/{uid}.
+    function notBlocked() {
+      let dir = /databases/$(database)/documents/userDirectory/$(authEmailLower());
+      return !exists(dir) || get(dir).data.get('status', 'aktiv') != 'sperret';
+    }
     function isAdmin() {
-      return signedIn() && userDoc().role == 'admin';
+      return signedIn() && userDoc().role == 'admin' && notBlocked();
     }
     function canAdminWrite() {
       return bootstrapAdmin() || isAdmin();
     }
     function isCoordinator() {
-      return signedIn() && userDoc().role == 'coordinator';
+      return signedIn() && userDoc().role == 'coordinator' && notBlocked();
     }
     function isSponsor() {
-      return signedIn() && userDoc().role == 'sponsor';
+      return signedIn() && userDoc().role == 'sponsor' && notBlocked();
     }
     function ownCoordinator() {
       return isCoordinator() && userDoc().coordinatorId == resource.data.koordinatorId;
@@ -41,14 +46,35 @@ service cloud.firestore {
 
     match /userDirectory/{emailId} {
       allow read: if signedIn() && (authEmailLower() == emailId || canAdminWrite());
-      allow write: if canAdminWrite();
+      allow create, delete: if canAdminWrite();
+      // Ved første innlogging setter personen selv invitert → aktiv, og ingenting annet.
+      allow update: if canAdminWrite()
+        || (signedIn() && authEmailLower() == emailId
+          && resource.data.get('status', 'aktiv') == 'invitert'
+          && request.resource.data.status == 'aktiv'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+    }
+
+    // Rolle og tilknytning i egen profil må stemme med invitasjonen i userDirectory.
+    function matchesDirectory(data) {
+      let entry = get(/databases/$(database)/documents/userDirectory/$(authEmailLower())).data;
+      return data.role == entry.role
+        && data.get('coordinatorId', null) == entry.get('coordinatorId', null)
+        && data.get('sponsorId', null) == entry.get('sponsorId', null);
     }
 
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || canAdminWrite());
       allow create: if canAdminWrite()
-        || (signedIn() && request.auth.uid == uid && (directoryInvite() || bootstrapAdmin()));
-      allow update: if canAdminWrite() || (signedIn() && request.auth.uid == uid);
+        || (signedIn() && request.auth.uid == uid
+          && directoryInvite() && matchesDirectory(request.resource.data));
+      // Egen profil: fritt for ufarlige felt; rolle/tilknytning bare til det userDirectory sier.
+      allow update: if canAdminWrite()
+        || (signedIn() && request.auth.uid == uid
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'email'])
+          && (!request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['role', 'coordinatorId', 'sponsorId'])
+            || (directoryInvite() && matchesDirectory(request.resource.data))));
       allow delete: if isAdmin();
     }
 
@@ -73,8 +99,29 @@ service cloud.firestore {
         && request.resource.data.tildeltBarnIds.size() == 0
         && request.resource.data.betalingsmetode in ['vipps', 'avtalegiro', 'bank']
         && request.resource.data.betalingsstatus == 'aktiv'
+        && (!('vippsAgreementStatus' in request.resource.data)
+          || request.resource.data.vippsAgreementStatus == 'PENDING')
       );
       allow update, delete: if canAdminWrite();
+    }
+
+    match /sponsorAssignments/{id} {
+      allow read: if canAdminWrite()
+        || (isSponsor() && resource.data.sponsorId == userDoc().sponsorId);
+      allow write: if canAdminWrite();
+    }
+
+    match /recurringCharges/{id} {
+      allow read: if canAdminWrite()
+        || (isSponsor() && resource.data.sponsorId == userDoc().sponsorId);
+      allow write: if canAdminWrite();
+    }
+
+    match /paymentAllocations/{id} {
+      allow read: if canAdminWrite()
+        || (isSponsor() && resource.data.sponsorId == userDoc().sponsorId)
+        || (isCoordinator() && resource.data.koordinatorId == userDoc().coordinatorId);
+      allow write: if canAdminWrite();
     }
 
     match /children/{id} {
@@ -173,8 +220,9 @@ service cloud.firestore {
 
     match /system/{id} {
       allow read: if canAdminWrite();
-      allow create: if canAdminWrite() && id == 'seedLock';
-      allow update, delete: if false;
+      allow create: if canAdminWrite() && (id == 'seedLock' || id == 'vippsChargeJob');
+      allow update: if canAdminWrite() && id == 'vippsChargeJob';
+      allow delete: if false;
     }
   }
 }

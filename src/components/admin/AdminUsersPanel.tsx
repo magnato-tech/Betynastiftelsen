@@ -10,10 +10,14 @@ import {
   type UserDirectoryStatus,
 } from '../../db/firestoreProfile';
 import { emailToDirectoryDocId } from '../../db/firestoreUser';
-import { normalizeUserDirectoryStatus } from '../../db/userDirectoryStatus';
-import { childNamesOfSponsor } from '../../utils/sponsorChildren';
+import {
+  buildPeopleRows,
+  type DirectoryRow,
+  type PersonRow,
+  type PersonRole,
+} from '../../utils/peopleDirectory';
 import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
-import { AdminOverlayModal } from './AdminOverlayModal';
+import { PersonCard, ROLE_LABEL } from './PersonCard';
 
 export interface AdminUsersPanelProps {
   focusEmail?: string | null;
@@ -21,13 +25,14 @@ export interface AdminUsersPanelProps {
   onOpenChild?: (childId: string) => void;
 }
 
-type DirectoryRow = FirestoreUserDirectoryEntry & { id: string };
+type RoleFilter = 'alle' | PersonRole;
 
-const ROLE_LABEL: Record<FirestoreUserDirectoryEntry['role'], string> = {
-  admin: 'Administrator',
-  coordinator: 'Koordinator',
-  sponsor: 'Fadder',
-};
+const FILTERS: { value: RoleFilter; label: string }[] = [
+  { value: 'alle', label: 'Alle' },
+  { value: 'admin', label: 'Administratorer' },
+  { value: 'coordinator', label: 'Koordinatorer' },
+  { value: 'sponsor', label: 'Faddere' },
+];
 
 export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   focusEmail,
@@ -36,11 +41,11 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
 }) => {
   const {
     sponsors,
-    childrenList,
     coordinators,
     firestoreEnabled,
     firestoreUserEmail,
     updateUserDirectoryStatus,
+    inviteUserToDirectory,
     addSponsor,
   } = useApp();
 
@@ -54,8 +59,11 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
 
   const [rows, setRows] = useState<DirectoryRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('alle');
+  const [inviteBusyKey, setInviteBusyKey] = useState<string | null>(null);
+  const [inviteNote, setInviteNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!db || !firestoreEnabled || !firestoreUserEmail) {
@@ -77,69 +85,51 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     return () => unsub();
   }, [firestoreEnabled, firestoreUserEmail]);
 
-  const mergedRows = useMemo(() => {
-    const byEmail = new Map<string, DirectoryRow>();
-    for (const row of rows) {
-      byEmail.set(emailToDirectoryDocId(row.email), row);
-    }
-    for (const email of BOOTSTRAP_ADMIN_EMAILS) {
-      const id = emailToDirectoryDocId(email);
-      if (!byEmail.has(id)) {
-        byEmail.set(id, {
-          id,
-          email: id,
-          role: 'admin',
-          status: 'aktiv',
-          displayName: id.split('@')[0],
-        });
-      }
-    }
-    return [...byEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
-  }, [rows]);
+  // Alle personer: admin, koordinatorer og faddere (ikke fadderbarn).
+  const peopleRows = useMemo(
+    () => buildPeopleRows(rows, coordinators, sponsors, BOOTSTRAP_ADMIN_EMAILS),
+    [rows, coordinators, sponsors]
+  );
+
+  const counts = useMemo(() => {
+    const c: Record<RoleFilter, number> = { alle: peopleRows.length, admin: 0, coordinator: 0, sponsor: 0 };
+    for (const r of peopleRows) c[r.role] += 1;
+    return c;
+  }, [peopleRows]);
+
+  const visibleRows = useMemo(
+    () => (roleFilter === 'alle' ? peopleRows : peopleRows.filter((r) => r.role === roleFilter)),
+    [peopleRows, roleFilter]
+  );
 
   useEffect(() => {
     if (focusEmail) {
-      setSelectedEmail(emailToDirectoryDocId(focusEmail));
+      // Velg raden for e-posten hvis den finnes, ellers direkte-raden for innloggingen.
+      const target = emailToDirectoryDocId(focusEmail);
+      const hit = peopleRows.find((r) => r.email === target);
+      setSelectedKey(hit ? hit.key : `dir:${target}`);
       onClearFocus?.();
     }
-  }, [focusEmail, onClearFocus]);
+  }, [focusEmail, onClearFocus, peopleRows]);
 
-  const selected = selectedEmail
-    ? mergedRows.find((r) => emailToDirectoryDocId(r.email) === selectedEmail)
-    : undefined;
+  const selected = selectedKey ? peopleRows.find((r) => r.key === selectedKey) : undefined;
 
-  const displayNameFor = (row: DirectoryRow) => {
-    if (row.displayName?.trim()) return row.displayName.trim();
-    if (row.role === 'sponsor' && row.sponsorId) {
-      const sp = sponsors.find((s) => s.id === row.sponsorId);
-      if (sp) return sp.navn;
-    }
-    if (row.role === 'coordinator' && row.coordinatorId) {
-      const c = coordinators.find((x) => x.id === row.coordinatorId);
-      if (c) return `${c.fornavn} ${c.etternavn}`;
-    }
-    return row.email.split('@')[0];
-  };
-
-  const persistStatus = async (row: DirectoryRow, status: UserDirectoryStatus) => {
+  const persistStatus = async (row: PersonRow, status: UserDirectoryStatus) => {
     const email = emailToDirectoryDocId(row.email);
-    const isBootstrapOnly =
-      BOOTSTRAP_ADMIN_EMAILS.some((e) => emailToDirectoryDocId(e) === email) &&
-      !rows.some((r) => emailToDirectoryDocId(r.email) === email);
-    if (isBootstrapOnly) {
+    if (row.isBootstrapOnly) {
       if (!db) throw new Error('Firestore er ikke konfigurert');
       await saveUserDirectoryEntry(db, {
         email,
         role: 'admin',
         status,
-        displayName: row.displayName,
+        displayName: row.directory?.displayName,
       });
       return;
     }
     await updateUserDirectoryStatus(email, status);
   };
 
-  const changeStatus = async (row: DirectoryRow, status: UserDirectoryStatus) => {
+  const changeStatus = async (row: PersonRow, status: UserDirectoryStatus) => {
     setStatusBusy(true);
     setLoadError(null);
     try {
@@ -151,13 +141,27 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     }
   };
 
-  const sponsorForRow = (row: DirectoryRow) =>
-    row.sponsorId ? sponsors.find((s) => s.id === row.sponsorId) : undefined;
-
-  const childrenForSponsorRow = (row: DirectoryRow) => {
-    const sp = sponsorForRow(row);
-    if (!sp) return [];
-    return childrenList.filter((c) => c.tildeltFadderId === sp.id);
+  // Lager innloggingsinvitasjon for en koordinator/fadder som ikke er invitert ennå.
+  const inviteRow = async (row: PersonRow) => {
+    if (!row.email) return;
+    setInviteBusyKey(row.key);
+    setLoadError(null);
+    setInviteNote(null);
+    try {
+      const entry: FirestoreUserDirectoryEntry = {
+        email: row.email,
+        role: row.role,
+        displayName: row.name || undefined,
+      };
+      if (row.role === 'coordinator' && row.coordinatorId) entry.coordinatorId = row.coordinatorId;
+      if (row.role === 'sponsor' && row.sponsorId) entry.sponsorId = row.sponsorId;
+      await inviteUserToDirectory(entry);
+      setInviteNote(`Invitasjon lagret for ${row.name}`);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Kunne ikke lagre invitasjonen.');
+    } finally {
+      setInviteBusyKey(null);
+    }
   };
 
   return (
@@ -165,14 +169,36 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       <div>
         <h2 className="text-xl font-serif font-bold text-stone-900">Brukere</h2>
         <p className="text-xs text-stone-600 mt-0.5 max-w-2xl">
-          Alle som kan logge inn: administratorer, koordinatorer i Kongo og faddere. Status styres i{' '}
-          <code className="text-[10px]">userDirectory</code>.
+          Alle personer i løsningen: administratorer, koordinatorer i Kongo og faddere. Kolonnen Innlogging viser om
+          personen kan logge inn. Fadderbarn er ikke brukere og vises under Barn.
         </p>
       </div>
 
       {loadError && (
         <p className="text-xs text-red-900 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{loadError}</p>
       )}
+      {inviteNote && (
+        <p className="text-xs text-green-900 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{inviteNote}</p>
+      )}
+
+      <div className="inline-flex flex-wrap rounded-lg border border-stone-300 overflow-hidden text-xs">
+        {FILTERS.map((f) => {
+          const active = roleFilter === f.value;
+          return (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setRoleFilter(f.value)}
+              aria-pressed={active}
+              className={`px-3 py-1.5 font-medium cursor-pointer border-r border-stone-300 last:border-r-0 ${
+                active ? 'bg-[#4D6B3E] text-white' : 'bg-white text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              {f.label} ({counts[f.value]})
+            </button>
+          );
+        })}
+      </div>
 
       <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
@@ -182,37 +208,58 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                 <th className="py-2.5 px-4">Navn</th>
                 <th className="py-2.5 px-4">E-post</th>
                 <th className="py-2.5 px-4">Rolle</th>
-                <th className="py-2.5 px-4">Status</th>
+                <th className="py-2.5 px-4">Innlogging</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {mergedRows.map((row) => {
-                const status = normalizeUserDirectoryStatus(row.status);
-                return (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-stone-50/80 cursor-pointer"
-                    onClick={() => setSelectedEmail(emailToDirectoryDocId(row.email))}
-                  >
-                    <td className="py-2.5 px-4 font-medium text-stone-900">{displayNameFor(row)}</td>
-                    <td className="py-2.5 px-4 text-stone-600">{row.email}</td>
-                    <td className="py-2.5 px-4 text-stone-700">{ROLE_LABEL[row.role]}</td>
-                    <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
+              {visibleRows.map((row) => (
+                <tr
+                  key={row.key}
+                  className="hover:bg-stone-50/80 cursor-pointer"
+                  onClick={() => setSelectedKey(row.key)}
+                >
+                  <td className="py-2.5 px-4 font-medium text-stone-900">{row.name}</td>
+                  <td className="py-2.5 px-4 text-stone-600">
+                    {row.email || <span className="text-stone-400">—</span>}
+                  </td>
+                  <td className="py-2.5 px-4 text-stone-700">{ROLE_LABEL[row.role]}</td>
+                  <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
+                    {row.loginStatus === 'ikke-invitert' ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-stone-500">Ikke invitert</span>
+                        <button
+                          type="button"
+                          disabled={!row.email || inviteBusyKey !== null}
+                          title={!row.email ? 'Mangler e-post' : undefined}
+                          onClick={() => void inviteRow(row)}
+                          className="px-2 py-1 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          {inviteBusyKey === row.key ? 'Lagrer…' : 'Inviter'}
+                        </button>
+                      </div>
+                    ) : (
                       <select
-                        value={status}
+                        value={row.loginStatus}
                         disabled={statusBusy}
                         onChange={(e) => void changeStatus(row, e.target.value as UserDirectoryStatus)}
                         className="px-2 py-1 rounded-md border border-stone-300 bg-white text-stone-800"
-                        aria-label={`Status for ${row.email}`}
+                        aria-label={`Innlogging for ${row.email || row.name}`}
                       >
                         <option value="aktiv">aktiv</option>
                         <option value="invitert">invitert</option>
                         <option value="sperret">sperret</option>
                       </select>
-                    </td>
-                  </tr>
-                );
-              })}
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {visibleRows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-4 px-4 text-stone-500">
+                    Ingen personer i denne gruppen.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -295,56 +342,15 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
       <UserDirectoryInviteForm />
 
       {selected && (
-        <AdminOverlayModal title={displayNameFor(selected)} onClose={() => setSelectedEmail(null)}>
-          <dl className="space-y-2 text-xs">
-            <div>
-              <dt className="text-stone-500">E-post</dt>
-              <dd className="font-medium">{selected.email}</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Rolle</dt>
-              <dd>{ROLE_LABEL[selected.role]}</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Status</dt>
-              <dd className="capitalize">{normalizeUserDirectoryStatus(selected.status)}</dd>
-            </div>
-          </dl>
-
-          {selected.role === 'sponsor' && sponsorForRow(selected) && (
-            <div className="pt-3 border-t border-stone-100 space-y-2">
-              <p className="text-xs font-semibold text-stone-800">Fadderdetaljer</p>
-              <p className="text-xs text-stone-600">
-                Start: {sponsorForRow(selected)!.startDato} · {sponsorForRow(selected)!.maanedsbelop} kr/mnd
-              </p>
-              <p className="text-xs text-stone-600">
-                Barn: {childNamesOfSponsor(childrenList, sponsorForRow(selected)!)}
-              </p>
-              <ul className="space-y-1">
-                {childrenForSponsorRow(selected).map((ch) => (
-                  <li key={ch.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedEmail(null);
-                        onOpenChild?.(ch.id);
-                      }}
-                      className="text-[#4D6B3E] hover:underline font-medium cursor-pointer"
-                    >
-                      {ch.internKode} — {ch.fornavn}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {selected.role === 'coordinator' && selected.coordinatorId && (
-            <p className="text-xs text-stone-600 pt-2 border-t border-stone-100">
-              Koordinator-ID: <span className="font-mono">{selected.coordinatorId}</span>
-            </p>
-          )}
-        </AdminOverlayModal>
+        <PersonCard
+          row={selected}
+          onClose={() => setSelectedKey(null)}
+          onChangeStatus={changeStatus}
+          onInvite={inviteRow}
+          statusBusy={statusBusy}
+          inviteBusy={inviteBusyKey === selected.key}
+          onOpenChild={onOpenChild}
+        />
       )}
     </div>
   );

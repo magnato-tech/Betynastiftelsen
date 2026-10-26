@@ -31,9 +31,8 @@ const c = (
 
 const CELLS: Cell[] = [
   // userDirectory
-  c('userDirectory: les egen invitasjon', 'userDirectory/invited@example.com', 'get', ['invited', ...STAFF], {
-    gap: { admin: 'F-09', bootstrap: 'F-09' },
-  }),
+  // F-09-merket var feil: admin har alltid kunnet lese invitasjoner (bekreftet mot gamle regler).
+  c('userDirectory: les egen invitasjon', 'userDirectory/invited@example.com', 'get', ['invited', ...STAFF]),
   c('userDirectory: opprett', 'userDirectory/ny@example.com', 'create', STAFF, { data: { role: 'sponsor' } }),
   c('userDirectory: endre', 'userDirectory/invited@example.com', 'update', STAFF),
   c('userDirectory: slett', 'userDirectory/invited@example.com', 'delete', STAFF),
@@ -44,6 +43,18 @@ const CELLS: Cell[] = [
   c('users: les admin-profil', 'users/admin1', 'get', ['admin', ...STAFF]),
   c('users: oppdater egen profil (ufarlig felt)', 'users/sponsorA', 'update', ['sponsorA', ...STAFF], {
     data: { sistInnlogget: 'na' },
+  }),
+  c('users: gi seg selv admin-rolle (fadder)', 'users/sponsorA', 'update', STAFF, {
+    data: { role: 'admin' },
+  }),
+  c('users: bytte egen sponsorId (fadder)', 'users/sponsorA', 'update', STAFF, {
+    data: { sponsorId: 'S2' },
+  }),
+  c('users: invitert oppretter egen profil som admin', 'users/invited', 'create', STAFF, {
+    data: { role: 'admin', email: 'invited@example.com' },
+  }),
+  c('users: invitert oppretter egen profil som i invitasjonen', 'users/invited', 'create', ['invited', ...STAFF], {
+    data: { role: 'sponsor', sponsorId: 'S3', email: 'invited@example.com' },
   }),
   c('users: opprett ny profil for annen bruker', 'users/ny-bruker', 'create', STAFF, {
     data: { role: 'sponsor', sponsorId: 'S9' },
@@ -125,6 +136,34 @@ const CELLS: Cell[] = [
   c('payments: opprett', 'payments/P9', 'create', STAFF, { data: { fadderId: 'S1', belop: 100 } }),
   c('payments: endre P1', 'payments/P1', 'update', STAFF),
   c('payments: slett P1', 'payments/P1', 'delete', STAFF),
+
+  // sponsorAssignments
+  c('sponsorAssignments: les ASG1 (S1)', 'sponsorAssignments/ASG1', 'get', ['sponsorA', ...STAFF]),
+  c('sponsorAssignments: les ASG2 (S2)', 'sponsorAssignments/ASG2', 'get', ['sponsorB', ...STAFF]),
+  c('sponsorAssignments: opprett', 'sponsorAssignments/ASG9', 'create', STAFF, {
+    data: { sponsorId: 'S1', childId: 'C1', koordinatorId: 'K1', startDato: '2026-01-01', andelOre: 25000 },
+  }),
+  c('sponsorAssignments: endre', 'sponsorAssignments/ASG1', 'update', STAFF),
+  c('sponsorAssignments: slett', 'sponsorAssignments/ASG1', 'delete', STAFF),
+
+  // recurringCharges
+  c('recurringCharges: les RC1 (S1)', 'recurringCharges/RC1', 'get', ['sponsorA', ...STAFF]),
+  c('recurringCharges: les RC2 (S2)', 'recurringCharges/RC2', 'get', ['sponsorB', ...STAFF]),
+  c('recurringCharges: opprett', 'recurringCharges/RC9', 'create', STAFF, {
+    data: { sponsorId: 'S1', agreementId: 'AGR1', periode: '2026-11', amountOre: 25000, status: 'PENDING' },
+  }),
+  c('recurringCharges: endre', 'recurringCharges/RC1', 'update', STAFF),
+  c('recurringCharges: slett', 'recurringCharges/RC1', 'delete', STAFF),
+
+  // paymentAllocations
+  c('paymentAllocations: les PA1 (S1 barn)', 'paymentAllocations/PA1', 'get', ['sponsorA', 'coordA', ...STAFF]),
+  // PA2 er fadder S2 sin betaling satt av til buffer hos K2: fadderen ser egen fordeling.
+  c('paymentAllocations: les PA2 (S2, K2 buffer)', 'paymentAllocations/PA2', 'get', ['sponsorB', 'coordB', ...STAFF]),
+  c('paymentAllocations: opprett', 'paymentAllocations/PA9', 'create', STAFF, {
+    data: { paymentId: 'pay_RC1', sponsorId: 'S1', maal: 'barn', periode: '2026-10', amountOre: 25000 },
+  }),
+  c('paymentAllocations: endre', 'paymentAllocations/PA1', 'update', STAFF),
+  c('paymentAllocations: slett', 'paymentAllocations/PA1', 'delete', STAFF),
 
   // campaigns
   c('campaigns: les', 'campaigns/CA1', 'get', ALL),

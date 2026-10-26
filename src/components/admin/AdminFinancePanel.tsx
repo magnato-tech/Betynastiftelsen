@@ -9,6 +9,8 @@ import {
   type PaymentSortDir,
   type PaymentSortKey,
 } from '../../utils/paymentRegister';
+import { paymentAmountKr } from '../../utils/paymentLedger';
+import { AdminVippsReconciliation } from './AdminVippsReconciliation';
 
 interface AdminFinancePanelProps {
   setActiveSection: (sec: string) => void;
@@ -25,7 +27,17 @@ const SORT_COLS: [PaymentSortKey, string, string][] = [
 ];
 
 export const AdminFinancePanel: React.FC<AdminFinancePanelProps> = ({ setActiveSection }) => {
-  const { childrenList, sponsors, reports, inquiries, payments, reconcilePayment } = useApp();
+  const {
+    childrenList,
+    sponsors,
+    reports,
+    inquiries,
+    payments,
+    recurringCharges,
+    paymentAllocations,
+    vippsChargeJob,
+    reconcilePayment,
+  } = useApp();
 
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -120,6 +132,16 @@ export const AdminFinancePanel: React.FC<AdminFinancePanelProps> = ({ setActiveS
             : `${totals.avstemt.toLocaleString('no-NO')} kr avstemt av ${totals.total.toLocaleString('no-NO')} kr`
         )}
       </div>
+
+      <AdminVippsReconciliation
+        sponsors={sponsors}
+        childrenList={childrenList}
+        recurringCharges={recurringCharges}
+        paymentAllocations={paymentAllocations}
+        payments={payments}
+        vippsChargeJob={vippsChargeJob}
+        onReconcile={reconcilePayment}
+      />
 
       <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-stone-200 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -220,7 +242,7 @@ export const AdminFinancePanel: React.FC<AdminFinancePanelProps> = ({ setActiveS
                   <td className="py-3 px-4 text-stone-600 uppercase font-mono">{pay.metode}</td>
                   <td className="py-3 px-4 text-stone-500 font-mono">{pay.referanse}</td>
                   <td className="py-3 px-4 text-right font-mono font-semibold text-stone-900 tabular-nums">
-                    {pay.belop.toLocaleString('no-NO')} kr
+                    {paymentAmountKr(pay).toLocaleString('no-NO')} kr
                   </td>
                   <td className="py-3 px-4 text-center">
                     <span

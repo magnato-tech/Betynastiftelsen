@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBanner } from './components/common/RoleSwitcherBanner';
-import { PortalRoleBar } from './components/common/PortalRoleBar';
+import { ViewAsBanner } from './components/common/ViewAsBanner';
 import { SaveStatusPill } from './components/common/SaveStatusPill';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -121,9 +121,12 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
       <SaveStatusPill />
-      {/* Testperiode: visningslinjen blir stående også etter innlogging. Fjernes med VITE_PROTOTYPE_ROLE_SWITCHER=false. */}
+      {/* Prototypelinjen (svart) er av i produksjon. Lokalt er den på; i produksjon slås den på med VITE_PROTOTYPE_ROLE_SWITCHER=true. */}
       {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
-      {!prototypeRoleSwitcherEnabled && firestoreUserProfile && <PortalRoleBar />}
+      {/* Admin som ser siden som en annen rolle: gul linje med «Tilbake til admin». */}
+      {!prototypeRoleSwitcherEnabled && firestoreUserProfile?.role === 'admin' && role !== 'admin' && (
+        <ViewAsBanner setActiveSection={setActiveSection} />
+      )}
 
       {/* 2. Top Bar complying with strict 1-row 3-zone contract */}
       <Navbar

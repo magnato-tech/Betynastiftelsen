@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { childIdsOfSponsor, childrenOfSponsor } from '../../utils/sponsorChildren';
+import { formatOreAsKr, paymentAmountKr } from '../../utils/paymentLedger';
 import { VisualCard } from '../common/VisualCard';
 import { ChildHistoryTimeline } from '../common/ChildHistoryTimeline';
 import {
@@ -36,6 +37,8 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
     milestones,
     inquiries,
     payments,
+    recurringCharges,
+    paymentAllocations,
     submitInquiry,
     currentRoleNotifications,
     markNotificationAsRead,
@@ -85,8 +88,26 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
   // Filter inquiries from this sponsor
   const sponsorInquiries = inquiries.filter((inq) => inq.fadderId === currentSponsor?.id);
 
-  // Filter payments from this sponsor
   const sponsorPayments = payments.filter((p) => p.fadderId === currentSponsor?.id);
+  const sponsorCharges = useMemo(
+    () =>
+      recurringCharges
+        .filter((c) => c.sponsorId === currentSponsor?.id)
+        .sort((a, b) => b.periode.localeCompare(a.periode)),
+    [recurringCharges, currentSponsor?.id]
+  );
+  const myAllocations = useMemo(
+    () => paymentAllocations.filter((a) => a.sponsorId === currentSponsor?.id),
+    [paymentAllocations, currentSponsor?.id]
+  );
+
+  const vippsStatusLabel = (() => {
+    const st = currentSponsor?.vippsAgreementStatus;
+    if (st === 'ACTIVE') return { text: 'Vipps-avtale aktiv', tone: 'emerald' as const };
+    if (st === 'PENDING') return { text: 'Venter på godkjenning i Vipps', tone: 'amber' as const };
+    if (st === 'STOPPED' || st === 'EXPIRED') return { text: 'Avtale avsluttet', tone: 'stone' as const };
+    return { text: 'Avtale aktiv', tone: 'emerald' as const };
+  })();
 
   const handleSendQuestion = (e: React.FormEvent) => {
     e.preventDefault();
@@ -629,55 +650,76 @@ export const SponsorPortal: React.FC<SponsorPortalProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                  vippsStatusLabel.tone === 'emerald'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : vippsStatusLabel.tone === 'amber'
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-stone-100 text-stone-700'
+                }`}
+              >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>Avtale aktiv</span>
+                <span>{vippsStatusLabel.text}</span>
               </span>
             </div>
           </div>
 
           <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
             <div className="p-6 border-b border-stone-200">
-              <h3 className="text-base font-serif font-bold text-stone-900">Innbetalingshistorikk</h3>
-              <p className="text-xs text-stone-500 mt-0.5">Oversikt over registrerte innbetalinger til stiftelsen</p>
+              <h3 className="text-base font-serif font-bold text-stone-900">Månedlige trekk</h3>
+              <p className="text-xs text-stone-500 mt-0.5">Belastninger og fordeling på dine barn og felles buffer</p>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-stone-50 text-stone-600 border-b border-stone-200 uppercase tracking-wider font-semibold">
-                  <tr>
-                    <th className="py-3 px-6">Dato</th>
-                    <th className="py-3 px-6">Formål</th>
-                    <th className="py-3 px-6">Metode</th>
-                    <th className="py-3 px-6">Referanse</th>
-                    <th className="py-3 px-6 text-right">Beløp</th>
-                    <th className="py-3 px-6 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100 font-sans">
-                  {sponsorPayments.map((p) => (
-                    <tr key={p.id} className="hover:bg-stone-50/60">
-                      <td className="py-3 px-6 text-stone-800 font-mono">{p.dato}</td>
-                      <td className="py-3 px-6 text-stone-900 font-medium capitalize">{p.type}</td>
-                      <td className="py-3 px-6 text-stone-600 uppercase font-mono">{p.metode}</td>
-                      <td className="py-3 px-6 text-stone-500 font-mono">{p.referanse}</td>
-                      <td className="py-3 px-6 text-right font-mono font-semibold text-stone-900 tabular-nums">
-                        {p.belop} kr
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <span className="text-emerald-700 font-medium">Betalt & avstemt</span>
-                      </td>
-                    </tr>
-                  ))}
-                  {sponsorPayments.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-6 text-center text-stone-500">
-                        Ingen innbetalinger registrert ennå.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="divide-y divide-stone-100">
+              {sponsorCharges.length === 0 && sponsorPayments.length === 0 && (
+                <p className="p-6 text-xs text-stone-500 text-center">Ingen trekk registrert ennå.</p>
+              )}
+              {sponsorCharges.map((charge) => {
+                const pay = sponsorPayments.find((p) => p.chargeOrderId === charge.id);
+                const allocs = pay ? myAllocations.filter((a) => a.paymentId === pay.id) : [];
+                const charged = charge.status === 'CHARGED';
+                const netOre = pay?.amountOre ?? charge.amountOre;
+                const refund = pay?.refundertOre ?? 0;
+                const displayOre = charged ? Math.max(0, netOre - refund) : netOre;
+                return (
+                  <div key={charge.id} className="p-6 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-mono text-sm text-stone-900">{charge.periode}</p>
+                        <p className="text-[11px] text-stone-500">Forfall {charge.due}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-mono font-semibold tabular-nums">{formatOreAsKr(displayOre)} kr</p>
+                        <p className="text-[11px] text-stone-500">
+                          {charged ? 'Innbetalt' : pay?.status === 'forventet' ? 'Kommende trekk' : charge.status}
+                        </p>
+                      </div>
+                    </div>
+                    {allocs.length > 0 && (
+                      <ul className="text-xs text-stone-600 space-y-1 pl-3 border-l-2 border-stone-200">
+                        {allocs.map((a) => (
+                          <li key={a.id} className="flex justify-between gap-4 max-w-sm">
+                            <span>
+                              {a.maal === 'buffer'
+                                ? 'Felles buffer'
+                                : myChildren.find((c) => c.id === a.childId)?.fornavn ?? 'Barn'}
+                            </span>
+                            <span className="font-mono tabular-nums">{formatOreAsKr(a.amountOre)} kr</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+              {sponsorCharges.length === 0 &&
+                sponsorPayments.map((p) => (
+                  <div key={p.id} className="p-6 flex justify-between text-xs">
+                    <span className="font-mono">{p.dato}</span>
+                    <span className="font-mono font-semibold">{paymentAmountKr(p).toLocaleString('no-NO')} kr</span>
+                    <span className="text-stone-500">{p.status}</span>
+                  </div>
+                ))}
             </div>
           </div>
         </div>

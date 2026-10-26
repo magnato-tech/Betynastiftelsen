@@ -49,10 +49,13 @@ export function mountApp(
     keepStorage?: boolean;
     /** Egen hydration, f.eks. delvis (offentlig) innlasting med full:false. */
     hydration?: { data: Record<string, unknown>; full: boolean };
+    /** Innlogget Firestore-profil, f.eks. admin som ser som fadder. */
+    profile?: { role: string; displayName: string; email: string };
   } = {},
 ): Mounted {
   if (!options.keepStorage) localStorage.clear();
   fakeSync.reset();
+  fakeSync.profile = options.profile ?? null;
   if (options.hydration) {
     fakeSync.hydration = options.hydration;
   } else if (options.keepStorage) {

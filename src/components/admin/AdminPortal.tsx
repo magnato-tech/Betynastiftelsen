@@ -78,6 +78,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [contentSortKey, setContentSortKey] = useState<AdminContentSortKey>('dato');
   const [contentSortDir, setContentSortDir] = useState<AdminContentSortDir>('desc');
 
+  // Filter for loggen: personnøkkel (type:id) eller 'alle'.
+  const [loggPersonFilter, setLoggPersonFilter] = useState<string>('alle');
+  const loggPersoner = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const l of auditLogs) {
+      if (l.gjelderId && l.gjelderNavn) map.set(`${l.gjelderType ?? ''}:${l.gjelderId}`, l.gjelderNavn);
+    }
+    return [...map.entries()]
+      .map(([key, navn]) => ({ key, navn }))
+      .sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
+  }, [auditLogs]);
+  const synligLogg = useMemo(
+    () =>
+      loggPersonFilter === 'alle'
+        ? auditLogs
+        : auditLogs.filter((l) => `${l.gjelderType ?? ''}:${l.gjelderId ?? ''}` === loggPersonFilter),
+    [auditLogs, loggPersonFilter]
+  );
+
   const deskFact = desk?.kind === 'historie' ? fieldFacts.find((f) => f.id === desk.id) : undefined;
   const deskReport = desk?.kind === 'rapport' ? reports.find((r) => r.id === desk.id) : undefined;
   const deskChild = childrenList.find((c) => c.id === (deskFact?.barnId || deskReport?.barnId));
@@ -623,14 +642,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               Hva som er gjort i administrasjonen. Ekstraordinære aksjoner og vitnesbyrd redigeres under CMS.
             </p>
           </div>
+          <div className="flex items-center gap-2 text-xs">
+            <label htmlFor="logg-person-filter" className="text-stone-600 font-medium">
+              Person
+            </label>
+            <select
+              id="logg-person-filter"
+              value={loggPersonFilter}
+              onChange={(e) => setLoggPersonFilter(e.target.value)}
+              className="px-2 py-1.5 border border-stone-300 rounded-lg bg-white text-stone-800"
+            >
+              <option value="alle">Alle</option>
+              {loggPersoner.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.navn}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="bg-white rounded-xl border border-stone-200 shadow-xs divide-y divide-stone-100 max-h-[640px] overflow-y-auto">
-            {auditLogs.map((log) => (
+            {synligLogg.map((log) => (
               <div key={log.id} className="p-4 text-xs space-y-1">
                 <div className="flex items-center justify-between text-stone-500 font-mono">
                   <span>{log.tidspunkt}</span>
                   <span className="font-sans font-semibold text-stone-700">{log.brukerRolle}</span>
                 </div>
-                <div className="font-medium text-stone-900">{log.handling}</div>
+                <div className="font-medium text-stone-900 flex items-center gap-2">
+                  {log.type === 'kommentar' && (
+                    <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] uppercase tracking-wide font-sans">
+                      Kommentar
+                    </span>
+                  )}
+                  {log.handling}
+                </div>
                 <p className="text-stone-600 font-sans">{log.detaljer}</p>
               </div>
             ))}

@@ -13,7 +13,7 @@ import {
   shouldRunSeedJob,
 } from './seedPolicy';
 
-const LISTS = ['coordinators', 'sponsors', 'children', 'catalogPhotos', 'mediaLibrary', 'facts', 'reports', 'milestones', 'inquiries', 'payments', 'campaigns', 'testimonials', 'notifications', 'auditLogs', 'emailOutbox'] as const;
+const LISTS = ['coordinators', 'sponsors', 'children', 'catalogPhotos', 'mediaLibrary', 'facts', 'reports', 'milestones', 'inquiries', 'payments', 'sponsorAssignments', 'recurringCharges', 'paymentAllocations', 'campaigns', 'testimonials', 'notifications', 'auditLogs', 'emailOutbox'] as const;
 
 describe('appen har ingen innebygde data', () => {
   it.each(LISTS)('%s er tom', (key) => {

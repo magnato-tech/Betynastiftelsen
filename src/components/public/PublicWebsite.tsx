@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { pollVippsAgreementStatus } from '../../utils/vippsRecurring';
 import { useApp } from '../../context/AppContext';
 import { Campaign } from '../../types';
 import { BecomeSponsorModal } from '../modals/BecomeSponsorModal';
@@ -120,6 +121,17 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       document.removeEventListener('click', handleClick, true);
     };
   }, [cmsPreviewEmbedded]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('vipps') !== 'return') return;
+    const agreementId = params.get('agreementId');
+    if (agreementId) void pollVippsAgreementStatus(agreementId);
+    params.delete('vipps');
+    params.delete('agreementId');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+    window.history.replaceState({}, '', next);
+  }, []);
 
   const activeCampaigns = campaigns.filter((c) => c.status === 'aktiv');
   const completedCampaigns = campaigns.filter((c) => c.status === 'fullfort');

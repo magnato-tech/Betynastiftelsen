@@ -71,27 +71,13 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
         : 'bg-white text-stone-700 border-stone-300 hover:border-[#4D6B3E]'
     }`;
 
-  const handleVippsFromChoose = async () => {
+  const handleVippsFromChoose = () => {
     const amount = resolvedAmountKr();
     if (amount < ctaConfig.customAmountMin && belop === 0) {
       setSaveError(`Velg minst ${ctaConfig.customAmountMin} kr.`);
       return;
     }
-    if (isVippsRecurringEnabledInFrontend() && amount > 0) {
-      try {
-        setSaving(true);
-        const { redirectUrl } = await startVippsRecurringAgreement({
-          amountKr: amount,
-          orderId: `betyna-hero-${Date.now()}`,
-        });
-        window.location.href = redirectUrl;
-        return;
-      } catch {
-        setSaveError('Vipps er ikke tilgjengelig akkurat nå. Fyll ut skjemaet under.');
-      } finally {
-        setSaving(false);
-      }
-    }
+    setSaveError(null);
     setMetode('vipps');
     setStep('form');
   };
@@ -129,7 +115,28 @@ export const BecomeSponsorModal: React.FC<BecomeSponsorModalProps> = ({
     };
     setSaving(true);
     try {
+      const pendingSponsorId = `sponsor-${Date.now().toString(36)}`;
+
+      if (metode === 'vipps' && isVippsRecurringEnabledInFrontend()) {
+        const agreement = await startVippsRecurringAgreement({
+          sponsorId: pendingSponsorId,
+          amountKr: finalBelop,
+          phone: telefon,
+        });
+        const vippsFields = agreement.sponsorPatch;
+        const createdId = registerNewSponsorInterest(payload, {
+          sponsorId: pendingSponsorId,
+          vippsPatch: vippsFields,
+        });
+        if (db && firestoreEnabled) {
+          await saveWebsiteSponsor(db, createdId, { ...payload, ...vippsFields });
+        }
+        window.location.href = agreement.redirectUrl;
+        return;
+      }
+
       const createdId = registerNewSponsorInterest(payload);
+
       if (db && firestoreEnabled) {
         await saveWebsiteSponsor(db, createdId, payload);
       }

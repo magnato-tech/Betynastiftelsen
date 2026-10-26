@@ -21,15 +21,28 @@ export function isVippsRecurringEnabledInFrontend(): boolean {
 }
 
 export interface StartVippsRecurringParams {
+  sponsorId: string;
   amountKr: number;
-  phone?: string;
-  orderId: string;
+  phone: string;
+  sponsor?: {
+    vippsAgreementId?: string;
+    vippsConfirmationUrl?: string;
+    vippsAgreementStatus?: string;
+  };
 }
 
 /** Kalles fra skjema når server-endepunkt er på plass. */
 export async function startVippsRecurringAgreement(
   params: StartVippsRecurringParams
-): Promise<{ redirectUrl: string }> {
+): Promise<{
+  redirectUrl: string;
+  agreementId?: string;
+  sponsorPatch?: {
+    vippsAgreementId: string;
+    vippsConfirmationUrl: string;
+    vippsAgreementStatus: 'PENDING';
+  };
+}> {
   if (!isVippsRecurringEnabledInFrontend()) {
     throw new Error('Vipps faste betalinger er ikke aktivert i dette miljøet.');
   }
@@ -37,15 +50,37 @@ export async function startVippsRecurringAgreement(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      sponsorId: params.sponsorId,
       amountOre: Math.round(params.amountKr * 100),
       phone: params.phone,
-      orderId: params.orderId,
+      sponsor: params.sponsor,
     }),
   });
   if (!res.ok) {
     throw new Error('Kunne ikke starte Vipps-avtale.');
   }
-  const data = (await res.json()) as { redirectUrl?: string };
+  const data = (await res.json()) as {
+    redirectUrl?: string;
+    agreementId?: string;
+    sponsorPatch?: {
+      vippsAgreementId: string;
+      vippsConfirmationUrl: string;
+      vippsAgreementStatus: 'PENDING';
+    };
+  };
   if (!data.redirectUrl) throw new Error('Manglende redirect fra Vipps.');
-  return { redirectUrl: data.redirectUrl };
+  return {
+    redirectUrl: data.redirectUrl,
+    agreementId: data.agreementId,
+    sponsorPatch: data.sponsorPatch,
+  };
+}
+
+/** Retur fra Vipps — kun les status, ingen sideeffekt i klienten. */
+export async function pollVippsAgreementStatus(agreementId: string): Promise<string | null> {
+  if (!agreementId || !isVippsRecurringEnabledInFrontend()) return null;
+  const res = await fetch(`/api/vipps/recurring/agreement/${encodeURIComponent(agreementId)}`);
+  if (!res.ok) return null;
+  const data = (await res.json()) as { status?: string };
+  return data.status ?? null;
 }

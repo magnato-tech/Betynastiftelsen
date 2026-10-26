@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 import {newsletterDevApi} from './src/plugins/newsletterDevApi';
+import {vippsDevApi} from './src/plugins/vippsDevApi';
 
 function valueFromDotEnv(key: string): string | undefined {
   try {
@@ -24,7 +25,7 @@ export default defineConfig(({ mode }) => {
   }
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), tailwindcss(), newsletterDevApi(env)],
+    plugins: [react(), tailwindcss(), newsletterDevApi(env), vippsDevApi(env)],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

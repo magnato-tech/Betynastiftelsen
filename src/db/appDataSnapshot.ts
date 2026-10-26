@@ -11,9 +11,13 @@ import type {
   EmailOutboxItem,
   FieldFact,
   Inquiry,
+  PaymentAllocation,
   PaymentRecord,
+  RecurringCharge,
   Report,
   Sponsor,
+  SponsorAssignment,
+  VippsChargeJobStatus,
   AppNotification,
 } from '../types';
 import type { EmailAutoSendPrefs } from '../email/autoSendPrefs';
@@ -29,6 +33,10 @@ export interface AppDataSnapshot {
   milestones: ChildMilestone[];
   inquiries: Inquiry[];
   payments: PaymentRecord[];
+  sponsorAssignments: SponsorAssignment[];
+  recurringCharges: RecurringCharge[];
+  paymentAllocations: PaymentAllocation[];
+  vippsChargeJob?: VippsChargeJobStatus;
   campaigns: Campaign[];
   testimonials: AdultGraduateStory[];
   notifications: AppNotification[];

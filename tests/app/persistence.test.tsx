@@ -63,7 +63,7 @@ describe('Automatisk lagring: alt som gjoeres sendes til lagringsmotoren', () =>
   it('snapshotet har alle 15 samlinger pluss cms og innstillinger', () => {
     mountApp();
     expect(Object.keys(lastPersisted()).sort()).toEqual(
-      ['auditLogs', 'catalogPhotos', 'children', 'cms', 'coordinators', 'emailAutoSend', 'emailOutbox', 'facts', 'inquiries', 'language', 'mediaLibrary', 'milestones', 'notifications', 'payments', 'campaigns', 'reports', 'sponsors', 'testimonials'].sort(),
+      ['auditLogs', 'catalogPhotos', 'children', 'cms', 'coordinators', 'emailAutoSend', 'emailOutbox', 'facts', 'inquiries', 'language', 'mediaLibrary', 'milestones', 'notifications', 'paymentAllocations', 'payments', 'recurringCharges', 'campaigns', 'reports', 'sponsorAssignments', 'sponsors', 'testimonials', 'vippsChargeJob'].sort(),
     );
   });
   it.each([

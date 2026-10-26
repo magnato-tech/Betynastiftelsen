@@ -55,8 +55,30 @@ const world = () => ({
     { id: 'q2', fadderId: 's2', fadderNavn: 'Fadder To', barnId: 'c2', barnNavn: 'Beni', sporsmaal: 'SPORSMAAL-S2', datoSendt: '2026-10-01', status: 'besvart' as const, svarTekst: 'SVAR-TIL-S2', svarDato: '2026-10-02' },
   ],
   payments: [
-    makePayment({ id: 'p1', fadderId: 's1', fadderNavn: 'Fadder Ett', referanse: 'REF-S1', status: 'forventet', belop: 250 }),
+    makePayment({ id: 'p1', fadderId: 's1', fadderNavn: 'Fadder Ett', referanse: 'REF-S1', status: 'forventet', belop: 250, chargeOrderId: 'rc-s1', periode: '2026-10', kilde: 'vipps' }),
     makePayment({ id: 'p2', fadderId: 's2', fadderNavn: 'Fadder To', referanse: 'REF-S2', belop: 350 }),
+  ],
+  recurringCharges: [
+    {
+      id: 'rc-s1',
+      agreementId: 'agr-s1',
+      sponsorId: 's1',
+      periode: '2026-10',
+      amountOre: 25000,
+      due: '2026-10-15',
+      status: 'DUE' as const,
+      idempotencyKey: 'chg_s1_2026-10',
+    },
+    {
+      id: 'rc-s2',
+      agreementId: 'agr-s2',
+      sponsorId: 's2',
+      periode: '2026-10',
+      amountOre: 35000,
+      due: '2026-10-15',
+      status: 'CHARGED' as const,
+      idempotencyKey: 'chg_s2_2026-10',
+    },
   ],
   fieldFacts: [makeFact({ id: 'f1', barnId: 'c1', trivsel: 'INTERN-FAKTA-ANGE' })],
 });
@@ -180,12 +202,14 @@ describe('Fadderportalen: spoersmaal - ingen direkte kontakt med barnet', () => 
 describe('Fadderportalen: betalinger', () => {
   it('viser kun egne betalinger', () => {
     const { text } = portal('betalinger');
-    expect(text()).toContain('REF-S1');
+    expect(text()).toContain('2026-10');
     expect(text()).not.toContain('REF-S2');
+    expect(text()).not.toContain('350');
   });
-  it('KJENT AVVIK F-26: "forventet" (ikke mottatt) betaling vises som "Betalt & avstemt"', () => {
+  it('viser forventet trekk uten å kalle det innbetalt', () => {
     const { text } = portal('betalinger');
-    expect(text()).toContain('Betalt & avstemt');
+    expect(text()).toContain('Kommende trekk');
+    expect(text()).not.toContain('Betalt & avstemt');
   });
 });
 

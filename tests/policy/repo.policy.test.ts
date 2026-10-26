@@ -132,7 +132,7 @@ describe('farlige API-er i appkoden', () => {
   });
   it('localStorage brukes bare av kjente filer', () => {
     expect(grep(/localStorage\./).sort()).toEqual(
-      ['src/context/AppContext.tsx', 'src/db/browserStateSnapshot.ts', 'src/db/useFirestoreAppSync.ts'].sort()
+      ['src/context/appContentStorage.ts', 'src/db/browserStateSnapshot.ts', 'src/db/useFirestoreSyncAuth.ts'].sort()
     );
   });
   it('sessionStorage brukes bare til navigasjon og innloggingsfeil', () => {

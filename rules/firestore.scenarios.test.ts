@@ -22,33 +22,34 @@ beforeEach(async () => {
 const doc = (actor: Actor, path: string) => dbFor(actor).doc(path);
 
 describe('Rolleeskalering via users-dokumentet (F-01, F-02)', () => {
-  it('KJENT AVVIK F-01: fadder kan gjore seg selv til admin', async () => {
-    await assertSucceeds(doc('sponsorA', 'users/sponsorA').update({ role: 'admin' }));
+  it('RETTET F-01: fadder kan IKKE gjore seg selv til admin', async () => {
+    await assertFails(doc('sponsorA', 'users/sponsorA').update({ role: 'admin' }));
   });
-  it('KJENT AVVIK F-01: fadder kan bytte til en annen fadders sponsorId', async () => {
-    await assertSucceeds(doc('sponsorA', 'users/sponsorA').update({ sponsorId: 'S2' }));
+  it('RETTET F-01: fadder kan IKKE bytte til en annen fadders sponsorId', async () => {
+    await assertFails(doc('sponsorA', 'users/sponsorA').update({ sponsorId: 'S2' }));
   });
-  it('KJENT AVVIK F-01: fadder kan gjore seg til koordinator', async () => {
-    await assertSucceeds(doc('sponsorA', 'users/sponsorA').update({ role: 'coordinator', coordinatorId: 'K2' }));
+  it('RETTET F-01: fadder kan IKKE gjore seg til koordinator', async () => {
+    await assertFails(doc('sponsorA', 'users/sponsorA').update({ role: 'coordinator', coordinatorId: 'K2' }));
   });
-  it('KJENT AVVIK F-01: koordinator kan bytte til en annen koordinators id', async () => {
-    await assertSucceeds(doc('coordA', 'users/coordA').update({ coordinatorId: 'K2' }));
+  it('RETTET F-01: koordinator kan IKKE bytte til en annen koordinators id', async () => {
+    await assertFails(doc('coordA', 'users/coordA').update({ coordinatorId: 'K2' }));
   });
-  it('KJENT AVVIK F-01: koordinator kan gjore seg til admin', async () => {
-    await assertSucceeds(doc('coordA', 'users/coordA').update({ role: 'admin' }));
+  it('RETTET F-01: koordinator kan IKKE gjore seg til admin', async () => {
+    await assertFails(doc('coordA', 'users/coordA').update({ role: 'admin' }));
   });
-  it('KJENT AVVIK F-02: invitert bruker kan opprette seg selv som admin', async () => {
-    await assertSucceeds(doc('invited', 'users/invited').set({ role: 'admin' }));
+  it('RETTET F-02: invitert bruker kan IKKE opprette seg selv som admin', async () => {
+    await assertFails(doc('invited', 'users/invited').set({ role: 'admin' }));
   });
-  it('KJENT AVVIK F-02: invitert bruker kan opprette seg som en annen fadder enn invitasjonen sier', async () => {
-    await assertSucceeds(doc('invited', 'users/invited').set({ role: 'sponsor', sponsorId: 'S1' }));
+  it('RETTET F-02: invitert bruker kan IKKE opprette seg som en annen fadder enn invitasjonen sier', async () => {
+    await assertFails(doc('invited', 'users/invited').set({ role: 'sponsor', sponsorId: 'S1' }));
   });
-  it('KJENT AVVIK F-01: eskaleringskjede - fadder blir admin og leser alle barn og betalinger', async () => {
+  it('RETTET F-01: eskaleringskjede stoppes - fadder blir ikke admin og leser ikke andres data', async () => {
+    await assertFails(doc('sponsorA', 'users/sponsorA').update({ role: 'admin' }));
     await assertFails(doc('sponsorA', 'payments/P2').get());
-    await assertSucceeds(doc('sponsorA', 'users/sponsorA').update({ role: 'admin' }));
-    await assertSucceeds(doc('sponsorA', 'payments/P2').get());
-    await assertSucceeds(doc('sponsorA', 'children/C2').get());
-    await assertSucceeds(doc('sponsorA', 'sponsors/S2').get());
+    await assertFails(doc('sponsorA', 'children/C2').get());
+  });
+  it('fadder kan fortsatt endre ufarlige felt i egen profil (navn)', async () => {
+    await assertSucceeds(doc('sponsorA', 'users/sponsorA').update({ displayName: 'Nytt navn' }));
   });
   it('fremmed innlogget bruker kan IKKE opprette seg selv som admin', async () => {
     await assertFails(doc('stranger', 'users/stranger').set({ role: 'admin' }));
@@ -298,5 +299,107 @@ describe('Systemlaas (seedLock)', () => {
     await assertFails(doc('admin', 'system/seedLock').update({ ok: false }));
     await assertFails(doc('admin', 'system/seedLock').delete());
     await assertFails(doc('bootstrap', 'system/seedLock').delete());
+  });
+});
+
+describe('Invitasjon av koordinator: hele forlopet', () => {
+  const coordDb = () => customCtx('nyKoord', { email: 'ny.koord@example.com' }).firestore();
+
+  it('admin inviterer, koordinator logger inn forste gang, blir aktiv og ser bare egne elever', async () => {
+    // 1. Admin inviterer (slik appen gjor det: e-post som dokument-id, status invitert)
+    await assertSucceeds(
+      doc('admin', 'userDirectory/ny.koord@example.com').set({
+        email: 'ny.koord@example.com',
+        role: 'coordinator',
+        coordinatorId: 'K1',
+        status: 'invitert',
+        displayName: 'Ny Koordinator',
+      })
+    );
+    const db = coordDb();
+    // 2. Forste innlogging: profil med samme rolle og koordinator som invitasjonen
+    await assertSucceeds(
+      db.doc('users/nyKoord').set({
+        id: 'nyKoord',
+        role: 'coordinator',
+        coordinatorId: 'K1',
+        email: 'ny.koord@example.com',
+        displayName: 'Ny Koordinator',
+        createdAt: '2026-10-26T08:00:00.000Z',
+      })
+    );
+    // 3. Personen setter selv invitert -> aktiv (var feilen: dette ble avvist for)
+    await assertSucceeds(db.doc('userDirectory/ny.koord@example.com').update({ status: 'aktiv' }));
+    // 4. Ser egne elever (K1), ikke andres (K2)
+    await assertSucceeds(db.doc('children/C1').get());
+    await assertSucceeds(db.doc('children/C3').get());
+    await assertFails(db.doc('children/C2').get());
+    await assertFails(db.doc('payments/P1').get());
+  });
+
+  it('invitert koordinator kan IKKE opprette profil med en annen koordinator enn invitasjonen', async () => {
+    await assertSucceeds(
+      doc('admin', 'userDirectory/ny.koord@example.com').set({
+        email: 'ny.koord@example.com',
+        role: 'coordinator',
+        coordinatorId: 'K1',
+        status: 'invitert',
+      })
+    );
+    await assertFails(coordDb().doc('users/nyKoord').set({ role: 'coordinator', coordinatorId: 'K2' }));
+  });
+
+  it('personen kan bare endre egen status fra invitert til aktiv - ikke rolle, ikke sperret->aktiv', async () => {
+    await assertSucceeds(
+      doc('admin', 'userDirectory/ny.koord@example.com').set({
+        email: 'ny.koord@example.com',
+        role: 'coordinator',
+        coordinatorId: 'K1',
+        status: 'invitert',
+      })
+    );
+    const db = coordDb();
+    await assertFails(db.doc('userDirectory/ny.koord@example.com').update({ role: 'admin' }));
+    await assertFails(
+      db.doc('userDirectory/ny.koord@example.com').update({ status: 'aktiv', coordinatorId: 'K2' })
+    );
+    await assertFails(doc('sponsorA', 'userDirectory/ny.koord@example.com').update({ status: 'aktiv' }));
+    await assertSucceeds(
+      doc('admin', 'userDirectory/ny.koord@example.com').update({ status: 'sperret' })
+    );
+    await assertFails(db.doc('userDirectory/ny.koord@example.com').update({ status: 'aktiv' }));
+  });
+});
+
+describe('Sperret bruker mister tilgang i databasen, ikke bare i appen', () => {
+  const sperr = (email: string) =>
+    doc('admin', `userDirectory/${email}`).set({ email, status: 'sperret' }, { merge: true });
+
+  it('sperret koordinator kan IKKE lese egne elever lenger', async () => {
+    await assertSucceeds(doc('coordA', 'children/C1').get());
+    await assertSucceeds(sperr('coord.a@example.com'));
+    await assertFails(doc('coordA', 'children/C1').get());
+    await assertFails(doc('coordA', 'coordinators/K1').get());
+  });
+
+  it('sperret fadder kan IKKE lese eget barn eller egne betalinger', async () => {
+    await assertSucceeds(doc('sponsorA', 'payments/P1').get());
+    await assertSucceeds(sperr('sponsor.a@example.com'));
+    await assertFails(doc('sponsorA', 'payments/P1').get());
+    await assertFails(doc('sponsorA', 'children/C1').get());
+  });
+
+  it('sperret admin (ikke bootstrap) mister admin-tilgang', async () => {
+    await assertSucceeds(doc('admin', 'payments/P2').get());
+    await assertSucceeds(doc('bootstrap', 'userDirectory/admin@example.com').set({ status: 'sperret' }));
+    await assertFails(doc('admin', 'payments/P2').get());
+  });
+
+  it('aktiv status og manglende rad gir fortsatt vanlig tilgang', async () => {
+    await assertSucceeds(
+      doc('admin', 'userDirectory/coord.a@example.com').set({ email: 'coord.a@example.com', status: 'aktiv' })
+    );
+    await assertSucceeds(doc('coordA', 'children/C1').get());
+    await assertSucceeds(doc('coordB', 'children/C2').get());
   });
 });

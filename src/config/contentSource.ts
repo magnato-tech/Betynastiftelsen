@@ -1,4 +1,9 @@
-import { prototypeRoleSwitcherEnabled } from './prototypeAccess';
+/**
+ * Uendret regel fra før visningslinjen ble slått av i produksjon:
+ * seed følger VITE_PROTOTYPE_ROLE_SWITCHER som tidligere, uavhengig av linjen.
+ */
+const legacyPrototypeMode =
+  import.meta.env.DEV || import.meta.env.VITE_PROTOTYPE_ROLE_SWITCHER !== 'false';
 
 /**
  * Mock/seed lastes kun i visningsmodus (lokal utvikling og demo).
@@ -12,4 +17,4 @@ import { prototypeRoleSwitcherEnabled } from './prototypeAccess';
  */
 export const seedContentEnabled =
   import.meta.env.VITE_USE_SEED === 'true' ||
-  (import.meta.env.VITE_USE_SEED !== 'false' && prototypeRoleSwitcherEnabled);
+  (import.meta.env.VITE_USE_SEED !== 'false' && legacyPrototypeMode);

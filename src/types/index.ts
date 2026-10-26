@@ -105,6 +105,8 @@ export interface Report {
   godkjentDato?: string;
 }
 
+export type VippsAgreementStatus = 'PENDING' | 'ACTIVE' | 'STOPPED' | 'EXPIRED';
+
 export interface Sponsor {
   id: string;
   navn: string;
@@ -114,11 +116,75 @@ export interface Sponsor {
   maanedsbelop: number; // 250, 350, eller annet
   betalingsmetode: 'vipps' | 'avtalegiro' | 'bank';
   betalingsstatus: 'aktiv' | 'pause';
+  /**
+   * ISO-dato når fadderavtalen ble avsluttet (deaktivert i personkortet).
+   * Valgt fremfor betalingsstatus, fordi 'pause' betyr midlertidig stans, ikke avslutning.
+   */
+  avsluttet?: string;
   startDato: string;
   /** Ett eller flere barn. Hvert barn har likevel bare én fadder. */
   tildeltBarnIds: string[];
   /** Hvor registreringen kom fra (simulering / prototype). */
   registrertKilde?: 'admin' | 'nettside' | 'import';
+  /** Vipps Recurring — én avtale per fadder. */
+  vippsAgreementId?: string;
+  vippsConfirmationUrl?: string;
+  vippsAgreementStatus?: VippsAgreementStatus;
+}
+
+/** Historisk kobling fadder–barn (andel i øre per måned). */
+export interface SponsorAssignment {
+  id: string;
+  sponsorId: string;
+  childId: string;
+  koordinatorId: string;
+  startDato: string;
+  sluttDato?: string;
+  andelOre: number;
+}
+
+export type RecurringChargeStatus =
+  | 'PENDING'
+  | 'DUE'
+  | 'PROCESSING'
+  | 'CHARGED'
+  | 'FAILED'
+  | 'REFUNDED'
+  | 'PARTIALLY_REFUNDED'
+  | 'RESERVED'
+  | 'PARTIALLY_CAPTURED'
+  | 'CANCELLED';
+
+/** Månedlig Vipps-belastning — dokument-id = orderId. */
+export interface RecurringCharge {
+  id: string;
+  agreementId: string;
+  sponsorId: string;
+  periode: string;
+  amountOre: number;
+  due: string;
+  status: RecurringChargeStatus;
+  idempotencyKey: string;
+}
+
+export type PaymentAllocationMaal = 'barn' | 'buffer';
+
+export interface PaymentAllocation {
+  id: string;
+  paymentId: string;
+  sponsorId: string;
+  maal: PaymentAllocationMaal;
+  childId?: string;
+  koordinatorId?: string;
+  periode: string;
+  amountOre: number;
+}
+
+export interface VippsChargeJobStatus {
+  sistKjort: string;
+  opprettet: number;
+  feilet: number;
+  melding?: string;
 }
 
 export type InquiryStatus = 'mottatt' | 'under_behandling' | 'venter_koordinator' | 'besvart' | 'lukket';
@@ -139,7 +205,14 @@ export interface Inquiry {
 }
 
 export type PaymentType = 'fadderbidrag' | 'aksjon';
-export type PaymentStatus = 'fullfort' | 'forventet' | 'avstemt';
+export type PaymentStatus =
+  | 'fullfort'
+  | 'forventet'
+  | 'avstemt'
+  | 'refundert'
+  | 'delvis_refundert';
+
+export type PaymentKilde = 'vipps' | 'manuell';
 
 export interface PaymentRecord {
   id: string;
@@ -147,7 +220,15 @@ export interface PaymentRecord {
   fadderNavn: string;
   aksjonId?: string;
   aksjonTittel?: string;
+  /** Beløp i kroner (bakoverkompatibilitet og aksjoner). */
   belop: number;
+  /** Beløp i hele øre for Vipps/manuell fadderbidrag. */
+  amountOre?: number;
+  refundertOre?: number;
+  chargeOrderId?: string;
+  agreementId?: string;
+  periode?: string;
+  kilde?: PaymentKilde;
   dato: string;
   type: PaymentType;
   metode: 'vipps' | 'avtalegiro' | 'bank';
@@ -199,6 +280,14 @@ export interface AdultGraduateStory {
 
 export type TestimonialStory = AdultGraduateStory;
 
+/** Hvem en loggført handling eller kommentar gjelder (personkortet i admin). */
+export interface PersonLogSubject {
+  type: 'coordinator' | 'sponsor' | 'admin';
+  /** Koordinator-id, fadder-id, eller for admin normalisert e-post. */
+  id: string;
+  navn: string;
+}
+
 export interface AuditLogItem {
   id: string;
   tidspunkt: string;
@@ -206,6 +295,12 @@ export interface AuditLogItem {
   brukerNavn: string;
   handling: string;
   detaljer: string;
+  /** Mangler felt = gammel oppføring, ingen person knyttet til. */
+  gjelderType?: PersonLogSubject['type'];
+  gjelderId?: string;
+  gjelderNavn?: string;
+  /** Mangler felt = 'hendelse'. */
+  type?: 'hendelse' | 'kommentar';
 }
 
 export type MilestoneCategory =

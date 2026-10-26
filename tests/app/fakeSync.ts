@@ -9,21 +9,36 @@ export const fakeSync = {
   confirmed: [] as unknown[],
   persisted: [] as unknown[],
   backendActive: false,
+  /** Innlogget Firestore-profil (f.eks. admin som ser som fadder). */
+  profile: null as null | { role: string; displayName: string; email: string },
+  readOnlyCalls: [] as string[],
   reset() {
     this.hydration = null;
     this.confirmed = [];
     this.persisted = [];
     this.backendActive = false;
+    this.profile = null;
+    this.readOnlyCalls = [];
   },
 };
 
 export function useFakeSync() {
   const [hydration] = useState(fakeSync.hydration);
   const [backendActive, setBackendActive] = useState(fakeSync.backendActive);
+  const [readOnly, setReadOnly] = useState(false);
   return {
     firestoreEnabled: false,
     firebaseUser: null,
-    firestoreUserProfile: null,
+    firestoreUserProfile: fakeSync.profile as never,
+    readOnly,
+    enterReadOnly: () => {
+      fakeSync.readOnlyCalls.push('enter');
+      setReadOnly(true);
+    },
+    exitReadOnly: async () => {
+      fakeSync.readOnlyCalls.push('exit');
+      setReadOnly(false);
+    },
     firestoreProfileLoading: false,
     firestoreAccessMessage: null,
     backendActive,

@@ -1,5 +1,5 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { Firestore } from 'firebase/firestore';
+import { deleteField, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import type { DocumentReference, Firestore } from 'firebase/firestore';
 import { isBootstrapAdminEmail } from '../config/bootstrapAdmins';
 import {
   FIRESTORE_COLLECTIONS,
@@ -40,6 +40,9 @@ export async function ensureFirestoreUserOnLogin(
       if (!canLoginWithDirectoryStatus(status)) {
         return { ok: false, reason: 'sperret' };
       }
+      // Rydder opp etter tidligere innlogginger der status ble stående som invitert.
+      if (status === 'invitert') await markerInvitasjonAktiv(db, directoryId);
+      return synkroniserProfil(userRef, profile, entry);
     } else if (!isBootstrapAdminEmail(email)) {
       return { ok: false, reason: 'unknown' };
     }
@@ -71,22 +74,64 @@ export async function ensureFirestoreUserOnLogin(
     role: entry.role,
     email: directoryId,
     displayName: entry.displayName || displayName?.trim() || directoryId.split('@')[0],
-    coordinatorId: entry.coordinatorId,
-    sponsorId: entry.sponsorId,
     createdAt: new Date().toISOString(),
   };
+  // Firestore tåler ikke undefined-verdier, så koblings-id-er tas med kun når de finnes.
+  if (entry.coordinatorId !== undefined) profile.coordinatorId = entry.coordinatorId;
+  if (entry.sponsorId !== undefined) profile.sponsorId = entry.sponsorId;
 
   await setDoc(userRef, profile, { merge: true });
 
-  if (status === 'invitert') {
-    await setDoc(
-      doc(db, FIRESTORE_COLLECTIONS.userDirectory, directoryId),
-      { status: 'aktiv' },
-      { merge: true }
-    );
-  }
+  if (status === 'invitert') await markerInvitasjonAktiv(db, directoryId);
 
   return { ok: true, profile };
+}
+
+/** Invitert → aktiv ved innlogging. Feiler den, skal innloggingen likevel gå gjennom. */
+async function markerInvitasjonAktiv(db: Firestore, directoryId: string): Promise<void> {
+  try {
+    await updateDoc(doc(db, FIRESTORE_COLLECTIONS.userDirectory, directoryId), { status: 'aktiv' });
+  } catch (err) {
+    console.warn('Kunne ikke sette invitasjonen til aktiv.', err);
+  }
+}
+
+/** Oppdaterer `users/{uid}` med endringer fra `userDirectory` (rolle, navn, koblinger). */
+async function synkroniserProfil(
+  userRef: DocumentReference,
+  profile: FirestoreUser,
+  entry: FirestoreUserDirectoryEntry
+): Promise<EnsureFirestoreUserResult> {
+  const displayName = entry.displayName?.trim() || profile.displayName;
+  const synced: FirestoreUser = { ...profile, role: entry.role, displayName };
+  const patch: Record<string, unknown> = {};
+
+  if (profile.role !== entry.role) patch.role = entry.role;
+  if (profile.displayName !== displayName) patch.displayName = displayName;
+
+  // Fjernet i katalogen = slett feltet i profilen (undefined kan ikke skrives).
+  for (const felt of ['coordinatorId', 'sponsorId'] as const) {
+    const verdi = entry[felt];
+    if (verdi === profile[felt]) continue;
+    if (verdi === undefined) {
+      patch[felt] = deleteField();
+      delete synced[felt];
+    } else {
+      patch[felt] = verdi;
+      synced[felt] = verdi;
+    }
+  }
+
+  if (Object.keys(patch).length === 0) return { ok: true, profile };
+
+  try {
+    await updateDoc(userRef, patch);
+  } catch (err) {
+    // Innlogging skal ikke feile; databasereglene avgjør tilgang ut fra den lagrede profilen.
+    console.warn('Kunne ikke synkronisere brukerprofilen fra katalogen ved innlogging.', err);
+    return { ok: true, profile };
+  }
+  return { ok: true, profile: synced };
 }
 
 export async function fetchFirestoreUser(
