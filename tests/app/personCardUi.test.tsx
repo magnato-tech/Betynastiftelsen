@@ -251,10 +251,23 @@ describe('personkort: opplysninger', () => {
   });
 });
 
-describe('personkort: innlogging', () => {
+describe('personkort: innlogging (i fanen Opplysninger)', () => {
+  it('har tre faner, og Opplysninger er standardfane med statusvalg/Inviter synlig', () => {
+    renderCard(kariRow);
+    const faner = screen.getAllByRole('tab');
+    expect(faner.map((f) => f.textContent)).toEqual(['Opplysninger', 'Logg', 'Arkiver / slett']);
+    expect(screen.getByRole('tab', { name: 'Opplysninger' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Inviter' })).toBeTruthy();
+  });
+
+  it('aktiv person: status-select vises i Opplysninger-fanen uten å bytte fane', () => {
+    renderCard({ ...kariRow, loginStatus: 'aktiv' });
+    expect(screen.getByRole('combobox', { name: /Endre status/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Inviter' })).toBeNull();
+  });
+
   it('ikke-invitert viser Inviter-knapp som kaller onInvite', () => {
     const { onInvite } = renderCard(kariRow);
-    gaTilFane('Innlogging');
 
     fireEvent.click(screen.getByRole('button', { name: 'Inviter' }));
     expect(onInvite).toHaveBeenCalledWith(kariRow);

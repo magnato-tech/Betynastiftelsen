@@ -36,11 +36,10 @@ const SAMLING_LABEL: Record<string, string> = {
   campaigns: 'kampanjer',
 };
 
-type Fane = 'opplysninger' | 'innlogging' | 'logg' | 'avslutt';
+type Fane = 'opplysninger' | 'logg' | 'avslutt';
 
 const FANER: { id: Fane; label: string }[] = [
   { id: 'opplysninger', label: 'Opplysninger' },
-  { id: 'innlogging', label: 'Innlogging' },
   { id: 'logg', label: 'Logg' },
   { id: 'avslutt', label: 'Arkiver / slett' },
 ];
@@ -313,8 +312,8 @@ export const PersonCard: React.FC<PersonCardProps> = ({
       aria-modal="true"
       aria-labelledby="personkort-tittel"
     >
-      <div className="bg-white rounded-xl border border-stone-200 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between gap-3 p-4 border-b border-stone-200">
+      <div className="bg-white rounded-xl border border-stone-200 shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="shrink-0 flex items-start justify-between gap-3 p-4 border-b border-stone-200">
           <div className="min-w-0">
             <h3 id="personkort-tittel" className="text-base font-serif font-bold text-stone-900 truncate">
               {row.name}
@@ -336,7 +335,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
           </button>
         </div>
 
-        <div role="tablist" aria-label="Personkort" className="flex flex-wrap border-b border-stone-200 px-2">
+        <div role="tablist" aria-label="Personkort" className="shrink-0 flex flex-wrap border-b border-stone-200 px-2">
           {FANER.map((f) => {
             const aktiv = fane === f.id;
             return (
@@ -360,10 +359,16 @@ export const PersonCard: React.FC<PersonCardProps> = ({
           })}
         </div>
 
-        <div className="p-4 space-y-4 text-sm text-stone-800">
-          {/* 1. Opplysninger */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 text-sm text-stone-800">
+          {/* 1. Opplysninger (med Innlogging-kort til høyre) */}
           {fane === 'opplysninger' && (
-            <div role="tabpanel" id="panel-opplysninger" aria-labelledby="fane-opplysninger" className="space-y-4">
+            <div
+              role="tabpanel"
+              id="panel-opplysninger"
+              aria-labelledby="fane-opplysninger"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+            <div className="md:col-span-2 min-w-0 space-y-4">
               {erAdmin && (
                 <div className="space-y-2 text-xs">
                   <p className="text-stone-600">Administratorer redigeres ikke her.</p>
@@ -469,11 +474,13 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                 </p>
               )}
             </div>
-          )}
 
-          {/* 2. Innlogging */}
-          {fane === 'innlogging' && (
-            <div role="tabpanel" id="panel-innlogging" aria-labelledby="fane-innlogging" className="space-y-4 text-xs">
+            {/* Innlogging: til høyre på md+, under skjemaet på små skjermer */}
+            <aside
+              aria-label="Innlogging"
+              className="md:col-span-1 self-start rounded-lg border border-stone-200 bg-stone-50/60 p-4 space-y-4 text-xs"
+            >
+              <h4 className="font-semibold text-stone-900">Innlogging</h4>
               <dl className="space-y-2">
                 <div>
                   <dt className="text-stone-500">E-post</dt>
@@ -517,10 +524,11 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                 Invitasjon sender ingen e-post. Gi beskjed til personen selv om å logge inn med Google eller
                 e-postlenke med denne adressen.
               </p>
-            </div>
+            </aside>
+          </div>
           )}
 
-          {/* 3. Logg */}
+          {/* 2. Logg */}
           {fane === 'logg' && (
             <div role="tabpanel" id="panel-logg" aria-labelledby="fane-logg" className="space-y-4">
               {subject ? (
