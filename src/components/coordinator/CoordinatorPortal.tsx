@@ -49,11 +49,16 @@ import {
 interface CoordinatorPortalProps {
   activeSection: string;
   setActiveSection: (sec: string) => void;
+  /** Spørsmål som skal vises fremhevet (fra varslingssenteret). */
+  focusEntityId?: string | null;
+  onClearFocus?: () => void;
 }
 
 export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   activeSection,
   setActiveSection,
+  focusEntityId = null,
+  onClearFocus,
 }) => {
   const {
     childrenList,
@@ -361,10 +366,28 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     coordinatorReplyToInquiry(inquiryId, coordinatorReplyFr.trim());
     setReplyingInquiryId(null);
     setCoordinatorReplyFr('');
+    onClearFocus?.();
   };
 
   // Filter inquiries waiting for coordinator
   const inquiriesWaitingCoordinator = inquiriesForCoordinator(inquiries, childrenList, currentCoordinatorId);
+
+  // Spørsmål fra varslingssenteret: åpne svarskjemaet, og scroll dit. Kjøres bare når fokus endres.
+  const fokusertSporsmal =
+    activeSection === 'questions' && focusEntityId
+      ? inquiriesWaitingCoordinator.find((inq) => inq.id === focusEntityId)
+      : undefined;
+  const fokusertSporsmalId = fokusertSporsmal?.id;
+  useEffect(() => {
+    if (!fokusertSporsmal) return;
+    setReplyingInquiryId(fokusertSporsmal.id);
+    setCoordinatorReplyFr(fokusertSporsmal.koordinatorNotatFr || '');
+    document
+      .getElementById(`sporsmal-${fokusertSporsmal.id}`)
+      ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    // Bevisst bare på fokus og id: en ny liste-oppdatering skal ikke nullstille det som skrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusEntityId, activeSection, fokusertSporsmalId]);
 
   const profileChildId = parseCoordinatorChildProfileId(activeSection);
   const profileChild = profileChildId
@@ -933,11 +956,20 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
             </p>
           </div>
 
+          {focusEntityId && !fokusertSporsmal && (
+            <div className="p-3 bg-[#F6F4ED] rounded-lg border border-[#A3B18A] text-xs text-[#3C3C3C]">
+              {ui.focusNotWaiting}
+            </div>
+          )}
+
           <div className="space-y-4">
             {inquiriesWaitingCoordinator.map((inq) => (
               <div
                 key={inq.id}
-                className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4"
+                id={`sporsmal-${inq.id}`}
+                className={`bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4 ${
+                  inq.id === focusEntityId ? 'ring-2 ring-[#4D6B3E]' : ''
+                }`}
               >
                 <div className="flex items-center justify-between text-xs text-stone-500">
                   <span>{ui.pupilConcerned} <strong className="text-stone-800">{inq.barnNavn}</strong></span>
@@ -973,7 +1005,10 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                         {ui.saveReply}
                       </button>
                       <button
-                        onClick={() => setReplyingInquiryId(null)}
+                        onClick={() => {
+                          setReplyingInquiryId(null);
+                          onClearFocus?.();
+                        }}
                         className="px-3 py-2 bg-stone-200 text-stone-700 rounded-lg text-xs font-medium cursor-pointer"
                       >
                         {ui.cancel}

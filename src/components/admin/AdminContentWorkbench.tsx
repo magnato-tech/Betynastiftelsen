@@ -44,6 +44,11 @@ export const AdminContentWorkbench: React.FC<AdminContentWorkbenchProps> = (prop
         props.draft.skoleNavn.trim().length > 0 &&
         props.draft.klassetrinn.trim().length > 0
       : props.titleNo.trim().length >= 3 && props.bodyNo.trim().length >= 20;
+  // Forklarer hvorfor «Publiser til fadder» er sperret.
+  const publishHint =
+    props.mode === 'historie'
+      ? 'Fyll inn fornavn, skole og klassetrinn, og skriv minst 40 tegn i historien.'
+      : 'Skriv en norsk tittel (minst 3 tegn) og norsk tekst (minst 20 tegn).';
 
   const childForPreview =
     props.mode === 'historie'
@@ -202,6 +207,7 @@ export const AdminContentWorkbench: React.FC<AdminContentWorkbenchProps> = (prop
           Publiser til fadder
         </button>
       </div>
+      {!canPublish && <p className="text-[11px] text-amber-800 text-right">{publishHint}</p>}
     </div>
   );
 };

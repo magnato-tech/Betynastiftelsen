@@ -6,10 +6,8 @@ import {
   canAssignSponsor,
   childCoordinatorState,
   childrenNeedingCoordinator,
-  type ChildCoordinatorInfo,
 } from '../../utils/coordinatorAssignment';
-import type { Child, Coordinator } from '../../types';
-import { AdminOverlayModal } from './AdminOverlayModal';
+import { ChildPage, koordinatorCelle, navnPaa } from './ChildPage';
 
 export interface AdminPeoplePanelProps {
   focusChildId?: string | null;
@@ -20,19 +18,6 @@ export interface AdminPeoplePanelProps {
 /** Filterverdier for koordinator-velgeren. Andre verdier er koordinator-id. */
 const FILTER_ALLE = 'alle';
 const FILTER_UGYLDIG = 'ugyldig';
-
-const navnPaa = (c: Coordinator): string => `${c.fornavn} ${c.etternavn}`;
-
-/** Koordinatorcellen i tabellen: navn, eller rød/gul melding ved manglende eller arkivert koordinator. */
-const koordinatorCelle = (info: ChildCoordinatorInfo) => {
-  if (info.state === 'ok' && info.coordinator) {
-    return <span className="text-stone-900 font-medium">{navnPaa(info.coordinator)}</span>;
-  }
-  if (info.state === 'arkivert' && info.coordinator) {
-    return <span className="text-amber-700 font-medium">{`Arkivert: ${navnPaa(info.coordinator)}`}</span>;
-  }
-  return <span className="text-red-700 font-medium">Mangler koordinator</span>;
-};
 
 export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
   focusChildId,
@@ -45,9 +30,6 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
     coordinators,
     addChild,
     assignSponsorToChild,
-    endSponsorship,
-    reopenChild,
-    reassignChildCoordinator,
   } = useApp();
 
   const aktiveKoordinatorer = coordinators.filter((c) => c.aktiv !== false);
@@ -67,12 +49,6 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
   const [assignFeil, setAssignFeil] = useState<string | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [koordinatorFilter, setKoordinatorFilter] = useState<string>(FILTER_ALLE);
-  // Valgt ny koordinator i barnekortet. Null betyr at brukeren ikke har valgt noe ennå.
-  const [bytteValg, setBytteValg] = useState<string | null>(null);
-  const [bytteFeil, setBytteFeil] = useState<string | null>(null);
-  const [bytteOk, setBytteOk] = useState<string | null>(null);
-  // Kort bekreftelse etter avslutt/gjenåpne oppfølging i barnekortet.
-  const [oppfolgingOk, setOppfolgingOk] = useState<string | null>(null);
 
   useEffect(() => {
     if (focusChildId) {
@@ -80,14 +56,6 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
       onClearChildFocus?.();
     }
   }, [focusChildId, onClearChildFocus]);
-
-  // Nullstiller valg i barnekortet når et annet barn åpnes.
-  useEffect(() => {
-    setBytteValg(null);
-    setBytteFeil(null);
-    setBytteOk(null);
-    setOppfolgingOk(null);
-  }, [selectedChildId]);
 
   // Aktive barn uten gyldig koordinator. Brukes i infolinjen og i filteret «Vis».
   const behovForKoordinator = childrenNeedingCoordinator(childrenList, coordinators);
@@ -157,55 +125,29 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
   );
 
   const selectedChild = selectedChildId ? childrenList.find((c) => c.id === selectedChildId) : undefined;
-  const selectedChildSponsor = selectedChild?.tildeltFadderId
-    ? sponsors.find((s) => s.id === selectedChild.tildeltFadderId)
-    : undefined;
-  const selectedState = selectedChild ? childCoordinatorState(selectedChild, coordinators) : undefined;
-  const harGyldigKoordinator = selectedState?.state === 'ok';
-  // Gjeldende koordinator-id, bare når den er gyldig og aktiv.
-  const gjeldendeKoordinatorId = harGyldigKoordinator && selectedChild ? selectedChild.koordinatorId : '';
-  const valgtKoordinatorId = bytteValg ?? gjeldendeKoordinatorId;
 
-  const bytteKoordinator = (child: Child) => {
-    const ny = aktiveKoordinatorer.find((c) => c.id === valgtKoordinatorId);
-    if (!ny) return;
-    const gammel = selectedState?.coordinator;
-    const gammelNavn = gammel ? navnPaa(gammel) : '';
-    const spoersmaal = gammelNavn
-      ? `Flytte ${child.fornavn} til ${navnPaa(ny)}? Rapporter, fakta, bilder og spørsmål om barnet følger med, og ${gammelNavn} mister tilgangen.`
-      : `Gi ${child.fornavn} koordinator ${navnPaa(ny)}? Rapporter, fakta, bilder og spørsmål om barnet blir synlige for ${navnPaa(ny)}.`;
-    if (!window.confirm(spoersmaal)) return;
-    setBytteFeil(null);
-    setBytteOk(null);
-    try {
-      reassignChildCoordinator(child.id, ny.id);
-      setBytteValg(null);
-      setBytteOk(`${child.fornavn} er flyttet til ${navnPaa(ny)}.`);
-    } catch (err) {
-      setBytteFeil(err instanceof Error ? err.message : 'Kunne ikke bytte koordinator.');
-    }
-  };
-
-  // Avslutter oppfølgingen etter bekreftelse. Barnet tas ut av programmet.
-  const avsluttOppfolging = (child: Child) => {
-    const fadderNavn = selectedChildSponsor?.navn;
-    const spoersmaal = `Avslutte oppfølgingen av ${child.fornavn}? ${child.fornavn} tas ut av programmet${fadderNavn ? ` og kobles fra fadderen ${fadderNavn}` : ''}. Det kan angres med «Gjenåpne».`;
-    if (!window.confirm(spoersmaal)) return;
-    endSponsorship(child.id);
-    setOppfolgingOk(`Oppfølgingen av ${child.fornavn} er avsluttet.`);
-  };
-
-  const gjenapnOppfolging = (child: Child) => {
-    reopenChild(child.id);
-    setOppfolgingOk(`Oppfølgingen av ${child.fornavn} er gjenåpnet.`);
-  };
+  // Hele barnesiden vises i stedet for listen når et barn er valgt.
+  if (selectedChild) {
+    return (
+      <div className="space-y-5">
+        <button
+          type="button"
+          onClick={() => setSelectedChildId(null)}
+          className="text-xs font-medium text-[#4D6B3E] hover:underline cursor-pointer"
+        >
+          ← Tilbake til Barn
+        </button>
+        <ChildPage key={selectedChild.id} child={selectedChild} onOpenSponsorByEmail={onOpenSponsorByEmail} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-serif font-bold text-stone-900">Barn</h2>
         <p className="text-xs text-stone-600 mt-0.5">
-          Barn i programmet. Faddere administreres under Brukere. Klikk en rad for barnekort.
+          Barn i programmet. Faddere administreres under Brukere. Klikk en rad for å åpne barnet.
         </p>
       </div>
 
@@ -443,131 +385,6 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
           </table>
         </div>
       </div>
-
-      {selectedChild && (
-        <AdminOverlayModal
-          title={`${selectedChild.internKode} — ${selectedChild.fornavn}`}
-          onClose={() => setSelectedChildId(null)}
-        >
-          <dl className="space-y-2 text-xs">
-            <div>
-              <dt className="text-stone-500">Alder</dt>
-              <dd>{new Date().getFullYear() - selectedChild.fodselsaar} år</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Skole</dt>
-              <dd>{selectedChild.skoleNavn}</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Klassetrinn</dt>
-              <dd>{selectedChild.klassetrinn}</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Status</dt>
-              <dd className="capitalize">{selectedChild.status}</dd>
-            </div>
-            <div>
-              <dt className="text-stone-500">Koordinator</dt>
-              <dd>{selectedState ? koordinatorCelle(selectedState) : '—'}</dd>
-            </div>
-          </dl>
-
-          <div className="pt-3 mt-3 border-t border-stone-100 space-y-2 text-xs">
-            <label className="block space-y-1 text-stone-700">
-              <span className="font-medium">Ny koordinator</span>
-              <select
-                value={valgtKoordinatorId}
-                onChange={(e) => {
-                  setBytteValg(e.target.value);
-                  setBytteFeil(null);
-                  setBytteOk(null);
-                }}
-                className="px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs w-full"
-              >
-                <option value="">Velg koordinator…</option>
-                {aktiveKoordinatorer.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {navnPaa(c)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="button"
-              disabled={!valgtKoordinatorId || valgtKoordinatorId === gjeldendeKoordinatorId}
-              onClick={() => bytteKoordinator(selectedChild)}
-              className="px-3 py-1.5 rounded-lg bg-[#4D6B3E] text-white hover:bg-[#3B522F] font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {harGyldigKoordinator ? 'Bytt koordinator' : 'Velg koordinator'}
-            </button>
-            {bytteFeil && (
-              <p role="alert" className="text-red-900 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {bytteFeil}
-              </p>
-            )}
-            {bytteOk && (
-              <p role="status" className="text-green-900 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                {bytteOk}
-              </p>
-            )}
-          </div>
-
-          {selectedChildSponsor ? (
-            <div className="pt-3 border-t border-stone-100">
-              <p className="text-xs text-stone-500 mb-1">Fadder</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedChildId(null);
-                  onOpenSponsorByEmail?.(selectedChildSponsor.epost);
-                }}
-                className="text-[#4D6B3E] hover:underline font-semibold cursor-pointer"
-              >
-                {selectedChildSponsor.navn} ({selectedChildSponsor.epost})
-              </button>
-            </div>
-          ) : (
-            <p className="text-xs text-[#4D6B3E] pt-3 border-t border-stone-100">Ingen fadder tildelt ennå.</p>
-          )}
-
-          {/* Avslutning er svært sjelden, derfor diskret og nederst i kortet. */}
-          <div className="mt-6 pt-3 border-t border-dashed border-stone-200 text-xs space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Avslutt oppfølging</p>
-            {selectedChild.status === 'aktiv' && (
-              <>
-                <p className="text-[11px] text-stone-500">
-                  Brukes når barnet er ferdig i programmet, for eksempel etter fullført skolegang. Svært sjelden.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => avsluttOppfolging(selectedChild)}
-                  className="px-2.5 py-1 rounded-md border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer"
-                >
-                  {`Avslutt oppfølging for ${selectedChild.fornavn}`}
-                </button>
-              </>
-            )}
-            {selectedChild.status === 'avsluttet' && (
-              <>
-                <p className="text-stone-600">Oppfølgingen er avsluttet.</p>
-                <button
-                  type="button"
-                  onClick={() => gjenapnOppfolging(selectedChild)}
-                  className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-stone-700 hover:bg-stone-50 font-medium cursor-pointer"
-                >
-                  Gjenåpne oppfølging
-                </button>
-                <p className="text-[11px] text-stone-500">Barnet blir aktivt igjen og venter på fadder.</p>
-              </>
-            )}
-            {oppfolgingOk && (
-              <p role="status" className="text-stone-700 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
-                {oppfolgingOk}
-              </p>
-            )}
-          </div>
-        </AdminOverlayModal>
-      )}
     </div>
   );
 };

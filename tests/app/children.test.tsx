@@ -220,14 +220,15 @@ describe('Oppdatering av barneprofil', () => {
   it('updateChild logger handlingen', () => {
     const m = mountApp({ children: [makeChild({ id: 'c1' })] });
     m.run((a) => a.updateChild('c1', { fornavn: 'Y' }));
-    expect(m.app.auditLogs[0].handling).toBe('Oppdaterte barneprofil');
+    expect(m.app.auditLogs[0].handling).toBe('Endret opplysninger om barnet');
   });
-  it('updateChild kan avslutte et barn uten at fadderkoblingen ryddes (bruk endSponsorship)', () => {
+  it('updateChild ignorerer status og fadder (bruk endSponsorship / removeChildSponsor)', () => {
     const m = mountApp({
       children: [makeChild({ id: 'c1', tildeltFadderId: 's1' })],
       sponsors: [makeSponsor({ id: 's1', tildeltBarnIds: ['c1'] })],
     });
     m.run((a) => a.updateChild('c1', { status: 'avsluttet' }));
+    expect(m.app.childrenList[0].status).toBe('aktiv');
     expect(m.app.childrenList[0].tildeltFadderId).toBe('s1');
     expect(m.app.sponsors[0].tildeltBarnIds).toEqual(['c1']);
   });

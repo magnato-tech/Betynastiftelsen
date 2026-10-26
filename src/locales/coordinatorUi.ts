@@ -112,6 +112,7 @@ const no = {
   cancel: 'Avbryt',
   replyQuestion: 'Svar på dette spørsmålet',
   noQuestions: 'Ingen spørsmål venter på svar nå.',
+  focusNotWaiting: 'Dette spørsmålet venter ikke lenger på svar fra deg.',
   enrollKicker: 'Førstegangsregistrering',
   enrollTitle: 'Registrer en ny elev i ordningen',
   enrollIntro: 'Bare nødvendige skoleopplysninger. Ingen helse- eller stigmatiserende data.',
@@ -292,6 +293,7 @@ const fr: typeof no = {
   cancel: 'Annuler',
   replyQuestion: 'Répondre à cette question',
   noQuestions: 'Aucune question en attente de réponse actuellement.',
+  focusNotWaiting: "Cette question n'est plus en attente de votre réponse.",
   enrollKicker: 'Enregistrement initial',
   enrollTitle: 'Inscrire un nouvel élève au programme',
   enrollIntro:

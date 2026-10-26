@@ -15,9 +15,13 @@ const LINK_LABELS: Record<string, string> = {
   paymentAllocations: 'fordelinger',
 };
 
-/** Administratorer ligger i userDirectory og kan ikke slettes eller deaktiveres i personkortet. */
+/**
+ * Administratorer ligger i userDirectory og kan ikke slettes eller deaktiveres i personkortet.
+ * Barn er ikke personer med innlogging, så de avvises her også (de har egne handlinger).
+ */
 export function assertNotAdmin(subject: PersonLogSubject): void {
   if (subject.type === 'admin') throw new Error('Administratorer kan ikke slettes her.');
+  if (subject.type === 'child') throw new Error('Barn kan ikke slettes eller deaktiveres her.');
 }
 
 /**

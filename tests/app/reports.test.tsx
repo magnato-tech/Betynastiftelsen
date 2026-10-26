@@ -186,14 +186,14 @@ describe('Godkjenning og avvisning i Norge (admin)', () => {
 });
 
 describe('KJENT AVVIK: feil ved godkjenning (F-19)', () => {
-  it('F-19: godkjenning av ukjent rapport varsler likevel koordinatorer (tom recipientId = alle koordinatorer)', () => {
+  it('F-19: godkjenning av ukjent rapport varsler ikke koordinatorer (tom recipientId skjules nå, jf. personvern)', () => {
     const m = mountApp(world({ reports: [] }));
     m.run((a) => a.approveReport('finnes-ikke'));
     expect(m.app.notifications).toHaveLength(1);
     expect(m.app.notifications[0].recipientId).toBe('');
     m.run((a) => a.setRole('coordinator'));
     m.run((a) => a.setCurrentCoordinatorId('k1'));
-    expect(m.app.currentRoleNotifications).toHaveLength(1);
+    expect(m.app.currentRoleNotifications).toHaveLength(0);
   });
   it('F-19: godkjenning av ukjent rapport skriver likevel "Godkjente rapport" i revisjonsloggen', () => {
     const m = mountApp(world({ reports: [] }));
@@ -206,30 +206,32 @@ describe('KJENT AVVIK: feil ved godkjenning (F-19)', () => {
         reports: [makeReport({ id: 'r1', barnId: 'c1', barnNavn: 'Ange', koordinatorId: 'k1' })],
       }),
     );
-  it('F-19: godkjenning sender IKKE varsel til fadder (barn-id leses fra oppdateringsfunksjon som ikke har kjort)', () => {
+  it('RETTET F-19: godkjenning varsler fadderen til barnet', () => {
     const m = approvable();
     m.run((a) => a.approveReport('r1'));
     expect(m.app.reports[0].status).toBe('godkjent');
-    expect(m.app.notifications.filter((n) => n.targetRole === 'sponsor')).toHaveLength(0);
+    const tilFadder = m.app.notifications.filter((n) => n.targetRole === 'sponsor');
+    expect(tilFadder).toHaveLength(1);
+    expect(tilFadder[0].recipientId).toBe(m.app.childrenList.find((c) => c.id === 'c1')?.tildeltFadderId);
   });
-  it('F-19: koordinatorvarselet ved godkjenning faar tom mottaker og vises derfor for ALLE koordinatorer', () => {
+  it('RETTET F-19: koordinatorvarselet ved godkjenning gaar til riktig koordinator med barnenavn', () => {
     const m = approvable();
     m.run((a) => a.approveReport('r1'));
     const n = m.app.notifications.filter((x) => x.targetRole === 'coordinator');
     expect(n).toHaveLength(1);
-    expect(n[0].recipientId).toBe('');
-    expect(n[0].title).toContain('()'); // barnenavnet mangler ogsaa i teksten
+    expect(n[0].recipientId).toBe('k1');
+    expect(n[0].title).toContain('(Ange)');
   });
-  it('F-19: e-post til fadder om godkjent rapport koes ikke, selv med automatisk utsending paa', () => {
+  it('RETTET F-19: e-post til fadder om godkjent rapport koes naar automatisk utsending er paa', () => {
     const m = approvable();
     m.run((a) => a.setEmailAutoSendEvent('report_approved', true));
     m.run((a) => a.approveReport('r1'));
-    expect(m.app.emailOutbox).toHaveLength(0);
+    expect(m.app.emailOutbox.length).toBeGreaterThan(0);
   });
-  it('F-19: avvisning gir koordinatorvarsel med tom mottaker og uten barnenavn', () => {
+  it('RETTET F-19: avvisning gir koordinatorvarsel til riktig koordinator med barnenavn', () => {
     const m = approvable();
     m.run((a) => a.rejectReport('r1', 'Mangler oppmote'));
-    expect(m.app.notifications[0].recipientId).toBe('');
-    expect(m.app.notifications[0].title).toContain('Élève');
+    expect(m.app.notifications[0].recipientId).toBe('k1');
+    expect(m.app.notifications[0].title).toContain('Ange');
   });
 });

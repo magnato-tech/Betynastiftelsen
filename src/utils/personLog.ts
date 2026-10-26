@@ -1,4 +1,4 @@
-import type { AuditLogItem, Coordinator, PersonLogSubject, Sponsor } from '../types';
+import type { AuditLogItem, Child, Coordinator, PersonLogSubject, Sponsor } from '../types';
 
 /** Personen som et personkort gjelder, fra en koordinator-post. */
 export function coordinatorSubject(c: Pick<Coordinator, 'id' | 'fornavn' | 'etternavn'>): PersonLogSubject {
@@ -8,6 +8,11 @@ export function coordinatorSubject(c: Pick<Coordinator, 'id' | 'fornavn' | 'ette
 /** Personen som et personkort gjelder, fra en fadder-post. */
 export function sponsorSubject(s: Pick<Sponsor, 'id' | 'navn'>): PersonLogSubject {
   return { type: 'sponsor', id: s.id, navn: s.navn };
+}
+
+/** Eleven som elevloggen gjelder, fra en barne-post. Navnet er «fornavn (internKode)». */
+export function childSubject(c: Pick<Child, 'id' | 'fornavn' | 'internKode'>): PersonLogSubject {
+  return { type: 'child', id: c.id, navn: `${c.fornavn} (${c.internKode})` };
 }
 
 /** Millisekundene i id-en «log-<ms>» eller «log-<ms>-<tilfeldig>»; 0 hvis formatet er ukjent. */

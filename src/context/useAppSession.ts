@@ -107,12 +107,31 @@ export function useAppSession(params: {
     }
   }, [firestore.firestoreUserProfile]);
 
-  const currentRoleNotifications = notifications.filter((n) => {
+  // Admin som ser som koordinator/fadder: velg en gyldig person når ingen (eller en arkivert) er valgt.
+  // Ellers viste velgeren første navn mens appen egentlig ikke hadde noen valgt (tom bjelle og elevliste).
+  useEffect(() => {
+    if (firestore.firestoreUserProfile?.role !== 'admin') return;
+    if (role === 'coordinator') {
+      const aktive = coordinators.filter((c) => c.aktiv !== false);
+      if (aktive.length > 0 && !aktive.some((c) => c.id === currentCoordinatorId)) {
+        setCurrentCoordinatorId(aktive[0].id);
+      }
+    }
+    if (role === 'sponsor') {
+      const aktive = sponsors.filter((s) => !s.avsluttet);
+      if (aktive.length > 0 && !aktive.some((s) => s.id === currentSponsorId)) {
+        setCurrentSponsorId(aktive[0].id);
+      }
+    }
+  }, [role, coordinators, sponsors, currentCoordinatorId, currentSponsorId, firestore.firestoreUserProfile?.role]);
+
+  /** Om et varsel hører til innlogget rolle. Koordinatorer får bare varsler adressert til seg selv (ikke uadresserte). */
+  const tilhorerRolle = (n: AppNotification): boolean => {
     if (role === 'admin') return n.targetRole === 'admin' || n.targetRole === 'all';
     if (role === 'coordinator') {
       return (
-        (n.targetRole === 'coordinator' || n.targetRole === 'all') &&
-        (!n.recipientId || n.recipientId === currentCoordinatorId)
+        n.targetRole === 'all' ||
+        (n.targetRole === 'coordinator' && !!currentCoordinatorId && n.recipientId === currentCoordinatorId)
       );
     }
     if (role === 'sponsor') {
@@ -122,7 +141,9 @@ export function useAppSession(params: {
       );
     }
     return n.targetRole === 'all';
-  });
+  };
+
+  const currentRoleNotifications = notifications.filter(tilhorerRolle);
 
   const unreadNotificationCount = currentRoleNotifications.filter((n) => !n.read).length;
 
@@ -131,20 +152,7 @@ export function useAppSession(params: {
   };
 
   const markAllNotificationsAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => {
-        const isForCurrent =
-          (role === 'admin' && (n.targetRole === 'admin' || n.targetRole === 'all')) ||
-          (role === 'coordinator' &&
-            (n.targetRole === 'coordinator' || n.targetRole === 'all') &&
-            (!n.recipientId || n.recipientId === currentCoordinatorId)) ||
-          (role === 'sponsor' &&
-            (n.targetRole === 'sponsor' || n.targetRole === 'all') &&
-            (!n.recipientId || n.recipientId === currentSponsorId)) ||
-          (role === 'public' && n.targetRole === 'all');
-        return isForCurrent ? { ...n, read: true } : n;
-      })
-    );
+    setNotifications((prev) => prev.map((n) => (tilhorerRolle(n) ? { ...n, read: true } : n)));
   };
 
   const deleteNotification = (id: string) => {

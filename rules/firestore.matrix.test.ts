@@ -79,11 +79,10 @@ const CELLS: Cell[] = [
   c('children: les C1 (fadderbarn, K1)', 'children/C1', 'get', ['coordA', 'sponsorA', ...STAFF]),
   c('children: les C2 (fadderbarn S2, K2)', 'children/C2', 'get', ['coordB', 'sponsorB', ...STAFF]),
   c('children: les C3 (uten fadder, K1)', 'children/C3', 'get', ['coordA', ...STAFF]),
-  c('children: endre C1', 'children/C1', 'update', ['coordA', ...STAFF], { gap: { coordB: 'F-03' } }),
-  c('children: endre C2', 'children/C2', 'update', ['coordB', ...STAFF], { gap: { coordA: 'F-03' } }),
+  c('children: endre C1', 'children/C1', 'update', ['coordA', ...STAFF]),
+  c('children: endre C2', 'children/C2', 'update', ['coordB', ...STAFF]),
   c('children: opprett barn for K1', 'children/C9', 'create', ['coordA', ...STAFF], {
     data: { navn: 'Nytt', koordinatorId: 'K1', status: 'utkast' },
-    gap: { coordB: 'F-03' },
   }),
   c('children: slett C1', 'children/C1', 'delete', STAFF),
 
@@ -91,7 +90,6 @@ const CELLS: Cell[] = [
   c('facts: les F1', 'facts/F1', 'get', ['coordA', ...STAFF]),
   c('facts: opprett faktum for C1 (K1)', 'facts/F9', 'create', ['coordA', ...STAFF], {
     data: { barnId: 'C1', koordinatorId: 'K1', tekst: 'ny' },
-    gap: { coordB: 'F-03' },
   }),
   c('facts: endre', 'facts/F1', 'update', STAFF),
   c('facts: slett', 'facts/F1', 'delete', STAFF),
@@ -102,11 +100,9 @@ const CELLS: Cell[] = [
   c('reports: les godkjent rapport om C2', 'reports/R3', 'get', ['coordB', 'sponsorB', ...STAFF]),
   c('reports: opprett innsendt rapport for K1', 'reports/R9', 'create', ['coordA', ...STAFF], {
     data: { barnId: 'C1', koordinatorId: 'K1', status: 'innsendt' },
-    gap: { coordB: 'F-03' },
   }),
   c('reports: opprett allerede-godkjent rapport (omgaar godkjenning)', 'reports/R10', 'create', STAFF, {
     data: { barnId: 'C1', koordinatorId: 'K1', status: 'godkjent' },
-    gap: { coordA: 'F-04', coordB: 'F-04' },
   }),
   c('reports: endre', 'reports/R2', 'update', STAFF),
   c('reports: slett', 'reports/R2', 'delete', STAFF),
@@ -116,9 +112,8 @@ const CELLS: Cell[] = [
   c('milestones: les M2 (C2)', 'milestones/M2', 'get', ['coordB', 'sponsorB', ...STAFF]),
   c('milestones: opprett for C1 (K1)', 'milestones/M9', 'create', ['coordA', ...STAFF], {
     data: { barnId: 'C1', koordinatorId: 'K1' },
-    gap: { coordB: 'F-03' },
   }),
-  c('milestones: endre M1', 'milestones/M1', 'update', ['coordA', ...STAFF], { gap: { coordB: 'F-03' } }),
+  c('milestones: endre M1', 'milestones/M1', 'update', ['coordA', ...STAFF]),
   c('milestones: slett', 'milestones/M1', 'delete', STAFF),
 
   // inquiries
@@ -127,7 +122,7 @@ const CELLS: Cell[] = [
   c('inquiries: fadder oppretter egen henvendelse', 'inquiries/Q9', 'create', ['sponsorA', ...STAFF], {
     data: { fadderId: 'S1', barnId: 'C1', status: 'ny' },
   }),
-  c('inquiries: endre Q1', 'inquiries/Q1', 'update', ['coordA', ...STAFF], { gap: { coordB: 'F-03' } }),
+  c('inquiries: endre Q1', 'inquiries/Q1', 'update', ['coordA', ...STAFF]),
   c('inquiries: slett Q1', 'inquiries/Q1', 'delete', STAFF),
 
   // payments
@@ -230,9 +225,8 @@ const CELLS: Cell[] = [
   c('catalogPhotos: les CP1', 'catalogPhotos/CP1', 'get', ['coordA', ...STAFF]),
   c('catalogPhotos: opprett for K1', 'catalogPhotos/CP9', 'create', ['coordA', ...STAFF], {
     data: { koordinatorId: 'K1', barnId: 'C1' },
-    gap: { coordB: 'F-03' },
   }),
-  c('catalogPhotos: endre CP1', 'catalogPhotos/CP1', 'update', ['coordA', ...STAFF], { gap: { coordB: 'F-03' } }),
+  c('catalogPhotos: endre CP1', 'catalogPhotos/CP1', 'update', ['coordA', ...STAFF]),
   c('catalogPhotos: slett CP1', 'catalogPhotos/CP1', 'delete', STAFF),
 
   // system

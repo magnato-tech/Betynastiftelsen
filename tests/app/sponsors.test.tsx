@@ -202,23 +202,23 @@ describe('Tildeling av fadder til barn', () => {
 });
 
 describe('KJENT AVVIK: tildeling uten kontroll (F-15, F-23)', () => {
-  it('F-23: tildeling til ukjent fadder-id godtas (barnet peker paa ikke-eksisterende fadder)', () => {
+  it('F-23: tildeling til ukjent fadder-id avvises (ingen endring)', () => {
     const m = mountApp(base());
-    m.run((a) => a.assignSponsorToChild('c1', 'spoekelse'));
-    expect(m.app.childrenList.find((c) => c.id === 'c1')?.tildeltFadderId).toBe('spoekelse');
+    expect(() => m.run((a) => a.assignSponsorToChild('c1', 'spoekelse'))).toThrow('Fant ikke fadderen.');
+    expect(m.app.childrenList.find((c) => c.id === 'c1')?.tildeltFadderId).toBeUndefined();
   });
-  it('F-23: tildeling av ukjent barn skriver likevel logg og varsel-forsoek uten barn', () => {
+  it('F-23: tildeling av ukjent barn avvises (ingen logg, ingen endring hos fadder)', () => {
     const m = mountApp(base());
-    m.run((a) => a.assignSponsorToChild('ukjent-barn', 's1'));
-    expect(m.app.auditLogs[0].handling).toBe('Tildelte fadder');
-    expect(m.app.sponsors.find((s) => s.id === 's1')?.tildeltBarnIds).toEqual(['ukjent-barn']);
+    expect(() => m.run((a) => a.assignSponsorToChild('ukjent-barn', 's1'))).toThrow('Fant ikke eleven.');
+    expect(m.app.auditLogs).toHaveLength(0);
+    expect(m.app.sponsors.find((s) => s.id === 's1')?.tildeltBarnIds).toEqual([]);
   });
   it('F-23: avsluttet barn kan faa ny fadder uten at status gjenopprettes', () => {
     const m = mountApp(base({ children: [makeChild({ id: 'c1', status: 'avsluttet', koordinatorId: 'k1' })] }));
     m.run((a) => a.assignSponsorToChild('c1', 's1'));
     expect(m.app.childrenList[0]).toMatchObject({ status: 'avsluttet', tildeltFadderId: 's1' });
   });
-  it('F-15: to kilder til sannhet - barnets tildeltFadderId kan endres uten at fadderens liste folger med', () => {
+  it('F-15: updateChild kan ikke endre barnets fadderfelt (egne handlinger brukes)', () => {
     const m = mountApp(base());
     m.run((a) => a.assignSponsorToChild('c1', 's1'));
     m.run((a) => a.updateChild('c1', { tildeltFadderId: 's2' }));
@@ -226,7 +226,7 @@ describe('KJENT AVVIK: tildeling uten kontroll (F-15, F-23)', () => {
     const s2 = m.app.sponsors.find((s) => s.id === 's2');
     expect(s1?.tildeltBarnIds).toEqual(['c1']);
     expect(s2?.tildeltBarnIds).toEqual([]);
-    expect(m.app.childrenList.find((c) => c.id === 'c1')?.tildeltFadderId).toBe('s2');
+    expect(m.app.childrenList.find((c) => c.id === 'c1')?.tildeltFadderId).toBe('s1');
   });
   it('F-15: fadderens barneliste og barnets fadderfelt kan vaere uenige fra databasen (ingen konsistenssjekk ved innlasting)', () => {
     const m = mountApp({

@@ -40,6 +40,14 @@ service cloud.firestore {
     function ownCoordinator() {
       return isCoordinator() && userDoc().coordinatorId == resource.data.koordinatorId;
     }
+    // Koordinator som følger barnet (slås opp på barnet, også for poster uten koordinatorId).
+    function coordinatorOfChild(barnId) {
+      return isCoordinator()
+        && get(/databases/$(database)/documents/children/$(barnId)).data.koordinatorId == userDoc().coordinatorId;
+    }
+    function ownsNew() {
+      return isCoordinator() && request.resource.data.koordinatorId == userDoc().coordinatorId;
+    }
     function ownSponsorChild() {
       return isSponsor() && resource.data.tildeltFadderId == userDoc().sponsorId;
     }
@@ -126,13 +134,17 @@ service cloud.firestore {
 
     match /children/{id} {
       allow read: if canAdminWrite() || ownCoordinator() || ownSponsorChild();
-      allow create, update: if canAdminWrite() || isCoordinator();
+      // Koordinator: bare egne barn, og kan ikke flytte barnet eller bytte fadder.
+      allow create: if canAdminWrite() || (ownsNew() && !('tildeltFadderId' in request.resource.data));
+      allow update: if canAdminWrite()
+        || (ownCoordinator()
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['koordinatorId', 'tildeltFadderId']));
       allow delete: if canAdminWrite();
     }
 
     match /facts/{id} {
       allow read: if canAdminWrite() || ownCoordinator();
-      allow create: if canAdminWrite() || isCoordinator();
+      allow create: if canAdminWrite() || (ownsNew() && coordinatorOfChild(request.resource.data.barnId));
       allow update: if canAdminWrite();
       allow delete: if canAdminWrite();
     }
@@ -142,7 +154,10 @@ service cloud.firestore {
         || ownCoordinator()
         || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId
             && resource.data.status == 'godkjent');
-      allow create: if canAdminWrite() || isCoordinator();
+      // Koordinator sender inn for egne barn; godkjent status settes bare av admin.
+      allow create: if canAdminWrite()
+        || (ownsNew() && coordinatorOfChild(request.resource.data.barnId)
+          && request.resource.data.status in ['kladd', 'innsendt']);
       allow update: if canAdminWrite();
       allow delete: if canAdminWrite();
     }
@@ -151,7 +166,8 @@ service cloud.firestore {
       allow read: if canAdminWrite()
         || ownCoordinator()
         || (isSponsor() && get(/databases/$(database)/documents/children/$(resource.data.barnId)).data.tildeltFadderId == userDoc().sponsorId);
-      allow create, update: if canAdminWrite() || isCoordinator();
+      allow create: if canAdminWrite() || coordinatorOfChild(request.resource.data.barnId);
+      allow update: if canAdminWrite() || coordinatorOfChild(resource.data.barnId);
       allow delete: if canAdminWrite();
     }
 
@@ -160,7 +176,7 @@ service cloud.firestore {
         || (isSponsor() && resource.data.fadderId == userDoc().sponsorId)
         || ownCoordinator();
       allow create: if canAdminWrite() || (isSponsor() && request.resource.data.fadderId == userDoc().sponsorId);
-      allow update: if canAdminWrite() || isCoordinator();
+      allow update: if canAdminWrite() || ownCoordinator();
       allow delete: if canAdminWrite();
     }
 
@@ -206,7 +222,8 @@ service cloud.firestore {
 
     match /catalogPhotos/{id} {
       allow read: if canAdminWrite() || ownCoordinator();
-      allow create, update: if canAdminWrite() || isCoordinator();
+      allow create: if canAdminWrite() || ownsNew();
+      allow update: if canAdminWrite() || ownCoordinator();
       allow delete: if canAdminWrite();
     }
 

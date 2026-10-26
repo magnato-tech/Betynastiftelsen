@@ -32,6 +32,8 @@ export const DevPortals: React.FC<DevPortalsProps> = ({
         key={language}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        focusEntityId={focusEntityId}
+        onClearFocus={onClearFocus}
       />
     );
   }

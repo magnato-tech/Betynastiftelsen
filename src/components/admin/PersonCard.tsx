@@ -27,6 +27,14 @@ export const LOGIN_LABEL: Record<PersonLoginStatus, string> = {
   'ikke-invitert': 'Ikke invitert',
 };
 
+/** Låst etikett for arkiverte personer. Innlogging gis først etter «Gjenopprett». */
+export const ARKIVERT_LOGIN_LABEL = 'Sperret (arkivert)';
+export const ARKIVERT_STATUS_FEIL = 'Personen er arkivert. Bruk «Gjenopprett» først.';
+
+/** Arkiverte personer kan ikke settes til aktiv eller invitert. Sperret er tillatt. */
+export const blokkerStatusForArkivert = (archived: boolean, status: UserDirectoryStatus): boolean =>
+  archived && (status === 'aktiv' || status === 'invitert');
+
 /** Visningsnavn for samlingene som kan blokkere sletting. */
 const SAMLING_LABEL: Record<string, string> = {
   children: 'barn',
@@ -313,6 +321,19 @@ export const PersonCard: React.FC<PersonCardProps> = ({
 
   const [avsluttBusy, setAvsluttBusy] = useState(false);
   const [avsluttFeil, setAvsluttFeil] = useState<string | null>(null);
+  const [statusFeil, setStatusFeil] = useState<string | null>(null);
+  // Arkivert = låst innlogging, uansett om raden eller posten er oppdatert.
+  const erArkivertPerson = arkivert || row.archived;
+
+  // Vakt: arkiverte personer får ikke aktiv/invitert via statusvalget.
+  const endreStatus = (status: UserDirectoryStatus) => {
+    if (blokkerStatusForArkivert(erArkivertPerson, status)) {
+      setStatusFeil(ARKIVERT_STATUS_FEIL);
+      return;
+    }
+    setStatusFeil(null);
+    void onChangeStatus(row, status);
+  };
 
   // Flytter én elev til valgt koordinator. Feil vises inline.
   const flyttBarn = (ch: Child) => {
@@ -605,12 +626,19 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                 </div>
                 <div>
                   <dt className="text-stone-500">Status</dt>
-                  <dd className="font-medium">{LOGIN_LABEL[row.loginStatus]}</dd>
+                  <dd className="font-medium">
+                    {erArkivertPerson ? ARKIVERT_LOGIN_LABEL : LOGIN_LABEL[row.loginStatus]}
+                  </dd>
                 </div>
               </dl>
 
               <div className="flex flex-wrap items-center gap-2">
-                {row.loginStatus === 'ikke-invitert' ? (
+                {erArkivertPerson ? (
+                  <div className="space-y-1">
+                    <span className="text-stone-500">{ARKIVERT_LOGIN_LABEL}</span>
+                    <p className="text-stone-500">Gjenopprett personen for å gi innlogging igjen.</p>
+                  </div>
+                ) : row.loginStatus === 'ikke-invitert' ? (
                   <button
                     type="button"
                     disabled={!row.email || inviteBusy}
@@ -626,7 +654,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                     <select
                       value={row.loginStatus}
                       disabled={statusBusy}
-                      onChange={(e) => void onChangeStatus(row, e.target.value as UserDirectoryStatus)}
+                      onChange={(e) => endreStatus(e.target.value as UserDirectoryStatus)}
                       className="px-2 py-1 rounded-md border border-stone-300 bg-white text-stone-800"
                     >
                       <option value="aktiv">aktiv</option>
@@ -636,6 +664,11 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                   </label>
                 )}
               </div>
+              {statusFeil && (
+                <p role="alert" className="text-red-900">
+                  {statusFeil}
+                </p>
+              )}
 
               <p className="text-stone-600">
                 Invitasjon sender ingen e-post. Gi beskjed til personen selv om å logge inn med Google eller

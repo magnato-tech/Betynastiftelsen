@@ -23,7 +23,13 @@ import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding
 import { formatDuration, formatNorwegianDate } from '../../utils/memberSince';
 import type { PersonLogSubject, SponsorOnboardingStep } from '../../types';
 import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
-import { PersonCard, ROLE_LABEL } from './PersonCard';
+import {
+  ARKIVERT_LOGIN_LABEL,
+  ARKIVERT_STATUS_FEIL,
+  PersonCard,
+  ROLE_LABEL,
+  blokkerStatusForArkivert,
+} from './PersonCard';
 
 export interface AdminUsersPanelProps {
   focusEmail?: string | null;
@@ -283,6 +289,8 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   const toggleAlle = () => setValgte(alleValgt ? new Set() : new Set(velgbare.map((r) => r.key)));
 
   const persistStatus = async (row: PersonRow, status: UserDirectoryStatus) => {
+    // Vakt også her: arkiverte får ikke innlogging før de gjenopprettes.
+    if (blokkerStatusForArkivert(row.archived, status)) throw new Error(ARKIVERT_STATUS_FEIL);
     const email = emailToDirectoryDocId(row.email);
     if (row.isBootstrapOnly) {
       if (!db) throw new Error('Firestore er ikke konfigurert');
@@ -298,6 +306,10 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   };
 
   const changeStatus = async (row: PersonRow, status: UserDirectoryStatus) => {
+    if (blokkerStatusForArkivert(row.archived, status)) {
+      setLoadError(ARKIVERT_STATUS_FEIL);
+      return;
+    }
     setStatusBusy(true);
     setLoadError(null);
     try {
@@ -562,7 +574,9 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                     </td>
                     <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap items-center gap-2">
-                        {row.loginStatus === 'ikke-invitert' ? (
+                        {row.archived ? (
+                          <span className="text-stone-500">{ARKIVERT_LOGIN_LABEL}</span>
+                        ) : row.loginStatus === 'ikke-invitert' ? (
                           <div className="flex items-center gap-2">
                             <span className="text-stone-500">Ikke invitert</span>
                             <button
@@ -601,16 +615,17 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                             <Archive className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        {!erAdmin && erArkivVisning && (
+                        {!erAdmin && row.archived && (
                           <button
                             type="button"
                             disabled={rowBusyKey !== null || bulkBusy}
                             onClick={() => void gjenopprettRad(row)}
                             aria-label={`Gjenopprett ${row.name}`}
                             title={`Gjenopprett ${row.name}`}
-                            className="p-1.5 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#4D6B3E] text-[#4D6B3E] font-medium hover:bg-[#4D6B3E]/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                           >
-                            <ArchiveRestore className="w-3.5 h-3.5" />
+                            <ArchiveRestore className="w-3.5 h-3.5" aria-hidden="true" />
+                            Gjenopprett
                           </button>
                         )}
                       </div>

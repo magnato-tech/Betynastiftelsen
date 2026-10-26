@@ -27,6 +27,7 @@ import {
 } from '../../utils/adminContentQueue';
 import { AdminContentWorkbench } from './AdminContentWorkbench';
 import { AdminOppfolgingSubNav } from './AdminOppfolgingSubNav';
+import { InquiryWorkPanel } from './InquiryWorkPanel';
 import { isAdminOppfolgingSection } from '../../utils/adminOppfolging';
 import type { FieldFact } from '../../types';
 
@@ -54,8 +55,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     publishChildStory,
     approveChildPhoto,
     rejectChildPhoto,
-    answerInquiry,
-    forwardInquiryToCoordinator,
   } = useApp();
 
   // Review & Translation State
@@ -64,9 +63,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Inquiry Answer State
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
-  const [answerDraft, setAnswerDraft] = useState('');
-  const [forwardNoteFr, setForwardNoteFr] = useState('');
   const [answerEmailQueued, setAnswerEmailQueued] = useState(false);
+  const selectedInquiry = selectedInquiryId ? inquiries.find((i) => i.id === selectedInquiryId) : undefined;
 
   const [desk, setDesk] = useState<{ kind: 'historie' | 'rapport'; id: string } | null>(null);
   const [storyDraft, setStoryDraft] = useState({
@@ -182,18 +180,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     closeDesk();
   };
 
-  const handleAnswerInquiry = (id: string) => {
-    if (!answerDraft.trim()) return;
-    answerInquiry(id, answerDraft.trim());
+  const handleInquiryDone = (utfall: { svart: boolean }) => {
     setSelectedInquiryId(null);
-    setAnswerDraft('');
-    setAnswerEmailQueued(true);
-  };
-
-  const handleForwardInquiry = (id: string) => {
-    forwardInquiryToCoordinator(id, forwardNoteFr || undefined);
-    setSelectedInquiryId(null);
-    setForwardNoteFr('');
+    if (utfall.svart) setAnswerEmailQueued(true);
   };
 
   // Helper metrics
@@ -549,81 +538,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           )}
 
           {/* Inquiry Reply Panel */}
-          {selectedInquiryId && (
-            <div className="bg-white border-2 border-[#4D6B3E]/60 rounded-xl p-6 shadow-md space-y-4">
-              {(() => {
-                const inq = inquiries.find((i) => i.id === selectedInquiryId);
-                if (!inq) return null;
-
-                return (
-                  <>
-                    <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-                      <div>
-                        <span className="text-xs uppercase tracking-wider text-[#4D6B3E] font-semibold">Behandle fadderspørsmål</span>
-                        <h3 className="text-lg font-serif font-bold text-stone-900">
-                          Fra: {inq.fadderNavn} vedr. {inq.barnNavn}
-                        </h3>
-                      </div>
-                      <button
-                        onClick={() => setSelectedInquiryId(null)}
-                        className="text-xs text-stone-500 hover:text-stone-800 cursor-pointer"
-                      >
-                        Lukk
-                      </button>
-                    </div>
-
-                    <div className="p-3 bg-stone-50 rounded-lg border border-stone-200 text-xs sm:text-sm text-stone-800">
-                      <strong>Fadders spørsmål: </strong> «{inq.sporsmaal}»
-                    </div>
-
-                    {inq.koordinatorNotatFr && (
-                      <div className="p-3 bg-[#A3B18A]/10 rounded-lg border border-[#A3B18A]/40 text-xs text-[#4D6B3E]">
-                        <strong>Feltnotat fra Kongo: </strong> {inq.koordinatorNotatFr}
-                      </div>
-                    )}
-
-                    <div className="space-y-3 pt-2">
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-700 mb-1">
-                          Skriv svar til fadder (blir synlig i fadderportalen):
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={answerDraft}
-                          onChange={(e) => setAnswerDraft(e.target.value)}
-                          placeholder="Skriv svar..."
-                          className="w-full p-3 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-800 focus:outline-hidden focus:border-[#4D6B3E]"
-                        />
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            placeholder="Valgfri fransk instruks til Kongo..."
-                            value={forwardNoteFr}
-                            onChange={(e) => setForwardNoteFr(e.target.value)}
-                            className="px-3 py-1.5 border border-stone-300 rounded-lg text-xs w-64 bg-stone-50"
-                          />
-                          <button
-                            onClick={() => handleForwardInquiry(inq.id)}
-                            className="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-lg text-xs font-medium cursor-pointer"
-                          >
-                            Send til koordinator i Kongo
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => handleAnswerInquiry(inq.id)}
-                          className="px-5 py-2 bg-[#4D6B3E] hover:bg-[#3B522F] text-white rounded-lg text-xs font-medium cursor-pointer shadow-xs"
-                        >
-                          Publiser svar til fadder
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
+          {selectedInquiry && (
+            <div className="bg-white border-2 border-[#4D6B3E]/60 rounded-xl p-6 shadow-md">
+              <InquiryWorkPanel
+                key={selectedInquiry.id}
+                inquiry={selectedInquiry}
+                onClose={() => setSelectedInquiryId(null)}
+                onDone={handleInquiryDone}
+              />
             </div>
           )}
 
@@ -667,10 +589,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </span>
 
                   <button
-                    onClick={() => {
-                      setSelectedInquiryId(inq.id);
-                      setAnswerDraft(inq.svarTekst || '');
-                    }}
+                    onClick={() => setSelectedInquiryId(inq.id)}
                     className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-lg cursor-pointer"
                   >
                     Behandle

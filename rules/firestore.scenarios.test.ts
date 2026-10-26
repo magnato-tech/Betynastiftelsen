@@ -182,21 +182,38 @@ describe('Koordinator: kun egne barn og egne data', () => {
   it('koordinator kan IKKE godkjenne egen rapport', async () => {
     await assertFails(doc('coordA', 'reports/R2').update({ status: 'godkjent' }));
   });
-  it('KJENT AVVIK F-04: koordinator kan opprette rapport som allerede er godkjent', async () => {
-    await assertSucceeds(
+  it('RETTET F-04: koordinator kan IKKE opprette rapport som allerede er godkjent', async () => {
+    await assertFails(
       doc('coordA', 'reports/RZ').set({ barnId: 'C1', koordinatorId: 'K1', status: 'godkjent' }),
     );
   });
-  it('KJENT AVVIK F-03: koordinator kan tildele fadder til eget barn (admin-oppgave)', async () => {
-    await assertSucceeds(doc('coordA', 'children/C3').update({ tildeltFadderId: 'S1' }));
-  });
-  it('KJENT AVVIK F-03: koordinator kan opprette barn med en annen koordinators id og fadder', async () => {
+  it('koordinator kan sende inn rapport om eget barn', async () => {
     await assertSucceeds(
-      doc('coordA', 'children/CZ').set({ navn: 'X', koordinatorId: 'K2', tildeltFadderId: 'S1' }),
+      doc('coordA', 'reports/RY').set({ barnId: 'C1', koordinatorId: 'K1', status: 'innsendt' }),
     );
   });
-  it('KJENT AVVIK F-03: koordinator kan endre et barn som tilhorer en annen koordinator', async () => {
-    await assertSucceeds(doc('coordA', 'children/C2').update({ navn: 'Overskrevet' }));
+  it('RETTET F-03: koordinator kan IKKE tildele fadder til eget barn (admin-oppgave)', async () => {
+    await assertFails(doc('coordA', 'children/C3').update({ tildeltFadderId: 'S1' }));
+  });
+  it('RETTET F-03: koordinator kan IKKE flytte eget barn til en annen koordinator', async () => {
+    await assertFails(doc('coordA', 'children/C1').update({ koordinatorId: 'K2' }));
+  });
+  it('RETTET F-03: koordinator kan IKKE opprette barn med en annen koordinators id', async () => {
+    await assertFails(doc('coordA', 'children/CZ').set({ navn: 'X', koordinatorId: 'K2' }));
+  });
+  it('RETTET F-03: koordinator kan IKKE opprette barn med fadder', async () => {
+    await assertFails(
+      doc('coordA', 'children/CZ').set({ navn: 'X', koordinatorId: 'K1', tildeltFadderId: 'S1' }),
+    );
+  });
+  it('RETTET F-03: koordinator kan IKKE endre et barn som tilhorer en annen koordinator', async () => {
+    await assertFails(doc('coordA', 'children/C2').update({ navn: 'Overskrevet' }));
+  });
+  it('koordinator kan endre opplysninger om eget barn', async () => {
+    await assertSucceeds(doc('coordA', 'children/C1').update({ navn: 'Rettet navn' }));
+  });
+  it('fadder kan IKKE endre opplysninger om eget fadderbarn', async () => {
+    await assertFails(doc('sponsorA', 'children/C1').update({ navn: 'Fra fadder' }));
   });
   it('koordinator kan IKKE slette barn', async () => {
     await assertFails(doc('coordA', 'children/C1').delete());

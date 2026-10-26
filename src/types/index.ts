@@ -293,8 +293,8 @@ export type TestimonialStory = AdultGraduateStory;
 
 /** Hvem en loggført handling eller kommentar gjelder (personkortet i admin). */
 export interface PersonLogSubject {
-  type: 'coordinator' | 'sponsor' | 'admin';
-  /** Koordinator-id, fadder-id, eller for admin normalisert e-post. */
+  type: 'coordinator' | 'sponsor' | 'admin' | 'child';
+  /** Koordinator-id, fadder-id, barn-id, eller for admin normalisert e-post. */
   id: string;
   navn: string;
 }
@@ -351,7 +351,8 @@ export type NotificationType =
   | 'milestone_logged'
   | 'photo_needs_approval'
   | 'photo_approved'
-  | 'photo_rejected';
+  | 'photo_rejected'
+  | 'child_updated';
 
 export interface AppNotification {
   id: string;

@@ -74,7 +74,8 @@ describe('Behandling av henvendelser (admin og koordinator)', () => {
   it('svar logges', () => {
     const m = withInq();
     m.run((a) => a.answerInquiry('q1', 'Svar'));
-    expect(m.app.auditLogs[0].handling).toBe('Besvarte spørsmål');
+    // Systemmeldingen til fadderen logges også, så svaret er ikke nødvendigvis øverst.
+    expect(m.app.auditLogs.some((l) => l.handling === 'Besvarte spørsmål')).toBe(true);
   });
   it('svar paavirker ikke andre henvendelser', () => {
     const m = mountApp(world({ inquiries: [inquiry(), inquiry({ id: 'q2' })] }));
@@ -118,26 +119,27 @@ describe('Behandling av henvendelser (admin og koordinator)', () => {
   });
 });
 
-describe('KJENT AVVIK: henvendelsesvarsler (F-19)', () => {
+describe('RETTET: henvendelsesvarsler (F-19)', () => {
   const withInq = () => mountApp(world({ inquiries: [inquiry()] }));
-  it('F-19: svar fra admin gir IKKE varsel til fadder (fadder-id leses fra oppdateringsfunksjon som ikke har kjort)', () => {
+  it('RETTET F-19: svar fra admin gir varsel til fadderen', () => {
     const m = withInq();
     m.run((a) => a.answerInquiry('q1', 'Svar'));
     expect(m.app.inquiries[0].status).toBe('besvart');
-    expect(m.app.notifications.filter((n) => n.targetRole === 'sponsor')).toHaveLength(0);
+    const tilFadder = m.app.notifications.filter((n) => n.targetRole === 'sponsor');
+    expect(tilFadder).toHaveLength(1);
+    expect(tilFadder[0].recipientId).toBe(m.app.inquiries[0].fadderId);
   });
-  it('F-19: e-post om besvart henvendelse koes ikke, selv med standardinnstilling paa', () => {
+  it('RETTET F-19: e-post om besvart henvendelse koes med standardinnstilling paa', () => {
     const m = withInq();
     expect(m.app.emailAutoSend.inquiry_answered).toBe(true);
     m.run((a) => a.answerInquiry('q1', 'Svar'));
-    expect(m.app.emailOutbox).toHaveLength(0);
+    expect(m.app.emailOutbox.length).toBeGreaterThan(0);
   });
-  it('F-19: videresending gir koordinatorvarsel uten mottaker (alle koordinatorer ser det) og uten koordinatorId paa henvendelsen', () => {
+  it('RETTET F-19: videresending varsler koordinatoren til barnet, med barnenavn', () => {
     const m = withInq();
     m.run((a) => a.forwardInquiryToCoordinator('q1'));
-    expect(m.app.notifications[0]).toMatchObject({ targetRole: 'coordinator', recipientId: '', type: 'inquiry_forwarded' });
-    expect(m.app.notifications[0].title).toContain('()');
-    // Selve henvendelsen faar riktig koordinator, men varselet om den peker ikke paa noen.
+    expect(m.app.notifications[0]).toMatchObject({ targetRole: 'coordinator', recipientId: 'k1', type: 'inquiry_forwarded' });
+    expect(m.app.notifications[0].title).not.toContain('()');
     expect(m.app.inquiries[0].koordinatorId).toBe('k1');
   });
 });

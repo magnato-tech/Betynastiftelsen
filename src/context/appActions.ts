@@ -25,8 +25,9 @@ import { deletePublicMediaFile, publicMediaObjectPath, uploadPublicMediaFile } f
 import { readImageFileAsDataUrl } from '../utils/readImageFile';
 import { storage as firebaseStorage } from '../config/firebase';
 import type { SystemTemplateId } from '../email/templates';
-import type { PaymentAllocation, PersonLogSubject, RecurringCharge } from '../types';
-import { coordinatorSubject, sponsorSubject } from '../utils/personLog';
+import type { PaymentAllocation, PersonLogSubject, RecurringCharge, SponsorAssignment } from '../types';
+import { childSubject, coordinatorSubject, sponsorSubject } from '../utils/personLog';
+import { buildAssignmentOnLink } from '../utils/paymentLedger';
 import { activeChildrenOfCoordinator, canAssignSponsor, planChildMove } from '../utils/coordinatorAssignment';
 import { assertNotAdmin, describeChanges, validateDeletePerson } from '../utils/personActions';
 import { linksToCoordinator, linksToSponsor } from '../utils/dataIntegrity';
@@ -93,6 +94,32 @@ export type AppActionsDeps = {
   addEmailOutboxItem: (item: Omit<EmailOutboxItem, 'id' | 'createdAt'>) => EmailOutboxItem;
   updateEmailOutboxItem: (id: string, updates: Partial<EmailOutboxItem>) => void;
 };
+
+/** Avslutter åpne tildelinger for barnet (sluttDato = dato). Andre poster endres ikke. */
+function avsluttApenTildeling(assignments: SponsorAssignment[], childId: string, dato: string): SponsorAssignment[] {
+  return assignments.map((a) => (a.childId === childId && !a.sluttDato ? { ...a, sluttDato: dato } : a));
+}
+
+/** Norske navn på felt i barneprofilen, brukt i logg og varsel. Ukjente felt vises med feltnavnet. */
+const BARN_FELT_ETIKETT: Record<string, string> = {
+  fornavn: 'fornavn',
+  fodselsaar: 'fødselsår',
+  kjonn: 'kjønn',
+  skoleNavn: 'skole',
+  klassetrinn: 'klassetrinn',
+  interesser: 'interesser',
+  bakgrunnskontekst: 'bakgrunn',
+  fotoTema: 'fototema',
+  samtykkeFoto: 'samtykke til foto',
+  samtykkeHistorie: 'samtykke til historie',
+  behovSammendrag: 'behov',
+};
+
+function ingenAktivKoordinatorFeil(child: Child): Error {
+  return new Error(
+    `Kan ikke koble ${child.fornavn} til fadder: barnet har ingen aktiv koordinator i Kongo. Velg koordinator for barnet først.`
+  );
+}
 
 export function createAppActions(deps: AppActionsDeps) {
   const {
@@ -248,59 +275,162 @@ export function createAppActions(deps: AppActionsDeps) {
     );
   };
 
-  const updateChild = (id: string, updates: Partial<Child>) => {
+  /**
+   * Admin endrer opplysninger om barnet. Koordinator, fadder, status og id har egne handlinger og ignoreres her.
+   * Koordinatoren får varsel om endringene. Ingen faktisk endring gir ingen logg og ingen varsel.
+   */
+  const updateChild = (childId: string, patch: Partial<Child>) => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) return;
+    const { id: _id, koordinatorId: _koordinator, tildeltFadderId: _fadder, status: _status, sistOppdatert: _dato, ...endringer } = patch;
+    const linjer = describeChanges(child, endringer);
+    if (linjer.length === 0) return;
+    const idag = new Date().toISOString().slice(0, 10);
+    setChildrenList((prev) => prev.map((c) => (c.id === childId ? { ...c, ...endringer, sistOppdatert: idag } : c)));
+    addAuditLog('Endret opplysninger om barnet', linjer.join('; '), adminActor(), childSubject(child));
+
+    if (child.koordinatorId) {
+      const etiketter = linjer.map((l) => {
+        const felt = l.split(':')[0];
+        return BARN_FELT_ETIKETT[felt] ?? felt;
+      });
+      const varsel: AppNotification = {
+        id: 'notif-' + Date.now(),
+        targetRole: 'coordinator',
+        recipientId: child.koordinatorId,
+        title: `Opplysninger om ${endringer.fornavn ?? child.fornavn} er oppdatert`,
+        message: `Administrator har endret: ${etiketter.join(', ')}.`,
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+        type: 'child_updated',
+        read: false,
+        actionSection: 'eleves',
+        relatedEntityId: child.id,
+      };
+      setNotifications((prev) => [varsel, ...prev]);
+    }
+  };
+
+  /**
+   * Felles kobling fadder–barn: barnet peker på fadderen, fadderen får barnet (og fjernes fra forrige fadder),
+   * og åpen tildeling avsluttes før en ny opprettes. Logger og varsler ikke.
+   */
+  const kobleFadderTilBarn = (child: Child, sponsor: Sponsor) => {
+    const idag = new Date().toISOString().slice(0, 10);
+    const nyTildeling: SponsorAssignment = {
+      ...buildAssignmentOnLink(sponsor, child, idag),
+      id: 'asg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    };
     setChildrenList((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updates, sistOppdatert: new Date().toISOString().slice(0, 10) } : c))
+      prev.map((c) => (c.id === child.id ? { ...c, tildeltFadderId: sponsor.id, sistOppdatert: idag } : c))
     );
-    addAuditLog('Oppdaterte barneprofil', `Profil for barn ID ${id} oppdatert.`);
+    setSponsors((prev) =>
+      prev.map((s) => {
+        const ids = childIdsOfSponsor(s);
+        if (s.id === sponsor.id) {
+          // Godkjent fadder som får barn går videre til «barn tildelt».
+          const avansert =
+            s.onboarding?.steg === 'godkjent' ? { onboarding: { ...s.onboarding, steg: 'barn_tildelt' as const } } : {};
+          return { ...s, tildeltBarnIds: addChildId(ids, child.id), ...avansert };
+        }
+        if (ids.includes(child.id)) return { ...s, tildeltBarnIds: removeChildId(ids, child.id) };
+        return s;
+      })
+    );
+    setSponsorAssignments((prev) => [...avsluttApenTildeling(prev, child.id, idag), nyTildeling]);
+  };
+
+  /** Varsel til fadderen om at hun er tildelt barnet (samme for ny tildeling og bytte). */
+  const varsleFadderOmBarn = (child: Child, sponsorId: string) => {
+    const assignNotif: AppNotification = {
+      id: 'notif-' + Date.now(),
+      targetRole: 'sponsor',
+      recipientId: sponsorId,
+      title: `Du er tildelt fadderbarn: ${child.fornavn}`,
+      message: `Du er nå koblet sammen med ${child.fornavn} (${child.internKode}) ved ${child.skoleNavn}. Se profilen i fadderportalen!`,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      type: 'sponsor_assigned',
+      read: false,
+      actionSection: 'barn',
+      relatedEntityId: child.id,
+    };
+    setNotifications((prev) => [assignNotif, ...prev]);
   };
 
   const assignSponsorToChild = (childId: string, sponsorId: string) => {
     // Fadder kan bare kobles til et barn med gyldig, aktiv koordinator.
     const barn = childrenList.find((c) => c.id === childId);
-    if (barn && !canAssignSponsor(barn, coordinators)) {
-      throw new Error(
-        `Kan ikke koble ${barn.fornavn} til fadder: barnet har ingen aktiv koordinator i Kongo. Velg koordinator for barnet først.`
-      );
-    }
+    if (!barn) throw new Error('Fant ikke eleven.');
+    if (!canAssignSponsor(barn, coordinators)) throw ingenAktivKoordinatorFeil(barn);
+    const sponsor = sponsors.find((s) => s.id === sponsorId);
+    if (!sponsor) throw new Error('Fant ikke fadderen.');
+    // Allerede koblet til denne fadderen: ingen endring.
+    if (barn.tildeltFadderId === sponsorId) return;
+
+    kobleFadderTilBarn(barn, sponsor);
+    addAuditLog(
+      'Tildelte fadder',
+      `Fadder ${sponsor.navn} ble tildelt ${barn.fornavn} (${barn.internKode}).`,
+      adminActor(),
+      childSubject(barn)
+    );
+    varsleFadderOmBarn(barn, sponsorId);
+  };
+
+  /**
+   * Bytter fadder for et barn. Forrige fadder mister barnet. Det sendes ingen e-post.
+   * Kaster Error hvis barnet mangler aktiv koordinator, fadderen er ukjent eller avsluttet, eller det er samme fadder.
+   */
+  const reassignChildSponsor = (childId: string, newSponsorId: string): void => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) throw new Error('Fant ikke eleven.');
+    if (!canAssignSponsor(child, coordinators)) throw ingenAktivKoordinatorFeil(child);
+    const ny = sponsors.find((s) => s.id === newSponsorId);
+    if (!ny) throw new Error('Fant ikke fadderen.');
+    if (ny.avsluttet) throw new Error(`${ny.navn} er avsluttet og kan ikke få nye barn.`);
+    if (child.tildeltFadderId === newSponsorId) throw new Error(`${child.fornavn} følges allerede av ${ny.navn}.`);
+    const gammel = sponsors.find((s) => s.id === child.tildeltFadderId);
+
+    kobleFadderTilBarn(child, ny);
+    const detaljer = `${child.fornavn} (${child.internKode}): fra ${gammel?.navn ?? 'ingen fadder'} til ${ny.navn}`;
+    addAuditLog('Fadder byttet', detaljer, adminActor(), childSubject(child));
+    if (gammel) addAuditLog('Fadder byttet', detaljer, adminActor(), sponsorSubject(gammel));
+    addAuditLog('Fadder byttet', detaljer, adminActor(), sponsorSubject(ny));
+    varsleFadderOmBarn(child, ny.id);
+  };
+
+  /** Fjerner fadderen fra barnet. Barnet forblir aktivt. Kaster Error hvis barnet ikke har fadder. */
+  const removeChildSponsor = (childId: string): void => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) throw new Error('Fant ikke eleven.');
+    const sponsorId = child.tildeltFadderId;
+    if (!sponsorId) throw new Error(`${child.fornavn} har ingen fadder å fjerne.`);
+    const gammel = sponsors.find((s) => s.id === sponsorId);
+    const idag = new Date().toISOString().slice(0, 10);
+
     setChildrenList((prev) =>
-      prev.map((c) => (c.id === childId ? { ...c, tildeltFadderId: sponsorId, sistOppdatert: new Date().toISOString().slice(0, 10) } : c))
+      prev.map((c) => (c.id === childId ? { ...c, tildeltFadderId: undefined, sistOppdatert: idag } : c))
     );
     setSponsors((prev) =>
       prev.map((s) => {
         const ids = childIdsOfSponsor(s);
-        if (s.id === sponsorId) {
-          // Godkjent fadder som får barn går videre til «barn tildelt».
-          const avansert =
-            s.onboarding?.steg === 'godkjent' ? { onboarding: { ...s.onboarding, steg: 'barn_tildelt' as const } } : {};
-          return { ...s, tildeltBarnIds: addChildId(ids, childId), ...avansert };
-        }
-        if (ids.includes(childId)) return { ...s, tildeltBarnIds: removeChildId(ids, childId) };
-        return s;
+        return ids.includes(childId) ? { ...s, tildeltBarnIds: removeChildId(ids, childId) } : s;
       })
     );
-    const child = childrenList.find((c) => c.id === childId);
-    const sponsor = sponsors.find((s) => s.id === sponsorId);
-    addAuditLog(
-      'Tildelte fadder',
-      `Fadder ${sponsor?.navn || sponsorId} ble tildelt ${child?.fornavn || childId} (${child?.internKode}).`
-    );
+    setSponsorAssignments((prev) => avsluttApenTildeling(prev, childId, idag));
 
-    // Notify sponsor that child is assigned
-    if (child) {
-      const assignNotif: AppNotification = {
-        id: 'notif-' + Date.now(),
-        targetRole: 'sponsor',
-        recipientId: sponsorId,
-        title: `Du er tildelt fadderbarn: ${child.fornavn}`,
-        message: `Du er nå koblet sammen med ${child.fornavn} (${child.internKode}) ved ${child.skoleNavn}. Se profilen i fadderportalen!`,
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        type: 'sponsor_assigned',
-        read: false,
-        actionSection: 'barn',
-        relatedEntityId: child.id,
-      };
-      setNotifications((prev) => [assignNotif, ...prev]);
+    addAuditLog(
+      'Fadder fjernet',
+      `${child.fornavn} (${child.internKode}) er ikke lenger koblet til ${gammel?.navn ?? sponsorId}.`,
+      adminActor(),
+      childSubject(child)
+    );
+    if (gammel) {
+      addAuditLog(
+        'Fadder fjernet',
+        `${child.fornavn} (${child.internKode}) er koblet fra fadderen.`,
+        adminActor(),
+        sponsorSubject(gammel)
+      );
     }
   };
 
@@ -308,6 +438,7 @@ export function createAppActions(deps: AppActionsDeps) {
     const child = childrenList.find((c) => c.id === childId);
     if (!child) return;
     const sponsorId = child.tildeltFadderId;
+    const idag = new Date().toISOString().slice(0, 10);
     setChildrenList((prev) =>
       prev.map((c) => (c.id === childId ? { ...c, status: 'avsluttet', tildeltFadderId: undefined } : c))
     );
@@ -318,10 +449,13 @@ export function createAppActions(deps: AppActionsDeps) {
         )
       );
     }
+    setSponsorAssignments((prev) => avsluttApenTildeling(prev, childId, idag));
     const sponsorNavn = sponsors.find((s) => s.id === sponsorId)?.navn;
     addAuditLog(
       'Avsluttet oppfølging',
-      `Oppfølgingen av ${child.fornavn} (${child.internKode}) er avsluttet${sponsorNavn ? `, og fadderen ${sponsorNavn} er koblet fra` : ''}.`
+      `Oppfølgingen av ${child.fornavn} (${child.internKode}) er avsluttet${sponsorNavn ? `, og fadderen ${sponsorNavn} er koblet fra` : ''}.`,
+      adminActor(),
+      childSubject(child)
     );
   };
 
@@ -333,7 +467,7 @@ export function createAppActions(deps: AppActionsDeps) {
     setChildrenList((prev) =>
       prev.map((c) => (c.id === childId ? { ...c, status: 'aktiv', sistOppdatert: today } : c))
     );
-    addAuditLog('Gjenåpnet oppfølging', `${child.fornavn} (${child.internKode}) er aktiv igjen.`);
+    addAuditLog('Gjenåpnet oppfølging', `${child.fornavn} (${child.internKode}) er aktiv igjen.`, adminActor(), childSubject(child));
   };
 
   const submitReport = (reportData: Partial<Report>) => {
@@ -392,17 +526,17 @@ export function createAppActions(deps: AppActionsDeps) {
   };
 
   const approveReport = (id: string, editedNorskTitle?: string, editedNorskContent?: string) => {
-    let targetChildId = '';
-    let targetChildName = '';
-    let reportCoordId = '';
+    // Leses før oppdateringen: setReports-callbacken kjører først senere, så verdier satt
+    // inni den var tomme da varslene ble laget (fadder og koordinator fikk aldri varsel).
+    const rapport = reports.find((r) => r.id === id);
+    const targetChildId = rapport?.barnId ?? '';
+    const targetChildName = rapport?.barnNavn ?? '';
+    const reportCoordId = rapport?.koordinatorId ?? '';
     markAdminNotificationsForEntityRead(id);
 
     setReports((prev) =>
       prev.map((r) => {
         if (r.id === id) {
-          targetChildId = r.barnId;
-          targetChildName = r.barnNavn;
-          reportCoordId = r.koordinatorId;
           return {
             ...r,
             status: 'godkjent',
@@ -465,14 +599,14 @@ export function createAppActions(deps: AppActionsDeps) {
   };
 
   const rejectReport = (id: string, reason: string) => {
-    let childName = '';
-    let coordId = '';
+    // Leses før oppdateringen (se approveReport).
+    const rapport = reports.find((r) => r.id === id);
+    const childName = rapport?.barnNavn ?? '';
+    const coordId = rapport?.koordinatorId ?? '';
     markAdminNotificationsForEntityRead(id);
     setReports((prev) =>
       prev.map((r) => {
         if (r.id === id) {
-          childName = r.barnNavn;
-          coordId = r.koordinatorId;
           return { ...r, status: 'avvist', adminNotat: `Retur til koordinator: ${reason}` };
         }
         return r;
@@ -772,13 +906,13 @@ export function createAppActions(deps: AppActionsDeps) {
   };
 
   const answerInquiry = (id: string, answerText: string) => {
-    let fadderId = '';
-    let barnNavn = '';
+    // Leses før oppdateringen (se approveReport): ellers fikk fadderen aldri varsel eller e-post.
+    const sporsmaal = inquiries.find((inq) => inq.id === id);
+    const fadderId = sporsmaal?.fadderId ?? '';
+    const barnNavn = sporsmaal?.barnNavn ?? '';
     setInquiries((prev) =>
       prev.map((inq) => {
         if (inq.id === id) {
-          fadderId = inq.fadderId;
-          barnNavn = inq.barnNavn;
           return {
             ...inq,
             status: 'besvart',
@@ -815,14 +949,13 @@ export function createAppActions(deps: AppActionsDeps) {
   };
 
   const forwardInquiryToCoordinator = (id: string, note?: string) => {
-    let barnNavn = '';
-    let coordId = '';
+    // Leses før oppdateringen (se approveReport): ellers fikk varselet ingen mottaker.
+    const sporsmaal = inquiries.find((inq) => inq.id === id);
+    const barnNavn = sporsmaal?.barnNavn ?? '';
+    const coordId = childrenList.find((c) => c.id === sporsmaal?.barnId)?.koordinatorId || '';
     setInquiries((prev) =>
       prev.map((inq) => {
         if (inq.id === id) {
-          barnNavn = inq.barnNavn;
-          const ch = childrenList.find((c) => c.id === inq.barnId);
-          coordId = ch?.koordinatorId || '';
           return {
             ...inq,
             status: 'venter_koordinator',
@@ -1309,6 +1442,22 @@ export function createAppActions(deps: AppActionsDeps) {
     setPaymentAllocations((prev) =>
       prev.map((a) => (allocationIds.has(a.id) ? { ...a, koordinatorId: mal.id } : a))
     );
+    // Uleste varsler til forrige koordinator om eleven, eller om rapporter/spørsmål som flytter med, sendes videre.
+    const varselIder = new Set<string>([childId, ...plan.reportIds, ...plan.inquiryIds]);
+    const fraId = child.koordinatorId;
+    if (fraId) {
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.targetRole === 'coordinator' &&
+          !n.read &&
+          n.recipientId === fraId &&
+          n.relatedEntityId &&
+          varselIder.has(n.relatedEntityId)
+            ? { ...n, recipientId: mal.id }
+            : n
+        )
+      );
+    }
 
     const fraNavn = fra ? `${fra.fornavn} ${fra.etternavn}` : 'ingen koordinator';
     const detaljer = `${child.fornavn} (${child.internKode}) – fra ${fraNavn} til ${malNavn}`;
@@ -1316,6 +1465,7 @@ export function createAppActions(deps: AppActionsDeps) {
       addAuditLog('Elev flyttet fra koordinator', detaljer, adminActor(), coordinatorSubject(fra));
     }
     addAuditLog('Elev flyttet til koordinator', detaljer, adminActor(), coordinatorSubject(mal));
+    addAuditLog('Elev flyttet', detaljer, adminActor(), childSubject(child));
   };
 
   /** Flytter eleven til en annen aktiv koordinator. Kaster Error hvis målet mangler, er arkivert eller er den samme. */
@@ -1417,6 +1567,8 @@ export function createAppActions(deps: AppActionsDeps) {
     addChild,
     updateChild,
     assignSponsorToChild,
+    reassignChildSponsor,
+    removeChildSponsor,
     endSponsorship,
     reopenChild,
     submitFieldFact,

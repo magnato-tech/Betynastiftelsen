@@ -81,7 +81,8 @@ export interface AppContextType {
 
   /** Kaster Error hvis koordinatorId mangler eller ikke er en aktiv koordinator. */
   addChild: (childData: Partial<Child>) => void;
-  updateChild: (id: string, updates: Partial<Child>) => void;
+  /** Admin endrer opplysninger om barnet. Ignorerer id, koordinator, fadder og status. Varsler koordinatoren ved endring. */
+  updateChild: (childId: string, patch: Partial<Child>) => void;
   /** Flytter eleven og alle poster som følger eleven (rapporter, fakta, bilder, spørsmål, tildelinger, betalinger). Kaster Error ved ugyldig mål. */
   reassignChildCoordinator: (childId: string, toCoordinatorId: string) => void;
   /** Flytter alle aktive elever fra én koordinator til en annen. Returnerer antall flyttet. */
@@ -89,6 +90,10 @@ export interface AppContextType {
   /** Flytter alle aktive elever først, og arkiverer deretter koordinatoren. */
   archiveCoordinatorAndMoveChildren: (coordinatorId: string, toCoordinatorId: string) => Promise<void>;
   assignSponsorToChild: (childId: string, sponsorId: string) => void;
+  /** Bytter fadder for barnet (ingen e-post). Kaster Error ved samme fadder, ukjent/avsluttet fadder eller ingen aktiv koordinator. */
+  reassignChildSponsor: (childId: string, newSponsorId: string) => void;
+  /** Fjerner fadderen; barnet forblir aktivt. Kaster Error hvis barnet ikke har fadder. */
+  removeChildSponsor: (childId: string) => void;
   endSponsorship: (childId: string) => void;
   /** Gjenåpner en avsluttet oppfølging: barnet blir aktivt igjen (uten gammel fadder). */
   reopenChild: (childId: string) => void;
