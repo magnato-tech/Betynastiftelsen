@@ -400,3 +400,24 @@ describe('Milepaeler', () => {
     expect((m.app.milestones[0] as unknown as Record<string, unknown>).koordinatorId).toBeUndefined();
   });
 });
+
+describe('Gjenåpne oppfølging', () => {
+  it('reopenChild setter status til aktiv og oppdaterer dato, uten å gjenopprette gammel fadder', () => {
+    const m = mountApp({ children: [makeChild({ id: 'c1', internKode: 'T-01', fornavn: 'Mia', status: 'avsluttet', sistOppdatert: '2020-01-01' })] });
+    m.run((a) => a.reopenChild('c1'));
+    expect(m.app.childrenList[0].status).toBe('aktiv');
+    expect(m.app.childrenList[0].sistOppdatert).toBe('2026-10-16');
+    expect(m.app.childrenList[0].tildeltFadderId).toBeUndefined();
+  });
+  it('reopenChild logger Gjenåpnet oppfølging', () => {
+    const m = mountApp({ children: [makeChild({ id: 'c1', internKode: 'T-01', fornavn: 'Mia', status: 'avsluttet' })] });
+    m.run((a) => a.reopenChild('c1'));
+    expect(m.app.auditLogs[0].handling).toBe('Gjenåpnet oppfølging');
+  });
+  it('reopenChild for ukjent id gjør ingenting', () => {
+    const m = mountApp({ children: [makeChild({ id: 'c1', status: 'avsluttet' })] });
+    m.run((a) => a.reopenChild('ukjent'));
+    expect(m.app.childrenList[0].status).toBe('avsluttet');
+    expect(m.app.auditLogs).toHaveLength(0);
+  });
+});

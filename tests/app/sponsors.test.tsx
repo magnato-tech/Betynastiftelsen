@@ -171,7 +171,7 @@ describe('Tildeling av fadder til barn', () => {
     const m = mountApp(base());
     m.run((a) => a.assignSponsorToChild('c1', 's1'));
     m.run((a) => a.endSponsorship('c1'));
-    expect(m.app.auditLogs[0].handling).toBe('Avsluttet fadderforhold');
+    expect(m.app.auditLogs[0].handling).toBe('Avsluttet oppfølging');
   });
   it('avslutning av ukjent barn gjor ingenting', () => {
     const m = mountApp(base());

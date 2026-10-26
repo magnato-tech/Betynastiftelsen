@@ -90,6 +90,8 @@ export interface AppContextType {
   archiveCoordinatorAndMoveChildren: (coordinatorId: string, toCoordinatorId: string) => Promise<void>;
   assignSponsorToChild: (childId: string, sponsorId: string) => void;
   endSponsorship: (childId: string) => void;
+  /** Gjenåpner en avsluttet oppfølging: barnet blir aktivt igjen (uten gammel fadder). */
+  reopenChild: (childId: string) => void;
 
   submitReport: (reportData: Partial<Report>) => void;
   approveReport: (id: string, editedNorskTitle?: string, editedNorskContent?: string) => void;

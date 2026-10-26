@@ -3,7 +3,7 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PersonRow } from '../../src/utils/peopleDirectory';
-import { makeChild, makeCoordinator } from '../../src/test/testData';
+import { makeChild, makeCoordinator, makeSponsor } from '../../src/test/testData';
 
 const appState = vi.hoisted(() => ({
   value: {} as Record<string, unknown>,
@@ -23,6 +23,7 @@ const spies = () => ({
   addChild: vi.fn(),
   assignSponsorToChild: vi.fn(),
   endSponsorship: vi.fn(),
+  reopenChild: vi.fn(),
   updateCoordinator: vi.fn(),
   updateSponsor: vi.fn(),
   addPersonComment: vi.fn(),
@@ -255,5 +256,48 @@ describe('Koordinatorkort: arkiver med elever', () => {
     gaTilFane('Arkiver / slett');
     expect(screen.getByRole('button', { name: 'Arkiver Kari Nordmann' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Flytt elevene og arkiver' })).toBeNull();
+  });
+});
+
+describe('Barn-siden: avslutt og gjenåpne oppfølging i barnekortet', () => {
+  const fadderMia = () => [makeChild({ id: 'c1', internKode: 'T-01', fornavn: 'Mia', koordinatorId: 'k1', status: 'aktiv', tildeltFadderId: 's1' })];
+
+  it('tabellen har ingen Handling-kolonne eller Avslutt-lenke', () => {
+    setApp({ childrenList: fadderMia(), sponsors: [makeSponsor({ id: 's1' })] });
+    renderPanel();
+    expect(screen.queryByText('Handling')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Avslutt' })).toBeNull();
+  });
+
+  it('aktivt barn: bekreftelse kalles og endSponsorship kjøres', () => {
+    const fns = setApp({ childrenList: fadderMia(), sponsors: [makeSponsor({ id: 's1' })] });
+    renderPanel();
+    fireEvent.click(screen.getByText('T-01'));
+    expect(screen.getByText('Brukes når barnet er ferdig i programmet, for eksempel etter fullført skolegang. Svært sjelden.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Avslutt oppfølging for Mia' }));
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Avslutte oppfølgingen av Mia? Mia tas ut av programmet og kobles fra fadderen Fadder A. Det kan angres med «Gjenåpne».'
+    );
+    expect(fns.endSponsorship).toHaveBeenCalledWith('c1');
+    expect(screen.getByRole('status').textContent).toBe('Oppfølgingen av Mia er avsluttet.');
+  });
+
+  it('avbrutt bekreftelse avslutter ikke oppfølgingen', () => {
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
+    const fns = setApp({ childrenList: fadderMia(), sponsors: [makeSponsor({ id: 's1' })] });
+    renderPanel();
+    fireEvent.click(screen.getByText('T-01'));
+    fireEvent.click(screen.getByRole('button', { name: 'Avslutt oppfølging for Mia' }));
+    expect(fns.endSponsorship).not.toHaveBeenCalled();
+  });
+
+  it('avsluttet barn: Gjenåpne oppfølging kaller reopenChild', () => {
+    const fns = setApp({ childrenList: [makeChild({ id: 'c1', internKode: 'T-01', fornavn: 'Mia', koordinatorId: 'k1', status: 'avsluttet' })] });
+    renderPanel();
+    fireEvent.click(screen.getByText('T-01'));
+    expect(screen.getByText('Oppfølgingen er avsluttet.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Gjenåpne oppfølging' }));
+    expect(fns.reopenChild).toHaveBeenCalledWith('c1');
+    expect(screen.queryByRole('button', { name: 'Avslutt oppfølging for Mia' })).toBeNull();
   });
 });

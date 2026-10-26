@@ -46,6 +46,7 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
     addChild,
     assignSponsorToChild,
     endSponsorship,
+    reopenChild,
     reassignChildCoordinator,
   } = useApp();
 
@@ -70,6 +71,8 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
   const [bytteValg, setBytteValg] = useState<string | null>(null);
   const [bytteFeil, setBytteFeil] = useState<string | null>(null);
   const [bytteOk, setBytteOk] = useState<string | null>(null);
+  // Kort bekreftelse etter avslutt/gjenåpne oppfølging i barnekortet.
+  const [oppfolgingOk, setOppfolgingOk] = useState<string | null>(null);
 
   useEffect(() => {
     if (focusChildId) {
@@ -83,6 +86,7 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
     setBytteValg(null);
     setBytteFeil(null);
     setBytteOk(null);
+    setOppfolgingOk(null);
   }, [selectedChildId]);
 
   // Aktive barn uten gyldig koordinator. Brukes i infolinjen og i filteret «Vis».
@@ -180,6 +184,20 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
     } catch (err) {
       setBytteFeil(err instanceof Error ? err.message : 'Kunne ikke bytte koordinator.');
     }
+  };
+
+  // Avslutter oppfølgingen etter bekreftelse. Barnet tas ut av programmet.
+  const avsluttOppfolging = (child: Child) => {
+    const fadderNavn = selectedChildSponsor?.navn;
+    const spoersmaal = `Avslutte oppfølgingen av ${child.fornavn}? ${child.fornavn} tas ut av programmet${fadderNavn ? ` og kobles fra fadderen ${fadderNavn}` : ''}. Det kan angres med «Gjenåpne».`;
+    if (!window.confirm(spoersmaal)) return;
+    endSponsorship(child.id);
+    setOppfolgingOk(`Oppfølgingen av ${child.fornavn} er avsluttet.`);
+  };
+
+  const gjenapnOppfolging = (child: Child) => {
+    reopenChild(child.id);
+    setOppfolgingOk(`Oppfølgingen av ${child.fornavn} er gjenåpnet.`);
   };
 
   return (
@@ -383,13 +401,12 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
                 <th className="py-2.5 px-4">Koordinator</th>
                 <th className="py-2.5 px-4">Fadder</th>
                 <th className="py-2.5 px-4">Status</th>
-                <th className="py-2.5 px-4 text-right">Handling</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {synligeBarn.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-4 px-4 text-stone-500">
+                  <td colSpan={6} className="py-4 px-4 text-stone-500">
                     Ingen barn passer filteret.
                   </td>
                 </tr>
@@ -419,21 +436,6 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
                       )}
                     </td>
                     <td className="py-2.5 px-4 capitalize text-stone-700">{ch.status}</td>
-                    <td className="py-2.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      {ch.status === 'aktiv' && ch.tildeltFadderId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm(`Avslutte fadderskap for ${ch.fornavn}?`)) {
-                              endSponsorship(ch.id);
-                            }
-                          }}
-                          className="text-stone-500 hover:text-stone-800 cursor-pointer"
-                        >
-                          Avslutt
-                        </button>
-                      )}
-                    </td>
                   </tr>
                 );
               })}
@@ -527,6 +529,43 @@ export const AdminPeoplePanel: React.FC<AdminPeoplePanelProps> = ({
           ) : (
             <p className="text-xs text-[#4D6B3E] pt-3 border-t border-stone-100">Ingen fadder tildelt ennå.</p>
           )}
+
+          {/* Avslutning er svært sjelden, derfor diskret og nederst i kortet. */}
+          <div className="mt-6 pt-3 border-t border-dashed border-stone-200 text-xs space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Avslutt oppfølging</p>
+            {selectedChild.status === 'aktiv' && (
+              <>
+                <p className="text-[11px] text-stone-500">
+                  Brukes når barnet er ferdig i programmet, for eksempel etter fullført skolegang. Svært sjelden.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => avsluttOppfolging(selectedChild)}
+                  className="px-2.5 py-1 rounded-md border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer"
+                >
+                  {`Avslutt oppfølging for ${selectedChild.fornavn}`}
+                </button>
+              </>
+            )}
+            {selectedChild.status === 'avsluttet' && (
+              <>
+                <p className="text-stone-600">Oppfølgingen er avsluttet.</p>
+                <button
+                  type="button"
+                  onClick={() => gjenapnOppfolging(selectedChild)}
+                  className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-stone-700 hover:bg-stone-50 font-medium cursor-pointer"
+                >
+                  Gjenåpne oppfølging
+                </button>
+                <p className="text-[11px] text-stone-500">Barnet blir aktivt igjen og venter på fadder.</p>
+              </>
+            )}
+            {oppfolgingOk && (
+              <p role="status" className="text-stone-700 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
+                {oppfolgingOk}
+              </p>
+            )}
+          </div>
         </AdminOverlayModal>
       )}
     </div>

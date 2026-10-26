@@ -318,7 +318,22 @@ export function createAppActions(deps: AppActionsDeps) {
         )
       );
     }
-    addAuditLog('Avsluttet fadderforhold', `Fadderforhold for ${child.fornavn} (${child.internKode}) avsluttet etter endt skolegang.`);
+    const sponsorNavn = sponsors.find((s) => s.id === sponsorId)?.navn;
+    addAuditLog(
+      'Avsluttet oppfølging',
+      `Oppfølgingen av ${child.fornavn} (${child.internKode}) er avsluttet${sponsorNavn ? `, og fadderen ${sponsorNavn} er koblet fra` : ''}.`
+    );
+  };
+
+  // Gjenåpner oppfølgingen. Gammel fadderkobling gjenopprettes ikke.
+  const reopenChild = (childId: string) => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setChildrenList((prev) =>
+      prev.map((c) => (c.id === childId ? { ...c, status: 'aktiv', sistOppdatert: today } : c))
+    );
+    addAuditLog('Gjenåpnet oppfølging', `${child.fornavn} (${child.internKode}) er aktiv igjen.`);
   };
 
   const submitReport = (reportData: Partial<Report>) => {
@@ -1403,6 +1418,7 @@ export function createAppActions(deps: AppActionsDeps) {
     updateChild,
     assignSponsorToChild,
     endSponsorship,
+    reopenChild,
     submitFieldFact,
     publishChildStory,
     submitReport,
