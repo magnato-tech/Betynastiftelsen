@@ -332,7 +332,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
       aria-modal="true"
       aria-labelledby="personkort-tittel"
     >
-      <div className="bg-white rounded-xl border border-stone-200 shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-xl border border-stone-200 shadow-xl max-w-5xl w-full h-[85vh] flex flex-col overflow-hidden">
         <div className="shrink-0 flex items-start justify-between gap-3 p-4 border-b border-stone-200">
           <div className="min-w-0">
             <h3 id="personkort-tittel" className="text-base font-serif font-bold text-stone-900 truncate">
