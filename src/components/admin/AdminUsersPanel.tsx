@@ -20,6 +20,7 @@ import {
 } from '../../utils/peopleDirectory';
 import { coordinatorSubject, sponsorSubject } from '../../utils/personLog';
 import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding';
+import { formatDuration, formatNorwegianDate } from '../../utils/memberSince';
 import type { PersonLogSubject, SponsorOnboardingStep } from '../../types';
 import { UserDirectoryInviteForm } from './UserDirectoryInviteForm';
 import { PersonCard, ROLE_LABEL } from './PersonCard';
@@ -43,6 +44,36 @@ const FILTERS: { value: RoleFilter; label: string }[] = [
   { value: 'sponsor', label: 'Faddere' },
   { value: 'arkivert', label: 'Arkivert' },
 ];
+
+/** Sortering på «Med siden»: eldst eller nyest først. Null = listens vanlige rekkefølge. */
+type MedSidenSort = 'eldst' | 'nyest' | null;
+
+/** Innhold i kolonnen «Med siden». Bare faddere med startdato har tall. */
+const MedSidenCelle: React.FC<{ row: PersonRow; dempet: string }> = ({ row, dempet }) => {
+  if (row.role !== 'sponsor' || !row.startDato) return <span className="text-stone-400">—</span>;
+  const start = formatNorwegianDate(row.startDato);
+  if (!start) return <span className="text-stone-400">—</span>;
+
+  // Arkivert fadder: vis perioden, og varigheten under.
+  if (row.sluttDato) {
+    const slutt = formatNorwegianDate(row.sluttDato);
+    const varighet = formatDuration(row.startDato, row.sluttDato);
+    return (
+      <div className={dempet || 'text-stone-700'}>
+        <div className="text-xs">{slutt ? `${start} – ${slutt}` : start}</div>
+        {varighet && <div className="text-[11px] text-stone-500">{varighet}</div>}
+      </div>
+    );
+  }
+
+  const varighet = formatDuration(row.startDato);
+  return (
+    <div className={dempet || 'text-stone-700'}>
+      <div className="text-xs">{start}</div>
+      {varighet && <div className="text-[11px] text-stone-500">{varighet}</div>}
+    </div>
+  );
+};
 
 export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   focusEmail,
@@ -87,6 +118,8 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
   const [rowBusyKey, setRowBusyKey] = useState<string | null>(null);
   // Angre-tilbud etter enkeltarkivering. Gjelder i 5 sekunder.
   const [angre, setAngre] = useState<{ navn: string; subject: PersonLogSubject } | null>(null);
+  // Sortering på «Med siden». Null = listens vanlige rekkefølge.
+  const [medSiden, setMedSiden] = useState<MedSidenSort>(null);
 
   useEffect(() => {
     if (!angre) return;
@@ -152,12 +185,23 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
     return c;
   }, [aktiveRader, arkiverteRader, stepByKey]);
 
-  const visibleRows = useMemo(() => {
+  const filtrerteRader = useMemo(() => {
     if (roleFilter === 'arkivert') return arkiverteRader;
     if (roleFilter === 'alle') return aktiveRader;
     if (roleFilter === 'nye') return aktiveRader.filter((r) => isOpenAdminTask(stepByKey.get(r.key) ?? null));
     return aktiveRader.filter((r) => r.role === roleFilter);
   }, [roleFilter, aktiveRader, arkiverteRader, stepByKey]);
+
+  // Rader uten startdato havner nederst i begge retninger.
+  const visibleRows = useMemo(() => {
+    if (!medSiden) return filtrerteRader;
+    return [...filtrerteRader].sort((a, b) => {
+      const da = a.startDato ?? '';
+      const db = b.startDato ?? '';
+      if (!da || !db) return da ? -1 : db ? 1 : 0;
+      return medSiden === 'eldst' ? da.localeCompare(db) : db.localeCompare(da);
+    });
+  }, [filtrerteRader, medSiden]);
 
   const erArkivVisning = roleFilter === 'arkivert';
   // Admin-rader kan ikke velges eller arkiveres her.
@@ -455,6 +499,19 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                 <th className="py-2.5 px-4">Navn</th>
                 <th className="py-2.5 px-4">E-post</th>
                 <th className="py-2.5 px-4">Rolle</th>
+                <th
+                  className="py-2.5 px-4"
+                  aria-sort={medSiden === 'eldst' ? 'ascending' : medSiden === 'nyest' ? 'descending' : 'none'}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setMedSiden((m) => (m === 'eldst' ? 'nyest' : 'eldst'))}
+                    className="inline-flex items-center gap-1 uppercase tracking-wider font-semibold hover:text-stone-900 cursor-pointer"
+                  >
+                    Med siden
+                    <span aria-hidden="true">{medSiden === 'eldst' ? '↑' : medSiden === 'nyest' ? '↓' : '↕'}</span>
+                  </button>
+                </th>
                 <th className="py-2.5 px-4">Innlogging</th>
               </tr>
             </thead>
@@ -500,6 +557,9 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
                       {row.email || <span className="text-stone-400">—</span>}
                     </td>
                     <td className={`py-2.5 px-4 ${dempet || 'text-stone-700'}`}>{ROLE_LABEL[row.role]}</td>
+                    <td className="py-2.5 px-4">
+                      <MedSidenCelle row={row} dempet={dempet} />
+                    </td>
                     <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap items-center gap-2">
                         {row.loginStatus === 'ikke-invitert' ? (
@@ -560,7 +620,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({
               })}
               {visibleRows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-4 px-4 text-stone-500">
+                  <td colSpan={6} className="py-4 px-4 text-stone-500">
                     {erArkivVisning ? 'Ingen arkiverte personer.' : 'Ingen personer i denne gruppen.'}
                   </td>
                 </tr>

@@ -163,4 +163,23 @@ describe('buildPeopleRows', () => {
     const rows = buildPeopleRows([], [], [], ['boss@example.no']);
     expect(rows[0].archived).toBe(false);
   });
+  it('fadderrader får startDato og sluttDato fra fadderposten, andre får ikke', () => {
+    const dir: DirectoryRow[] = [
+      { id: 'ola@example.no', email: 'ola@example.no', role: 'sponsor', status: 'aktiv', sponsorId: 's1' },
+    ];
+    const rows = buildPeopleRows(
+      dir,
+      [coord({ id: 'c1', fornavn: 'Kari', etternavn: 'Nordmann' })],
+      [
+        sponsor({ id: 's1', navn: 'Ola', epost: 'ola@example.no', startDato: '2024-03-01', avsluttet: '2026-10-03' }),
+        sponsor({ id: 's2', navn: 'Per', startDato: '2025-05-01' }),
+      ],
+      []
+    );
+    expect(rows.find((r) => r.sponsorId === 's1')).toMatchObject({ startDato: '2024-03-01', sluttDato: '2026-10-03' });
+    expect(rows.find((r) => r.sponsorId === 's2')).toMatchObject({ startDato: '2025-05-01', sluttDato: undefined });
+    const koord = rows.find((r) => r.coordinatorId === 'c1');
+    expect(koord?.startDato).toBeUndefined();
+    expect(koord?.sluttDato).toBeUndefined();
+  });
 });

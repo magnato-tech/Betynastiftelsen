@@ -24,6 +24,10 @@ export interface PersonRow {
   isBootstrapOnly: boolean;
   /** Arkivert: koordinator med aktiv=false, eller fadder med satt avsluttet-dato. */
   archived: boolean;
+  /** Fadders startdato (ISO), fra fadderposten. Mangler for koordinatorer og admin. */
+  startDato?: string;
+  /** Fadders avslutningsdato (ISO), fra fadderposten når den er arkivert. */
+  sluttDato?: string;
 }
 
 /** Innloggingsstatus for onboarding-beregningen. Null når personen ikke har innloggingsrad. */
@@ -111,6 +115,8 @@ export function buildPeopleRows(
       distrikt: coord?.distrikt,
       isBootstrapOnly: false,
       archived,
+      startDato: sp?.startDato,
+      sluttDato: sp?.avsluttet,
     });
   }
 
@@ -159,6 +165,8 @@ export function buildPeopleRows(
       sponsorId: s.id,
       isBootstrapOnly: false,
       archived: !!s.avsluttet,
+      startDato: s.startDato,
+      sluttDato: s.avsluttet,
     });
   }
 

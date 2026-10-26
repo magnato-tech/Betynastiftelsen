@@ -10,6 +10,7 @@ import { coordinatorSubject, logForPerson, sponsorSubject } from '../../utils/pe
 import { linksToCoordinator, linksToSponsor } from '../../utils/dataIntegrity';
 import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding';
 import { activeChildrenOfCoordinator } from '../../utils/coordinatorAssignment';
+import { formatDuration, formatNorwegianDate } from '../../utils/memberSince';
 import { SponsorOnboardingPanel } from './SponsorOnboardingPanel';
 import type { Child, Coordinator, PersonLogSubject, Sponsor } from '../../types';
 
@@ -56,7 +57,7 @@ const navnPaa = (c: Coordinator): string => `${c.fornavn} ${c.etternavn}`;
 interface Felt {
   key: string;
   label: string;
-  type?: 'text' | 'email' | 'tel' | 'number';
+  type?: 'text' | 'email' | 'tel' | 'number' | 'date';
   pakrevd?: boolean;
 }
 
@@ -74,7 +75,21 @@ const FADDER_FELTER: Felt[] = [
   { key: 'telefon', label: 'Telefon', type: 'tel' },
   { key: 'poststed', label: 'Poststed' },
   { key: 'maanedsbelop', label: 'Månedsbeløp (kr)', type: 'number', pakrevd: true },
+  { key: 'startDato', label: 'Startdato', type: 'date', pakrevd: true },
 ];
+
+/** «Fadder siden …» for aktive, «Fadder fra … til …» for arkiverte. Tom streng uten gyldig startdato. */
+function fadderPeriodeTekst(s: Pick<Sponsor, 'startDato' | 'avsluttet'>): string {
+  const start = formatNorwegianDate(s.startDato);
+  if (!start) return '';
+  if (s.avsluttet) {
+    const slutt = formatNorwegianDate(s.avsluttet);
+    const varighet = formatDuration(s.startDato, s.avsluttet);
+    return `Fadder fra ${start} til ${slutt}${varighet ? ` (${varighet})` : ''}`;
+  }
+  const varighet = formatDuration(s.startDato);
+  return `Fadder siden ${start}${varighet ? ` (${varighet})` : ''}`;
+}
 
 /** Verdiene som er tillatt i typen Sponsor.betalingsmetode. */
 const BETALINGSMETODER: { value: Sponsor['betalingsmetode']; label: string }[] = [
@@ -191,6 +206,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({
       v.poststed = sponsor.poststed;
       v.maanedsbelop = String(sponsor.maanedsbelop);
       v.betalingsmetode = sponsor.betalingsmetode;
+      v.startDato = sponsor.startDato;
     }
     return v;
   }, [coordinator, sponsor]);
@@ -489,6 +505,10 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                 </p>
               )}
 
+              {sponsor && fadderPeriodeTekst(sponsor) && (
+                <p className="text-xs text-stone-700 font-medium">{fadderPeriodeTekst(sponsor)}</p>
+              )}
+
               {felter.length > 0 && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -544,7 +564,6 @@ export const PersonCard: React.FC<PersonCardProps> = ({
 
               {sponsor && (
                 <div className="pt-3 border-t border-stone-100 space-y-2 text-xs text-stone-600">
-                  <p>Start: {sponsor.startDato}</p>
                   <p className="font-semibold text-stone-800">Barn</p>
                   {barn.length === 0 && <p>Ingen barn er tildelt.</p>}
                   <ul className="space-y-1">
