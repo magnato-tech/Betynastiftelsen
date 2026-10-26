@@ -11,6 +11,7 @@ describe('CMS live preview', () => {
     expect(cmsPreviewHash('hero')).toBe('home');
     expect(cmsPreviewHash('steps')).toBe('fadderordningen');
     expect(cmsPreviewHash('cta')).toBe('cta');
+    expect(cmsPreviewHash('stotte')).toBe('hva-stotten-gjor');
   });
 
   it('gjenkjenner innebygd forhåndsvisning', () => {

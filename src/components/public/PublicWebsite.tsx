@@ -31,6 +31,9 @@ import {
 } from '../../utils/cmsPreviewBridge';
 import type { CmsPreviewSection } from '../../utils/cmsPreview';
 import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionDefaults } from '../../utils/testimonials';
+import { withTransparencyDefaults } from '../../utils/transparency';
+import { withSupportCardsDefaults } from '../../utils/supportCards';
+import { aboutUsHasText, withAboutUsDefaults } from '../../utils/aboutUs';
 import { TestimonialStoryCard } from './TestimonialStoryCard';
 import { HeroAnniversaryBadge } from './HeroAnniversaryBadge';
 import { WaitingSponsorsSection } from './WaitingSponsorsSection';
@@ -148,6 +151,10 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
   const heroHeightVh = getHeroHeightVh(heroConfig);
   const heroObjectPosition = getHeroObjectPosition(heroConfig);
   const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
+  const transparency = withTransparencyDefaults(cmsContent.transparency);
+  const supportCards = withSupportCardsDefaults(cmsContent.supportCards);
+  const aboutUs = withAboutUsDefaults(cmsContent.aboutUs);
+  const aboutUsImageSrc = resolvePublicImageUrl(aboutUs.imageUrl);
   const frontPageStories = stories.filter(isFrontPageTestimonial);
   const waitingSection = withWaitingSponsorsSectionDefaults(cmsContent.waitingSponsorsSection);
   const waitingCards = getPublishedWaitingSponsorCards(cmsContent);
@@ -364,6 +371,51 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         </HomeColumn>
       </section>
 
+      {/* Om oss: Betynas historie (CMS-modul). Skjult som standard, og vises kun når den er på og har tekst. */}
+      {/* I CMS-forhåndsvisningen vises den også uten tekst (med plassholder), så den kan klikkes for redigering. */}
+      {onHome('omOss') && (aboutUsHasText(aboutUs) || cmsPreviewEmbedded) && (
+        <section
+          id="om-betyna"
+          data-cms-section="omOss"
+          data-cms-label="Om oss"
+          style={homeBlockStyle('omOss')}
+          className={`relative z-10 scroll-mt-24 rounded-2xl transition-shadow ${previewMark('omOss')}`}
+        >
+          <HomeColumn cms={cmsContent}>
+            <div className="bg-white rounded-2xl border border-[#DFD9CB] p-8 md:p-12 shadow-xs">
+              <div className={`grid grid-cols-1 gap-8 ${aboutUsImageSrc ? 'md:grid-cols-2 md:items-center' : ''}`}>
+                {aboutUsImageSrc && (
+                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+                    <img
+                      src={aboutUsImageSrc}
+                      alt={aboutUs.imageAlt ?? ''}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="w-full space-y-4">
+                  <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
+                    {aboutUs.kicker}
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">{aboutUs.title}</h2>
+                  {aboutUsHasText(aboutUs) ? (
+                    <SafeHtml
+                      html={aboutUs.bodyHtml}
+                      className="text-sm text-stone-700 leading-relaxed font-sans rich-html"
+                    />
+                  ) : (
+                    <p className="text-sm text-stone-400 italic">
+                      Historien er ikke skrevet ennå. Klikk her for å skrive den. (Vises ikke på nettsiden før det finnes tekst.)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </HomeColumn>
+        </section>
+      )}
+
       {/* Vitnesbyrd: CMS-tekst + kort i rutenett (runde 3) */}
       <section
         id="historier"
@@ -477,42 +529,50 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           })}
         </div>
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[
-            {
-              icon: Heart,
-              title: t('sponsorship.card1Title', 'Ett barn — din fadder'),
-              desc: t(
-                'sponsorship.card1Desc',
-                'Du støtter ett navn og ett liv. Ikke en anonym giverpool. Skoleplassen henger på at du er med over tid.'
-              ),
-            },
-            {
-              icon: Users,
-              title: t('sponsorship.card2Title', 'Pengene til familien'),
-              desc: t(
-                'sponsorship.card2Desc',
-                'Bidraget går til omsorgspersoner som betaler skole, uniform, mat og medisin — slik det fungerer lokalt i Kongo.'
-              ),
-            },
-            {
-              icon: GraduationCap,
-              title: t('sponsorship.card3Title', 'Hele veien til jobb'),
-              desc: t(
-                'sponsorship.card3Desc',
-                'Vi følger barnet til fagbrev, utdanning og en reell jobb — slik at det kan forsørge sin familie.'
-              ),
-            },
-          ].map((card) => (
-            <div
-              key={card.title}
-              className="bg-white p-5 rounded-xl border border-[#DFD9CB] shadow-xs space-y-2"
-            >
-              <card.icon className="w-5 h-5 text-[#4D6B3E]" />
-              <h3 className="text-base font-serif font-bold text-stone-900">{card.title}</h3>
-              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{card.desc}</p>
-            </div>
-          ))}
+        </HomeColumn>
+      </section>
+
+      {/* 3b. HVA STØTTEN GJØR (egen modul rett etter Fadderordningen) */}
+      <section
+        id="hva-stotten-gjor"
+        data-cms-section="stotte"
+        data-cms-label="Hva støtten gjør"
+        style={homeBlockStyle('stotte')}
+        className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow bg-[#F6F4ED] ${previewMark('stotte')}`}
+      >
+        <HomeColumn cms={cmsContent}>
+        <div className="mb-10 w-full">
+          <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
+            {language === 'fr' ? t('support.kicker', supportCards.kicker) : supportCards.kicker}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
+            {language === 'fr' ? t('support.title', supportCards.title) : supportCards.title}
+          </h2>
+          {supportCards.intro?.trim() && (
+            <p className="text-sm sm:text-base text-stone-700 mt-3 leading-relaxed">
+              {language === 'fr' ? t('support.intro', supportCards.intro) : supportCards.intro}
+            </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {supportCards.cards.map((card, idx) => {
+            const Icon = [Heart, Users, GraduationCap][idx % 3];
+            const cardTitle =
+              language === 'fr' ? t(`sponsorship.card${(idx % 3) + 1}Title`, card.title) : card.title;
+            const cardDesc =
+              language === 'fr' ? t(`sponsorship.card${(idx % 3) + 1}Desc`, card.description) : card.description;
+            return (
+              <div
+                key={card.id}
+                className="bg-white p-5 rounded-xl border border-[#DFD9CB] shadow-xs space-y-2"
+              >
+                <Icon className="w-5 h-5 text-[#4D6B3E]" />
+                <h3 className="text-base font-serif font-bold text-stone-900">{cardTitle}</h3>
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{cardDesc}</p>
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-6">
@@ -683,65 +743,45 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       </section>
 
       {/* 7. ÅPENHET OG ØKONOMI */}
-      <section id="apenhet" style={homeBlockStyle('apenhet')} className="scroll-mt-24">
+      <section id="apenhet" data-cms-section="apenhet" style={homeBlockStyle('apenhet')} className="scroll-mt-24">
         <HomeColumn cms={cmsContent}>
         <div className="bg-white rounded-2xl border border-[#DFD9CB] p-8 md:p-12 shadow-xs">
           <div className="mb-8 w-full">
             <span className="text-xs uppercase tracking-widest text-[#4D6B3E] font-semibold">
-              {t('transparency.kicker', 'Økonomi & åpenhet')}
+              {language === 'fr' ? t('transparency.kicker', transparency.kicker) : transparency.kicker}
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 mt-2">
-              {t('transparency.title', 'Slik pengene brukes')}
+              {language === 'fr' ? t('transparency.title', transparency.title) : transparency.title}
             </h2>
             <p className="text-sm text-stone-700 mt-2 leading-relaxed">
-              {t(
-                'transparency.intro',
-                'Fadderbidraget går uavkortet til barnet — via omsorgspersoner i storfamilien, ikke i lommen på barnet. Koordinatoren sørger for at skole, uniform, medisin og det nødvendige blir dekket.'
-              )}
+              {language === 'fr' ? t('transparency.intro', transparency.intro) : transparency.intro}
             </p>
             <p className="text-sm text-stone-600 mt-2 leading-relaxed">
-              Ti faddere à 3 500 kroner i året gir 35 000 kroner til ett barns løp. Ingen lønn tas ut i Betyna.{' '}
-              {t(
-                'transparency.legalFormShort',
-                'Vi er foreløpig ikke stiftelse — med vilje — så mer av det som kommer inn kan gå til barna.'
+              {language === 'fr' ? (
+                <>
+                  Ti faddere à 3 500 kroner i året gir 35 000 kroner til ett barns løp. Ingen lønn tas ut i Betyna.{' '}
+                  {t(
+                    'transparency.legalFormShort',
+                    'Vi er foreløpig ikke stiftelse — med vilje — så mer av det som kommer inn kan gå til barna.'
+                  )}
+                </>
+              ) : (
+                transparency.secondary
               )}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-stone-100">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-stone-900">
-                {t('transparency.col1Title', 'Månedlig fadderbidrag')}
-              </h3>
-              <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                {t(
-                  'transparency.col1Desc',
-                  'Skolepenger, uniform, sekk, mat og det familien trenger for at barnet kan gå på skole — ofte er beløpet lite i norske øyne, men avgjørende lokalt.'
-                )}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-stone-900">
-                {t('transparency.col2Title', 'Liten reserve')}
-              </h3>
-              <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                {t(
-                  'transparency.col2Desc',
-                  'En andel settes av til sykdom og sykehus (malaria er en reell risiko) og til skolestart én gang i året, når sekk og utstyr må kjøpes inn på nytt.'
-                )}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-stone-900">
-                {t('transparency.col3Title', 'Ingen barnehjem-modell')}
-              </h3>
-              <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                {t(
-                  'transparency.col3Desc',
-                  'Vi støtter storfamilien som faktisk bærer ansvaret — ikke et fremmed barnehjem. Ekstra gaver fra fadder ved bursdag, jul eller akutte behov er populært, men frivillig.'
-                )}
-              </p>
-            </div>
+            {transparency.cards.map((card) => (
+              <div key={card.id} className="space-y-2">
+                <h3 className="text-sm font-semibold text-stone-900">
+                  {language === 'fr' ? t(`transparency.${card.id}Title`, card.title) : card.title}
+                </h3>
+                <p className="text-xs text-stone-600 leading-relaxed font-sans">
+                  {language === 'fr' ? t(`transparency.${card.id}Desc`, card.description) : card.description}
+                </p>
+              </div>
+            ))}
           </div>
 
         </div>

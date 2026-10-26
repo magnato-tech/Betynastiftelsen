@@ -34,6 +34,7 @@ export function postCmsPreviewSelectSection(target: Window, section: CmsPreviewS
 export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
   hero: 'home',
   steps: 'fadderordningen',
+  stotte: 'hva-stotten-gjor',
   stories: 'historier',
   waiting: 'venter-fadder',
   about: 'om-oss',
@@ -41,6 +42,7 @@ export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
   cta: 'cta',
   behov: 'aksjoner',
   apenhet: 'apenhet',
+  omOss: 'om-betyna',
 };
 
 export const CMS_PREVIEW_ACTIVE_CLASS = 'cms-preview-active';

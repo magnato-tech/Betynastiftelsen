@@ -1,24 +1,29 @@
 import type { CmsContent, CmsHomeLayoutItem, CmsHomeModuleId } from '../types';
 import { cmsSectionEnabled } from './cmsSections';
+import { aboutUsHasText, withAboutUsDefaults } from './aboutUs';
 
 export const CMS_HOME_MODULE_LABELS: Record<CmsHomeModuleId, string> = {
   hero: 'Hovedbanner',
   stories: 'Vitnesbyrd',
   waiting: 'Disse venter på fadder',
   steps: 'Fadderordningen',
+  stotte: 'Hva støtten gjør',
   kpis: 'Nøkkeltall',
   about: 'Kjernerammer',
   cta: 'Fadderoppfordring',
   behov: 'Aksjoner',
   apenhet: 'Økonomi og åpenhet',
+  omOss: 'Om oss',
 };
 
 /** Standard rekkefølge på forsiden (kan endres i CMS). */
 export const DEFAULT_CMS_HOME_LAYOUT: CmsHomeLayoutItem[] = [
   { moduleId: 'hero', visible: true },
+  { moduleId: 'omOss', visible: false },
   { moduleId: 'stories', visible: true },
   { moduleId: 'waiting', visible: true },
   { moduleId: 'steps', visible: true },
+  { moduleId: 'stotte', visible: true },
   { moduleId: 'behov', visible: true },
   { moduleId: 'kpis', visible: true },
   { moduleId: 'about', visible: true },
@@ -31,11 +36,13 @@ const MODULE_IDS: CmsHomeModuleId[] = [
   'stories',
   'waiting',
   'steps',
+  'stotte',
   'kpis',
   'about',
   'cta',
   'behov',
   'apenhet',
+  'omOss',
 ];
 
 function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
@@ -44,6 +51,8 @@ function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
       return cmsSectionEnabled(cms.heroSection);
     case 'steps':
       return cmsSectionEnabled(cms.stepsSection);
+    case 'stotte':
+      return true;
     case 'about':
       return cmsSectionEnabled(cms.aboutSection);
     case 'kpis':
@@ -58,6 +67,9 @@ function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
       return true;
     case 'apenhet':
       return true;
+    case 'omOss':
+      // Skjult som standard, så eksisterende sider ikke får en tom seksjon.
+      return false;
     default:
       return true;
   }
@@ -82,9 +94,17 @@ export function normalizeCmsHomeLayout(cms: CmsContent): CmsHomeLayoutItem[] {
     }
   }
   for (const id of MODULE_IDS) {
-    if (!ordered.some((o) => o.moduleId === id)) {
-      ordered.push({ moduleId: id, visible: legacyVisible(cms, id) });
+    if (ordered.some((o) => o.moduleId === id)) continue;
+    const item: CmsHomeLayoutItem = { moduleId: id, visible: legacyVisible(cms, id) };
+    if (id === 'stotte') {
+      // Eldre layout: «Hva støtten gjør» skal ligge rett etter Fadderordningen, ikke sist.
+      const stepsIdx = ordered.findIndex((o) => o.moduleId === 'steps');
+      if (stepsIdx >= 0) {
+        ordered.splice(stepsIdx + 1, 0, item);
+        continue;
+      }
     }
+    ordered.push(item);
   }
   return ordered;
 }
@@ -112,7 +132,10 @@ export function publicNavVisibility(
   fadderordningen: boolean;
   historier: boolean;
   aksjoner: boolean;
+  /** «Profil & verdier» → Kjernerammer (DOM-id om-oss). */
   omOss: boolean;
+  /** «Om oss» → historien om Betyna (DOM-id om-betyna), når modulen er på og har tekst. */
+  historie: boolean;
   apenhet: boolean;
   bliFadderCta: boolean;
 } {
@@ -122,6 +145,7 @@ export function publicNavVisibility(
     historier: isHomeModuleVisible(cms, 'stories') && ctx.hasFrontPageStories,
     aksjoner: isHomeModuleVisible(cms, 'behov') && ctx.hasActiveCampaigns,
     omOss: isHomeModuleVisible(cms, 'about'),
+    historie: isHomeModuleVisible(cms, 'omOss') && aboutUsHasText(withAboutUsDefaults(cms.aboutUs)),
     apenhet: isHomeModuleVisible(cms, 'apenhet'),
     bliFadderCta: showHeroCta,
   };

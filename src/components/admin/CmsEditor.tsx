@@ -4,6 +4,17 @@ import { ImagePickerField } from './ImagePickerField';
 import { TestimonialEditor } from './TestimonialEditor';
 import { WaitingSponsorsEditor } from './WaitingSponsorsEditor';
 import { getPublishedWaitingSponsorCards } from '../../utils/waitingSponsors';
+import {
+  TRANSPARENCY_MAX_CARDS,
+  TRANSPARENCY_MIN_CARDS,
+  withTransparencyDefaults,
+} from '../../utils/transparency';
+import { withAboutUsDefaults } from '../../utils/aboutUs';
+import {
+  SUPPORT_CARDS_MAX_CARDS,
+  SUPPORT_CARDS_MIN_CARDS,
+  withSupportCardsDefaults,
+} from '../../utils/supportCards';
 import { CmsLivePreview } from './CmsLivePreview';
 import { CmsMediaLibraryPanel } from './CmsMediaLibraryPanel';
 import { CmsSectionNav } from './CmsSectionNav';
@@ -213,6 +224,69 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       ...updates,
     };
     updateCmsSection('ctaBanner', updated);
+  };
+
+  // 6b. ØKONOMI OG ÅPENHET (Slik pengene brukes)
+  const transparency = withTransparencyDefaults(cmsContent.transparency);
+
+  const handleTransparencyChange = (field: 'kicker' | 'title' | 'intro' | 'secondary', value: string) => {
+    updateCmsSection('transparency', { ...transparency, [field]: value });
+  };
+
+  const handleTransparencyCardChange = (index: number, field: 'title' | 'description', value: string) => {
+    const cards = transparency.cards.map((card, i) => (i === index ? { ...card, [field]: value } : card));
+    updateCmsSection('transparency', { ...transparency, cards });
+  };
+
+  const handleTransparencyAddCard = () => {
+    if (transparency.cards.length >= TRANSPARENCY_MAX_CARDS) return;
+    const newCard = { id: `card-${Date.now().toString(36)}`, title: '', description: '' };
+    updateCmsSection('transparency', { ...transparency, cards: [...transparency.cards, newCard] });
+  };
+
+  const handleTransparencyRemoveCard = (index: number) => {
+    if (transparency.cards.length <= TRANSPARENCY_MIN_CARDS) return;
+    updateCmsSection('transparency', {
+      ...transparency,
+      cards: transparency.cards.filter((_, i) => i !== index),
+    });
+  };
+
+  // 6a. HVA STØTTEN GJØR (egen modul rett etter Fadderordningen)
+  const supportCards = withSupportCardsDefaults(cmsContent.supportCards);
+
+  const handleSupportCardsChange = (field: 'kicker' | 'title' | 'intro', value: string) => {
+    updateCmsSection('supportCards', { ...supportCards, [field]: value });
+  };
+
+  const handleSupportCardChange = (index: number, field: 'title' | 'description', value: string) => {
+    const cards = supportCards.cards.map((card, i) => (i === index ? { ...card, [field]: value } : card));
+    updateCmsSection('supportCards', { ...supportCards, cards });
+  };
+
+  const handleSupportCardAdd = () => {
+    if (supportCards.cards.length >= SUPPORT_CARDS_MAX_CARDS) return;
+    const newCard = { id: `card-${Date.now().toString(36)}`, title: '', description: '' };
+    updateCmsSection('supportCards', { ...supportCards, cards: [...supportCards.cards, newCard] });
+  };
+
+  const handleSupportCardRemove = (index: number) => {
+    if (supportCards.cards.length <= SUPPORT_CARDS_MIN_CARDS) return;
+    updateCmsSection('supportCards', {
+      ...supportCards,
+      cards: supportCards.cards.filter((_, i) => i !== index),
+    });
+  };
+
+  // 6c. OM OSS (Betynas historie)
+  const aboutUs = withAboutUsDefaults(cmsContent.aboutUs);
+
+  const handleAboutUsChange = (field: 'kicker' | 'title' | 'bodyHtml' | 'imageAlt', value: string) => {
+    updateCmsSection('aboutUs', { ...aboutUs, [field]: value });
+  };
+
+  const handleAboutUsImageChange = (updates: { backgroundImageUrl?: string }) => {
+    updateCmsSection('aboutUs', { ...aboutUs, imageUrl: updates.backgroundImageUrl || undefined });
   };
 
   // 6. STORY HANDLERS
@@ -1227,17 +1301,287 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
 
       {activeSubTab === 'media' && <CmsMediaLibraryPanel />}
 
+      {activeSubTab === 'stotte' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-serif font-bold text-stone-900">Hva støtten gjør (tre kort)</h3>
+              <p className="text-xs text-stone-600 mt-0.5 max-w-2xl">
+                Overskriften og kortene som vises på forsiden rett etter Fadderordningen. Bruk øyet i seksjonslisten for å vise
+                eller skjule modulen.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (kicker) *</label>
+              <input
+                type="text"
+                value={supportCards.kicker}
+                onChange={(e) => handleSupportCardsChange('kicker', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Overskrift *</label>
+              <input
+                type="text"
+                value={supportCards.title}
+                onChange={(e) => handleSupportCardsChange('title', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Ingress (valgfri)</label>
+              <textarea
+                rows={3}
+                value={supportCards.intro ?? ''}
+                onChange={(e) => handleSupportCardsChange('intro', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-serif font-bold text-stone-900">
+                Kort ({supportCards.cards.length} av {SUPPORT_CARDS_MAX_CARDS})
+              </h4>
+              <button
+                type="button"
+                onClick={handleSupportCardAdd}
+                disabled={supportCards.cards.length >= SUPPORT_CARDS_MAX_CARDS}
+                className="px-3 py-1.5 bg-[#4D6B3E] hover:bg-[#3B522F] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium cursor-pointer flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Nytt kort
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {supportCards.cards.map((card, idx) => (
+                <div
+                  key={card.id}
+                  className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[#4D6B3E] uppercase tracking-wider">Kort #{idx + 1}</span>
+                      {supportCards.cards.length > SUPPORT_CARDS_MIN_CARDS && (
+                        <button
+                          type="button"
+                          onClick={() => handleSupportCardRemove(idx)}
+                          className="text-xs text-red-700 hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Fjern
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-700 mb-1">Tittel *</label>
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) => handleSupportCardChange(idx, 'title', e.target.value)}
+                        className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-700 mb-1">Beskrivelse *</label>
+                      <textarea
+                        rows={4}
+                        value={card.description}
+                        onChange={(e) => handleSupportCardChange(idx, 'description', e.target.value)}
+                        className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-stone-500">Franske tekster kommer fra oversettelsene og endres ikke her.</p>
+        </div>
+      )}
+
       {activeSubTab === 'apenhet' && (
-        <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-2 text-sm text-stone-700">
-          <h3 className="text-base font-serif font-bold text-stone-900">Økonomi og åpenhet</h3>
-          <p>
-            Modulen viser fast tekst om hvordan fadderbidraget brukes («Slik pengene brukes»), med tre kort:
-            månedlig fadderbidrag, liten reserve og ingen barnehjem-modell.
-          </p>
-          <p className="text-xs text-stone-500">
-            Teksten kan ikke redigeres her ennå. Bruk øyet i seksjonslisten for å vise eller skjule modulen. Når den er
-            skjult, forsvinner også «Åpenhet» fra toppmenyen.
-          </p>
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-serif font-bold text-stone-900">Økonomi og åpenhet («Slik pengene brukes»)</h3>
+              <p className="text-xs text-stone-600 mt-0.5 max-w-2xl">
+                Teksten og kortene som vises på forsiden. Bruk øyet i seksjonslisten for å vise eller skjule modulen. Når den er
+                skjult, forsvinner også «Åpenhet» fra toppmenyen.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (kicker) *</label>
+              <input
+                type="text"
+                value={transparency.kicker}
+                onChange={(e) => handleTransparencyChange('kicker', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Overskrift *</label>
+              <input
+                type="text"
+                value={transparency.title}
+                onChange={(e) => handleTransparencyChange('title', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Ingress *</label>
+              <textarea
+                rows={3}
+                value={transparency.intro}
+                onChange={(e) => handleTransparencyChange('intro', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Tilleggstekst</label>
+              <textarea
+                rows={3}
+                value={transparency.secondary}
+                onChange={(e) => handleTransparencyChange('secondary', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-serif font-bold text-stone-900">
+                Kort ({transparency.cards.length} av {TRANSPARENCY_MAX_CARDS})
+              </h4>
+              <button
+                type="button"
+                onClick={handleTransparencyAddCard}
+                disabled={transparency.cards.length >= TRANSPARENCY_MAX_CARDS}
+                className="px-3 py-1.5 bg-[#4D6B3E] hover:bg-[#3B522F] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium cursor-pointer flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Nytt kort
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {transparency.cards.map((card, idx) => (
+                <div
+                  key={card.id}
+                  className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[#4D6B3E] uppercase tracking-wider">Kort #{idx + 1}</span>
+                      {transparency.cards.length > TRANSPARENCY_MIN_CARDS && (
+                        <button
+                          type="button"
+                          onClick={() => handleTransparencyRemoveCard(idx)}
+                          className="text-xs text-red-700 hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Fjern
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-700 mb-1">Tittel *</label>
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) => handleTransparencyCardChange(idx, 'title', e.target.value)}
+                        className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-700 mb-1">Beskrivelse *</label>
+                      <textarea
+                        rows={4}
+                        value={card.description}
+                        onChange={(e) => handleTransparencyCardChange(idx, 'description', e.target.value)}
+                        className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-stone-500">Franske tekster kommer fra oversettelsene og endres ikke her.</p>
+        </div>
+      )}
+
+      {activeSubTab === 'omOss' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-serif font-bold text-stone-900">Om oss («Historien om Betyna»)</h3>
+              <p className="text-xs text-stone-600 mt-0.5 max-w-2xl">
+                Skriv historien om Betyna – hvordan det startet, hvem som var med og hva som er oppnådd. Modulen vises
+                på forsiden når den er slått på i seksjonslisten og har tekst.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (kicker)</label>
+              <input
+                type="text"
+                value={aboutUs.kicker}
+                onChange={(e) => handleAboutUsChange('kicker', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-medium focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Overskrift</label>
+              <input
+                type="text"
+                value={aboutUs.title}
+                onChange={(e) => handleAboutUsChange('title', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 font-serif font-bold focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+
+            <RichTextEditor
+              label="Historien"
+              sublabel="Formatér med fet, kursiv, lenker eller punktlister."
+              content={aboutUs.bodyHtml}
+              onChange={(html) => handleAboutUsChange('bodyHtml', html)}
+              minHeight="220px"
+            />
+
+            <div className="pt-2 border-t border-stone-200">
+              <ImagePickerField
+                label="Bilde (valgfritt)"
+                sublabel="Last opp fra maskinen, velg et motiv fra biblioteket, eller lim inn en adresse."
+                currentUrl={aboutUs.imageUrl}
+                showScrimSlider={false}
+                mediaLibrary={mediaLibrary}
+                onChange={handleAboutUsImageChange}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1">Alternativ tekst for bildet</label>
+              <input
+                type="text"
+                value={aboutUs.imageAlt ?? ''}
+                onChange={(e) => handleAboutUsChange('imageAlt', e.target.value)}
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+              />
+            </div>
+          </div>
         </div>
       )}
 

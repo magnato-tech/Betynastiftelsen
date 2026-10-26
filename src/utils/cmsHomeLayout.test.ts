@@ -88,6 +88,68 @@ describe('cmsHomeLayout', () => {
     ).toBe(false);
   });
 
+  it('Om oss er skjult som standard, også i eldre layouter', () => {
+    expect(visibleHomeModules(baseCms())).not.toContain('omOss');
+    const legacy = { ...baseCms(), homeLayout: [{ moduleId: 'hero' as const, visible: true }] };
+    expect(normalizeCmsHomeLayout(legacy).find((r) => r.moduleId === 'omOss')?.visible).toBe(false);
+    expect(visibleHomeModules(legacy)).not.toContain('omOss');
+  });
+
+  it('«Om oss»-lenken vises når historien er på og har tekst; «Profil & verdier» er uendret', () => {
+    const ctx = { hasFrontPageStories: true, hasActiveCampaigns: true };
+    const cms = {
+      ...baseCms(),
+      aboutUs: { kicker: 'K', title: 'T', bodyHtml: '<p>Historien</p>' },
+      homeLayout: setHomeModuleVisible(normalizeCmsHomeLayout(baseCms()), 'omOss', true),
+    };
+    const vis = publicNavVisibility(cms, ctx);
+    expect(vis.historie).toBe(true);
+    expect(vis.omOss).toBe(true);
+  });
+
+  it('«Om oss»-lenken skjules når historien er på men tom', () => {
+    const ctx = { hasFrontPageStories: true, hasActiveCampaigns: true };
+    const cms = {
+      ...baseCms(),
+      aboutUs: { kicker: 'K', title: 'T', bodyHtml: '' },
+      homeLayout: setHomeModuleVisible(normalizeCmsHomeLayout(baseCms()), 'omOss', true),
+    };
+    const vis = publicNavVisibility(cms, ctx);
+    expect(vis.historie).toBe(false);
+    expect(vis.omOss).toBe(true);
+  });
+
+  it('«Om oss»-lenken skjules når modulen er av; «Profil & verdier» er som før', () => {
+    const vis = publicNavVisibility(baseCms(), { hasFrontPageStories: true, hasActiveCampaigns: true });
+    expect(vis.historie).toBe(false);
+    expect(vis.omOss).toBe(true);
+  });
+
+  it('standard rekkefølge har «Hva støtten gjør» rett etter Fadderordningen', () => {
+    const ids = visibleHomeModules(baseCms());
+    const stepsIdx = ids.indexOf('steps');
+    expect(stepsIdx).toBeGreaterThanOrEqual(0);
+    expect(ids[stepsIdx + 1]).toBe('stotte');
+    expect(ids).toContain('stotte');
+  });
+
+  it('eldre lagret layout uten stotte får modulen rett etter steps, synlig', () => {
+    const legacy = {
+      ...baseCms(),
+      homeLayout: [
+        { moduleId: 'hero' as const, visible: true },
+        { moduleId: 'steps' as const, visible: true },
+        { moduleId: 'behov' as const, visible: true },
+        { moduleId: 'apenhet' as const, visible: true },
+      ],
+    };
+    const layout = normalizeCmsHomeLayout(legacy);
+    const ids = layout.map((r) => r.moduleId);
+    expect(ids.indexOf('stotte')).toBe(ids.indexOf('steps') + 1);
+    expect(layout.find((r) => r.moduleId === 'stotte')?.visible).toBe(true);
+    expect(visibleHomeModules(legacy)).toContain('stotte');
+  });
+
   it('reorderHomeModule flytter modul til ny posisjon', () => {
     const layout = normalizeCmsHomeLayout(baseCms());
     const next = reorderHomeModule(layout, 'behov', 'hero');

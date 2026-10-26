@@ -2,6 +2,9 @@ import type { CmsContent } from '../types';
 import { BETYNA_DEFAULT_HERO_IMAGE } from '../utils/cmsHeroImage';
 import { DEFAULT_HERO_LAYOUT } from '../utils/heroLayout';
 import { DEFAULT_TESTIMONIALS_SECTION } from '../utils/testimonials';
+import { DEFAULT_TRANSPARENCY_SECTION } from '../utils/transparency';
+import { DEFAULT_SUPPORT_CARDS_SECTION } from '../utils/supportCards';
+import { DEFAULT_ABOUT_US_SECTION } from '../utils/aboutUs';
 
 /** Lås etter første (og eneste) import. Finnes den, skal seed aldri kjøre igjen. */
 export interface SeedLock {
@@ -39,6 +42,9 @@ export const EMPTY_CMS_CONTENT: CmsContent = {
     scrimOpacity: 75,
   },
   testimonialsSection: DEFAULT_TESTIMONIALS_SECTION,
+  transparency: DEFAULT_TRANSPARENCY_SECTION,
+  supportCards: DEFAULT_SUPPORT_CARDS_SECTION,
+  aboutUs: DEFAULT_ABOUT_US_SECTION,
 };
 
 /**

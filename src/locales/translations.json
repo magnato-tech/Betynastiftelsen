@@ -5,6 +5,7 @@
       "sponsorship": "Fadderordningen",
       "stories": "Historier",
       "campaigns": "Aksjoner",
+      "aboutUs": "Om oss",
       "about": "Profil & verdier",
       "transparency": "Åpenhet",
       "login": "Logg inn",
@@ -103,6 +104,10 @@
       "legalFormParagraph1": "Vi er en veldig liten organisasjon. For at pengene skal gå uavkortet til barna, har vi foreløpig ikke råd til å etablere oss som stiftelse. Det ville krevd revisor og annen formell ramme som i praksis kunne kostet en stor del av hele årsbudsjettet.",
       "legalFormParagraph2": "Dersom vi vokser gradvis og tiden er inne, vil vi etablere stiftelse — og da må også revisor, regnskap og det formelle være på plass. Inntil da prioriterer vi barna foran byråkrati."
     },
+    "support": {
+      "kicker": "Hva støtten gjør",
+      "title": "Slik gjør bidraget ditt en forskjell"
+    },
     "steps": {
       "kicker": "Fadderordningen",
       "title": "Én fadder — ett barn som er avhengig av deg",
@@ -192,6 +197,7 @@
       "sponsorship": "Parrainage",
       "stories": "Histoires",
       "campaigns": "Collectes",
+      "aboutUs": "À propos",
       "about": "Profil et valeurs",
       "transparency": "Transparence",
       "login": "Se connecter",
@@ -289,6 +295,10 @@
       "legalFormTitle": "Pas encore une fondation — volontairement",
       "legalFormParagraph1": "Nous sommes une très petite organisation. Pour que l'argent aille intégralement aux enfants, nous n'avons pas encore les moyens de devenir une fondation. Il faudrait un commissaire aux comptes et un cadre formel qui pourrait absorber une large part du budget annuel.",
       "legalFormParagraph2": "Si nous grandissons progressivement et que le moment est venu, nous créerons une fondation — avec commissaire aux comptes, comptabilité et formalités en place. D'ici là, nous privilégions les enfants plutôt que la bureaucratie."
+    },
+    "support": {
+      "kicker": "Ce que soutient le parrainage",
+      "title": "Comment votre contribution fait la différence"
     },
     "steps": {
       "kicker": "Parrainage",

@@ -170,6 +170,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {t('nav.campaigns', 'Aksjoner')}
                 </button>
               )}
+              {publicNav?.historie && (
+                <button
+                  onClick={() => setActiveSection('om-betyna')}
+                  className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    activeSection === 'om-betyna' ? 'text-[#4D6B3E] font-semibold' : 'hover:text-[#3C3C3C]'
+                  }`}
+                >
+                  {t('nav.aboutUs', 'Om oss')}
+                </button>
+              )}
               {publicNav?.omOss && (
                 <button
                   onClick={() => setActiveSection('om-oss')}

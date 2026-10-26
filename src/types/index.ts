@@ -497,6 +497,46 @@ export interface CmsCtaBanner {
   scrimOpacity?: number;
 }
 
+export interface CmsTransparencyCard {
+  id: string;
+  title: string;
+  description: string;
+}
+
+/** Seksjonen «Økonomi og åpenhet» («Slik pengene brukes») på forsiden. */
+export interface CmsTransparencySection {
+  kicker: string;
+  title: string;
+  intro: string;
+  /** Tilleggstekst under ingressen. */
+  secondary: string;
+  cards: CmsTransparencyCard[];
+}
+
+export interface CmsSupportCard {
+  id: string;
+  title: string;
+  description: string;
+}
+
+/** Seksjonen «Hva støtten gjør» på forsiden (egen modul, rett etter Fadderordningen). */
+export interface CmsSupportCardsSection {
+  kicker: string;
+  title: string;
+  intro?: string;
+  cards: CmsSupportCard[];
+}
+
+/** Seksjonen «Om oss» (Betynas historie) på forsiden. */
+export interface CmsAboutUsSection {
+  kicker: string;
+  title: string;
+  /** Rik tekst (HTML fra RichTextEditor). Tom = seksjonen vises ikke. */
+  bodyHtml: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
+
 export interface CmsTestimonialsSection {
   enabled?: boolean;
   kicker: string;
@@ -517,11 +557,13 @@ export type CmsHomeModuleId =
   | 'stories'
   | 'waiting'
   | 'steps'
+  | 'stotte'
   | 'about'
   | 'kpis'
   | 'cta'
   | 'behov'
-  | 'apenhet';
+  | 'apenhet'
+  | 'omOss';
 
 /** Anonymt fadder-kort på forsiden — illustrasjon, ikke ekte barn. */
 export interface CmsWaitingSponsorCard {
@@ -562,6 +604,12 @@ export interface CmsContent {
   kpiStats: CmsKpiStat[];
   ctaBanner?: CmsCtaBanner;
   testimonialsSection?: CmsTestimonialsSection;
+  /** Økonomi og åpenhet på forsiden. Mangler = dagens tekster (se withTransparencyDefaults). */
+  transparency?: CmsTransparencySection;
+  /** «Hva støtten gjør» på forsiden. Mangler = dagens tekster (se withSupportCardsDefaults). */
+  supportCards?: CmsSupportCardsSection;
+  /** «Om oss» (Betynas historie) på forsiden. Mangler = tom tekst, og modulen vises ikke. */
+  aboutUs?: CmsAboutUsSection;
   waitingSponsorsSection?: CmsWaitingSponsorsSection;
   waitingSponsorCards?: CmsWaitingSponsorCard[];
   /** Rekkefølge og synlighet på forsiden. Mangler = standard rekkefølge + eldre av/på-felt. */

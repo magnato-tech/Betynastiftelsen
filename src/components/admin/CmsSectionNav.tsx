@@ -3,10 +3,12 @@ import {
   Eye,
   EyeOff,
   GripVertical,
+  HandHeart,
   Image as ImageIcon,
   Landmark,
   Layers,
   Layout,
+  BookOpen,
   Megaphone,
   MessageSquare,
   ShieldCheck,
@@ -27,6 +29,7 @@ const MODULE_META: Record<
 > = {
   hero: { label: 'Hovedbanner', hint: 'Første inntrykk', icon: Layout },
   steps: { label: 'Fadderordningen', hint: 'Ramme 1–2–3', icon: Layers },
+  stotte: { label: 'Hva støtten gjør', hint: 'Tre kort om støtten', icon: HandHeart },
   stories: { label: 'Vitnesbyrd', hint: 'Historier med samtykke', icon: MessageSquare },
   waiting: { label: 'Venter på fadder', hint: 'Anonyme illustrasjonskort', icon: Users },
   about: { label: 'Kjernerammer', hint: 'Verdier og etikk', icon: ShieldCheck },
@@ -34,6 +37,7 @@ const MODULE_META: Record<
   cta: { label: 'Fadderoppfordring', hint: 'Handlingsbånd', icon: Megaphone },
   behov: { label: 'Aksjoner', hint: 'Konkrete behov', icon: ImageIcon },
   apenhet: { label: 'Økonomi og åpenhet', hint: 'Slik pengene brukes', icon: Landmark },
+  omOss: { label: 'Om oss', hint: 'Historien om Betyna', icon: BookOpen },
 };
 
 interface CmsSectionNavProps {
