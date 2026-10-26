@@ -1227,6 +1227,20 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
 
       {activeSubTab === 'media' && <CmsMediaLibraryPanel />}
 
+      {activeSubTab === 'apenhet' && (
+        <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-2 text-sm text-stone-700">
+          <h3 className="text-base font-serif font-bold text-stone-900">Økonomi og åpenhet</h3>
+          <p>
+            Modulen viser fast tekst om hvordan fadderbidraget brukes («Slik pengene brukes»), med tre kort:
+            månedlig fadderbidrag, liten reserve og ingen barnehjem-modell.
+          </p>
+          <p className="text-xs text-stone-500">
+            Teksten kan ikke redigeres her ennå. Bruk øyet i seksjonslisten for å vise eller skjule modulen. Når den er
+            skjult, forsvinner også «Åpenhet» fra toppmenyen.
+          </p>
+        </div>
+      )}
+
       {activeSubTab === 'behov' && (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">

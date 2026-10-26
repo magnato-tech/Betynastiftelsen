@@ -4,6 +4,7 @@ import {
   EyeOff,
   GripVertical,
   Image as ImageIcon,
+  Landmark,
   Layers,
   Layout,
   Megaphone,
@@ -32,6 +33,7 @@ const MODULE_META: Record<
   kpis: { label: 'Nøkkeltall', hint: 'Faktabånd på forsiden', icon: TrendingUp },
   cta: { label: 'Fadderoppfordring', hint: 'Handlingsbånd', icon: Megaphone },
   behov: { label: 'Aksjoner', hint: 'Konkrete behov', icon: ImageIcon },
+  apenhet: { label: 'Økonomi og åpenhet', hint: 'Slik pengene brukes', icon: Landmark },
 };
 
 interface CmsSectionNavProps {

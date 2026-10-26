@@ -683,7 +683,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       </section>
 
       {/* 7. ÅPENHET OG ØKONOMI */}
-      <section id="apenhet" style={{ order: 45 }} className="scroll-mt-24">
+      <section id="apenhet" style={homeBlockStyle('apenhet')} className="scroll-mt-24">
         <HomeColumn cms={cmsContent}>
         <div className="bg-white rounded-2xl border border-[#DFD9CB] p-8 md:p-12 shadow-xs">
           <div className="mb-8 w-full">

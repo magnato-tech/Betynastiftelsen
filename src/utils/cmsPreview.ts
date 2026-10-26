@@ -6,7 +6,8 @@ export type CmsPreviewSection =
   | 'about'
   | 'kpis'
   | 'cta'
-  | 'behov';
+  | 'behov'
+  | 'apenhet';
 
 const SECTION_HASH: Record<CmsPreviewSection, string> = {
   hero: 'home',
@@ -17,6 +18,7 @@ const SECTION_HASH: Record<CmsPreviewSection, string> = {
   kpis: 'home',
   cta: 'cta',
   behov: 'aksjoner',
+  apenhet: 'apenhet',
 };
 
 export function readCmsPreviewFlags(search = window.location.search, isIframe = window.self !== window.top) {

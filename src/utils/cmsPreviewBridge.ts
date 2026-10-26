@@ -40,6 +40,7 @@ export const CMS_SECTION_DOM_ID: Record<CmsPreviewSection, string> = {
   kpis: 'cms-kpi',
   cta: 'cta',
   behov: 'aksjoner',
+  apenhet: 'apenhet',
 };
 
 export const CMS_PREVIEW_ACTIVE_CLASS = 'cms-preview-active';

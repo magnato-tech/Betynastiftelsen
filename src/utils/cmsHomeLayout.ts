@@ -10,6 +10,7 @@ export const CMS_HOME_MODULE_LABELS: Record<CmsHomeModuleId, string> = {
   about: 'Kjernerammer',
   cta: 'Fadderoppfordring',
   behov: 'Aksjoner',
+  apenhet: 'Økonomi og åpenhet',
 };
 
 /** Standard rekkefølge på forsiden (kan endres i CMS). */
@@ -21,6 +22,7 @@ export const DEFAULT_CMS_HOME_LAYOUT: CmsHomeLayoutItem[] = [
   { moduleId: 'behov', visible: true },
   { moduleId: 'kpis', visible: true },
   { moduleId: 'about', visible: true },
+  { moduleId: 'apenhet', visible: true },
   { moduleId: 'cta', visible: true },
 ];
 
@@ -33,6 +35,7 @@ const MODULE_IDS: CmsHomeModuleId[] = [
   'about',
   'cta',
   'behov',
+  'apenhet',
 ];
 
 function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
@@ -52,6 +55,8 @@ function legacyVisible(cms: CmsContent, moduleId: CmsHomeModuleId): boolean {
     case 'waiting':
       return cms.waitingSponsorsSection?.enabled !== false;
     case 'behov':
+      return true;
+    case 'apenhet':
       return true;
     default:
       return true;
@@ -117,7 +122,7 @@ export function publicNavVisibility(
     historier: isHomeModuleVisible(cms, 'stories') && ctx.hasFrontPageStories,
     aksjoner: isHomeModuleVisible(cms, 'behov') && ctx.hasActiveCampaigns,
     omOss: isHomeModuleVisible(cms, 'about'),
-    apenhet: true,
+    apenhet: isHomeModuleVisible(cms, 'apenhet'),
     bliFadderCta: showHeroCta,
   };
 }

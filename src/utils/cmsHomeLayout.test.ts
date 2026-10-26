@@ -61,6 +61,23 @@ describe('cmsHomeLayout', () => {
     expect(vis.fadderordningen).toBe(false);
   });
 
+  it('Økonomi og åpenhet er en modul: synlig som standard, og skjules sammen med menylenken', () => {
+    expect(visibleHomeModules(baseCms())).toContain('apenhet');
+    const ctx = { hasFrontPageStories: true, hasActiveCampaigns: true };
+    expect(publicNavVisibility(baseCms(), ctx).apenhet).toBe(true);
+    const cms = {
+      ...baseCms(),
+      homeLayout: setHomeModuleVisible(normalizeCmsHomeLayout(baseCms()), 'apenhet', false),
+    };
+    expect(visibleHomeModules(cms)).not.toContain('apenhet');
+    expect(publicNavVisibility(cms, ctx).apenhet).toBe(false);
+  });
+
+  it('eldre lagret layout uten apenhet får modulen lagt til som synlig', () => {
+    const cms = { ...baseCms(), homeLayout: [{ moduleId: 'hero' as const, visible: true }] };
+    expect(normalizeCmsHomeLayout(cms).find((r) => r.moduleId === 'apenhet')?.visible).toBe(true);
+  });
+
   it('publicNavVisibility skjuler Bli fadder når hero-CTA er av', () => {
     const cms = {
       ...baseCms(),

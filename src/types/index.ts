@@ -520,7 +520,8 @@ export type CmsHomeModuleId =
   | 'about'
   | 'kpis'
   | 'cta'
-  | 'behov';
+  | 'behov'
+  | 'apenhet';
 
 /** Anonymt fadder-kort på forsiden — illustrasjon, ikke ekte barn. */
 export interface CmsWaitingSponsorCard {
