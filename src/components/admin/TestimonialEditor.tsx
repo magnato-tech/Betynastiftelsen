@@ -18,7 +18,6 @@ import {
   testimonialPresetUrlForSrc,
   type TestimonialPhotoPreset,
 } from '../../utils/testimonialPhotoPresets';
-import { TestimonialStoryCard } from '../public/TestimonialStoryCard';
 import { RichTextEditor } from './RichTextEditor';
 import { SafeHtml } from '../common/SafeHtml';
 import {
@@ -54,7 +53,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
   const { stories, addStory, updateStory, deleteStory, cmsContent, updateCmsSection, uploadMediaLibraryItem } =
     useApp();
   const testimonialsSection = withTestimonialsSectionDefaults(cmsContent.testimonialsSection);
-  const frontPagePreview = stories.filter(isFrontPageTestimonial);
 
   const [activeCategory, setActiveCategory] = useState<TestimonialCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -477,22 +475,6 @@ export const TestimonialEditor: React.FC<TestimonialEditorProps> = ({ onViewPubl
             />
           </div>
         </div>
-        {frontPagePreview.length > 0 && (
-          <div className="pt-4 border-t border-stone-100 space-y-3">
-            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-              Forhåndsvisning av rutenett ({frontPagePreview.length} kort)
-            </p>
-            <div
-              className={`grid gap-4 ${
-                testimonialsSection.gridColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              }`}
-            >
-              {frontPagePreview.slice(0, testimonialsSection.gridColumns === 2 ? 4 : 3).map((story) => (
-                <TestimonialStoryCard key={story.id} story={story} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 1. Header & Quick Controls */}
