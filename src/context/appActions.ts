@@ -175,6 +175,13 @@ export function createAppActions(deps: AppActionsDeps) {
     addAuditLog('Koordinator sendte fakta', `Fakta for ${child.fornavn} ligger i kø som skriv historien.`);
   };
 
+  /** Markerer admin-varsler om en sak som lest når saken er behandlet (varslene slettes ikke). */
+  const markAdminNotificationsForEntityRead = (entityId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.relatedEntityId === entityId && n.targetRole === 'admin' ? { ...n, read: true } : n))
+    );
+  };
+
   const publishChildStory = (
     factId: string,
     draft: {
@@ -187,6 +194,7 @@ export function createAppActions(deps: AppActionsDeps) {
   ) => {
     const fact = fieldFacts.find((f) => f.id === factId);
     if (!fact || !draft.historie.trim()) return;
+    markAdminNotificationsForEntityRead(factId);
     setFieldFacts((prev) =>
       prev.map((f) =>
         f.id === factId
@@ -341,6 +349,7 @@ export function createAppActions(deps: AppActionsDeps) {
     let targetChildId = '';
     let targetChildName = '';
     let reportCoordId = '';
+    markAdminNotificationsForEntityRead(id);
 
     setReports((prev) =>
       prev.map((r) => {
@@ -412,6 +421,7 @@ export function createAppActions(deps: AppActionsDeps) {
   const rejectReport = (id: string, reason: string) => {
     let childName = '';
     let coordId = '';
+    markAdminNotificationsForEntityRead(id);
     setReports((prev) =>
       prev.map((r) => {
         if (r.id === id) {

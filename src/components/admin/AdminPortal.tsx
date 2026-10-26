@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Report } from '../../types';
 import {
@@ -18,6 +18,7 @@ import { AdminSettingsPanel } from './AdminSettingsPanel';
 import {
   buildAdminContentQueue,
   buildAdminContentRegister,
+  resolveQueueFocus,
   seedStoryFromFacts,
   sortAdminContentItems,
   type AdminContentQueueItem,
@@ -32,11 +33,16 @@ import type { FieldFact } from '../../types';
 interface AdminPortalProps {
   activeSection: string;
   setActiveSection: (sec: string) => void;
+  /** Sak fra et varsel som skal fremheves i godkjenningskøen. */
+  focusEntityId?: string | null;
+  onClearFocus?: () => void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   activeSection,
   setActiveSection,
+  focusEntityId = null,
+  onClearFocus,
 }) => {
   const {
     childrenList,
@@ -100,12 +106,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const deskFact = desk?.kind === 'historie' ? fieldFacts.find((f) => f.id === desk.id) : undefined;
   const deskReport = desk?.kind === 'rapport' ? reports.find((r) => r.id === desk.id) : undefined;
   const deskChild = childrenList.find((c) => c.id === (deskFact?.barnId || deskReport?.barnId));
-  const contentQueue = buildAdminContentQueue(fieldFacts, reports);
+  const contentQueue = useMemo(() => buildAdminContentQueue(fieldFacts, reports), [fieldFacts, reports]);
   const contentRegister = useMemo(
     () => buildAdminContentRegister(fieldFacts, reports),
     [fieldFacts, reports]
   );
-  const shownContentView = contentView ?? (contentRegister.length > 8 ? 'tabell' : 'kort');
+  // Fokus på en sak viser alltid kortvisningen, ellers velger brukeren selv.
+  const focusResult = useMemo(
+    () => (focusEntityId ? resolveQueueFocus(contentQueue, contentRegister, focusEntityId) : null),
+    [focusEntityId, contentQueue, contentRegister]
+  );
+  const focusPending = focusResult?.kind === 'pending';
+  const focusedRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (focusPending) focusedRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }, [focusEntityId, focusPending]);
+  const shownContentView = focusEntityId
+    ? 'kort'
+    : contentView ?? (contentRegister.length > 8 ? 'tabell' : 'kort');
+  const visibleQueue =
+    focusResult?.kind === 'pending' ? [focusResult.item] : contentQueue;
   const sortedRegister = useMemo(
     () => sortAdminContentItems(contentRegister, contentSortKey, contentSortDir),
     [contentRegister, contentSortKey, contentSortDir]
@@ -285,6 +305,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           )}
 
+          {focusResult && (
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-[#A3B18A]/15 border border-[#A3B18A]/60 text-xs text-stone-700">
+              <span>
+                {focusResult.kind === 'pending' && 'Viser saken fra varselet.'}
+                {focusResult.kind === 'approved' && 'Denne rapporten er allerede godkjent.'}
+                {focusResult.kind === 'missing' &&
+                  'Fant ikke saken fra varselet. Den kan være slettet eller lagt inn som eksempel.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => onClearFocus?.()}
+                className="px-3 py-1.5 rounded-md bg-white border border-stone-300 hover:bg-stone-50 text-xs font-medium text-[#4D6B3E] cursor-pointer"
+              >
+                Vis alle
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-stone-500">
               {contentQueue.length} venter · {contentRegister.filter((i) => i.status === 'publisert').length} publisert
@@ -303,6 +341,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  // Tabell viser alle saker, så fokus fra et varsel slippes.
+                  onClearFocus?.();
                   setContentView('tabell');
                   setContentSortKey('dato');
                   setContentSortDir('desc');
@@ -319,10 +359,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           {shownContentView === 'kort' && (
           <div className="space-y-3">
-            {contentQueue.map((item) => (
+            {visibleQueue.map((item) => {
+              const erFokusert = focusResult?.kind === 'pending' && focusResult.item.id === item.id;
+              return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                ref={erFokusert ? focusedRef : undefined}
+                className={`bg-white p-5 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+                  erFokusert ? 'ring-2 ring-[#4D6B3E]' : ''
+                }`}
               >
                 <div className="space-y-1.5 max-w-2xl">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
@@ -350,7 +395,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   Skriv og publiser
                 </button>
               </div>
-            ))}
+              );
+            })}
 
             {contentQueue.length === 0 && pendingPhotos.length === 0 && (
               <div className="p-8 bg-white rounded-xl border border-stone-200 text-center text-xs text-stone-500 space-y-1">

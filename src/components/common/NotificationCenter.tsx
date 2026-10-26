@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 
 interface NotificationCenterProps {
-  onNavigateSection?: (section: string) => void;
+  /** Navigerer til seksjonen; relatedEntityId (f.eks. rapport-id) sendes med for å fokusere saken. */
+  onNavigateSection?: (section: string, relatedEntityId?: string) => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNavigateSection }) => {
@@ -79,7 +80,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
   const handleNotificationClick = (notif: AppNotification) => {
     markNotificationAsRead(notif.id);
     if (notif.actionSection && onNavigateSection) {
-      onNavigateSection(notif.actionSection);
+      onNavigateSection(notif.actionSection, notif.relatedEntityId);
       setIsOpen(false);
     }
   };

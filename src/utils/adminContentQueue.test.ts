@@ -3,6 +3,7 @@ import { makeFact, makeReport } from '../test/testData';
 import {
   buildAdminContentQueue,
   buildAdminContentRegister,
+  resolveQueueFocus,
   seedStoryFromFacts,
   sortAdminContentItems,
 } from './adminContentQueue';
@@ -46,5 +47,34 @@ describe('Admin innholdskø', () => {
     for (let i = 1; i < newestFirst.length; i++) {
       expect(newestFirst[i - 1].dato >= newestFirst[i].dato).toBe(true);
     }
+  });
+});
+
+describe('resolveQueueFocus', () => {
+  const queue = buildAdminContentQueue(facts, reports);
+  const register = buildAdminContentRegister(facts, reports);
+
+  it('finner ventende rapport paa id (rapport-id = item.id)', () => {
+    const res = resolveQueueFocus(queue, register, 'r-wait');
+    expect(res.kind).toBe('pending');
+    if (res.kind === 'pending') expect(res.item).toMatchObject({ kind: 'rapport', id: 'r-wait' });
+  });
+
+  it('finner ventende historie paa fakta-id', () => {
+    const res = resolveQueueFocus(queue, register, 'f-new');
+    expect(res.kind).toBe('pending');
+    if (res.kind === 'pending') expect(res.item).toMatchObject({ kind: 'historie', id: 'f-new' });
+  });
+
+  it('godkjent rapport gir approved', () => {
+    expect(resolveQueueFocus(queue, register, 'r-ok')).toEqual({ kind: 'approved' });
+  });
+
+  it('kladd-rapport (verken i kø eller publisert) gir missing', () => {
+    expect(resolveQueueFocus(queue, register, 'r-draft')).toEqual({ kind: 'missing' });
+  });
+
+  it('ukjent id gir missing', () => {
+    expect(resolveQueueFocus(queue, register, 'finnes-ikke')).toEqual({ kind: 'missing' });
   });
 });

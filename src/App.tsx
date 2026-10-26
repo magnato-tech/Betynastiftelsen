@@ -41,6 +41,16 @@ const MainLayout: React.FC = () => {
     cmsContent,
   } = useApp();
   const [activeSection, setActiveSection] = useState<string>('home');
+  // Sak som skal fokuseres i admin (satt fra varslingssenteret), nullstilles ved vanlig navigasjon.
+  const [focusEntityId, setFocusEntityId] = useState<string | null>(null);
+  const navigateNormal = (section: string) => {
+    setFocusEntityId(null);
+    setActiveSection(section);
+  };
+  const navigateWithFocus = (section: string, entityId?: string) => {
+    setActiveSection(section);
+    setFocusEntityId(entityId ?? null);
+  };
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
   const [donateCampaign, setDonateCampaign] = useState<Campaign | null>(null);
   const previewFlags = readCmsPreviewFlags();
@@ -136,7 +146,8 @@ const MainLayout: React.FC = () => {
       <Navbar
         onOpenSponsorModal={() => setIsSponsorModalOpen(true)}
         activeSection={activeSection}
-        setActiveSection={setActiveSection}
+        setActiveSection={navigateNormal}
+        onNavigateWithFocus={navigateWithFocus}
         cmsContent={cmsContentForNav}
       />
 
@@ -157,7 +168,9 @@ const MainLayout: React.FC = () => {
           <DevPortals
             role={role}
             activeSection={activeSection}
-            setActiveSection={setActiveSection}
+            setActiveSection={navigateNormal}
+            focusEntityId={focusEntityId}
+            onClearFocus={() => setFocusEntityId(null)}
           />
         )}
       </main>

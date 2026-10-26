@@ -32,6 +32,8 @@ interface NavbarProps {
   onOpenSponsorModal: () => void;
   activeSection: string;
   setActiveSection: (section: string) => void;
+  /** Navigerer til seksjon og fokuserer en sak (brukes av varslingssenteret). */
+  onNavigateWithFocus?: (section: string, entityId?: string) => void;
   /** CMS for offentlig meny (bruk utkast i innebygd preview). */
   cmsContent?: CmsContent;
 }
@@ -40,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSponsorModal,
   activeSection,
   setActiveSection,
+  onNavigateWithFocus,
   cmsContent: cmsContentProp,
 }) => {
   const {
@@ -350,7 +353,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <LanguageSwitcher />
 
-          {role !== 'public' && <NotificationCenter onNavigateSection={setActiveSection} />}
+          {role !== 'public' && <NotificationCenter onNavigateSection={onNavigateWithFocus ?? setActiveSection} />}
 
           {role === 'public' && firestoreProfileLoading && (
             <span className="text-xs text-stone-500 whitespace-nowrap">Logger inn …</span>

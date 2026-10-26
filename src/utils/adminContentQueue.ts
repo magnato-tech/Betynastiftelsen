@@ -85,3 +85,23 @@ export function sortAdminContentItems(
     return a.dato.localeCompare(b.dato) * sign;
   });
 }
+
+export type QueueFocusResult =
+  | { kind: 'pending'; item: AdminContentQueueItem }
+  | { kind: 'approved' }
+  | { kind: 'missing' };
+
+/**
+ * Finner saken et varsel peker til (relatedEntityId = fakta-id eller rapport-id, som er item.id).
+ * Søker først i køen, deretter blant publiserte elementer i registeret.
+ */
+export function resolveQueueFocus(
+  queueItems: AdminContentQueueItem[],
+  registerItems: AdminContentQueueItem[],
+  focusId: string
+): QueueFocusResult {
+  const pending = queueItems.find((i) => i.id === focusId);
+  if (pending) return { kind: 'pending', item: pending };
+  if (registerItems.some((i) => i.id === focusId && i.status === 'publisert')) return { kind: 'approved' };
+  return { kind: 'missing' };
+}

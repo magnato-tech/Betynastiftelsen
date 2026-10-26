@@ -8,12 +8,16 @@ interface DevPortalsProps {
   role: string;
   activeSection: string;
   setActiveSection: (sec: string) => void;
+  focusEntityId?: string | null;
+  onClearFocus?: () => void;
 }
 
 export const DevPortals: React.FC<DevPortalsProps> = ({
   role,
   activeSection,
   setActiveSection,
+  focusEntityId,
+  onClearFocus,
 }) => {
   const { language } = useApp();
 
@@ -33,7 +37,12 @@ export const DevPortals: React.FC<DevPortalsProps> = ({
   }
   if (role === 'admin') {
     return (
-      <AdminPortal activeSection={activeSection} setActiveSection={setActiveSection} />
+      <AdminPortal
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        focusEntityId={focusEntityId}
+        onClearFocus={onClearFocus}
+      />
     );
   }
   return null;
