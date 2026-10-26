@@ -64,6 +64,8 @@ describe('personkort: data og handlinger', () => {
 
   it('deactivatePerson og reactivatePerson (uten Firestore) endrer status og logger', async () => {
     const m = setup();
+    // Koordinatoren med aktiv elev kan ikke arkiveres; eleven settes avsluttet først.
+    m.run((a) => a.updateChild('c1', { status: 'avsluttet' }));
     await act(async () => {
       await m.app.deactivatePerson(kari);
     });

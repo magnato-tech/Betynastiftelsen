@@ -79,8 +79,15 @@ export interface AppContextType {
     }
   ) => void;
 
+  /** Kaster Error hvis koordinatorId mangler eller ikke er en aktiv koordinator. */
   addChild: (childData: Partial<Child>) => void;
   updateChild: (id: string, updates: Partial<Child>) => void;
+  /** Flytter eleven og alle poster som følger eleven (rapporter, fakta, bilder, spørsmål, tildelinger, betalinger). Kaster Error ved ugyldig mål. */
+  reassignChildCoordinator: (childId: string, toCoordinatorId: string) => void;
+  /** Flytter alle aktive elever fra én koordinator til en annen. Returnerer antall flyttet. */
+  reassignAllChildren: (fromCoordinatorId: string, toCoordinatorId: string) => number;
+  /** Flytter alle aktive elever først, og arkiverer deretter koordinatoren. */
+  archiveCoordinatorAndMoveChildren: (coordinatorId: string, toCoordinatorId: string) => Promise<void>;
   assignSponsorToChild: (childId: string, sponsorId: string) => void;
   endSponsorship: (childId: string) => void;
 

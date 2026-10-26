@@ -310,6 +310,7 @@ export function useAppContent(params: {
     setSponsorAssignments,
     recurringCharges,
     paymentAllocations,
+    setPaymentAllocations,
     vippsChargeJob,
     campaigns,
     setCampaigns,

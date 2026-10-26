@@ -216,8 +216,8 @@ describe('personkort: Ny fadder-fanen', () => {
     const fns = setApp({
       sponsors: [medSteg('godkjent')],
       childrenList: [
-        makeChild({ id: 'c1', fornavn: 'Mia', fodselsaar: 2016, klassetrinn: '4', skoleNavn: 'Testskole' }),
-        makeChild({ id: 'c2', fornavn: 'Ola', tildeltFadderId: 'annen' }),
+        makeChild({ id: 'c1', fornavn: 'Mia', fodselsaar: 2016, klassetrinn: '4', skoleNavn: 'Testskole', koordinatorId: 'k1' }),
+        makeChild({ id: 'c2', fornavn: 'Ola', tildeltFadderId: 'annen', koordinatorId: 'k1' }),
       ],
     });
     renderCard();
@@ -227,6 +227,20 @@ describe('personkort: Ny fadder-fanen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Velg Mia til Kari Fadder' }));
     expect(fns.assignChildInOnboarding).toHaveBeenCalledWith('s3', 'c1');
+  });
+
+  it('steg 2: barn uten gyldig koordinator listes ikke, og det vises en merknad', () => {
+    setApp({
+      sponsors: [medSteg('godkjent')],
+      childrenList: [
+        makeChild({ id: 'c1', fornavn: 'Mia', koordinatorId: 'k1' }),
+        makeChild({ id: 'c2', fornavn: 'Ola', koordinatorId: undefined }),
+      ],
+    });
+    renderCard();
+
+    expect(screen.queryByText('Ola')).toBeNull();
+    expect(screen.getByText(/1 barn uten fadder mangler koordinator og kan ikke kobles ennå/)).toBeTruthy();
   });
 
   it('steg 2: sier fra når ingen barn venter', () => {

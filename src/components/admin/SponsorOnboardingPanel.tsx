@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Sponsor, SponsorOnboardingStep } from '../../types';
 import { buildWelcomeEmailDraft } from '../../utils/sponsorOnboarding';
+import { canAssignSponsor } from '../../utils/coordinatorAssignment';
 
 const INPUT_KLASSE = 'px-3 py-2 border border-stone-300 rounded-lg text-xs bg-white w-full';
 
@@ -42,6 +43,7 @@ export interface SponsorOnboardingPanelProps {
 export const SponsorOnboardingPanel: React.FC<SponsorOnboardingPanelProps> = ({ sponsor, step }) => {
   const {
     childrenList,
+    coordinators,
     approveSponsorOnboarding,
     rejectSponsorOnboarding,
     assignChildInOnboarding,
@@ -58,7 +60,13 @@ export const SponsorOnboardingPanel: React.FC<SponsorOnboardingPanelProps> = ({ 
   const rang = RANG[step];
 
   // Barn som venter på fadder: samme filter som i Barn-fanen.
-  const venterPaaFadder = childrenList.filter((c) => !c.tildeltFadderId && c.status === 'aktiv');
+  // Bare barn med gyldig, aktiv koordinator kan kobles til en fadder.
+  const venterPaaFadder = childrenList.filter(
+    (c) => !c.tildeltFadderId && c.status === 'aktiv' && canAssignSponsor(c, coordinators)
+  );
+  const utenKoordinator = childrenList.filter(
+    (c) => !c.tildeltFadderId && c.status === 'aktiv' && !canAssignSponsor(c, coordinators)
+  ).length;
 
   // Barna fadderen allerede har fått, enten via fadderen eller via barnet.
   const tildelteBarn = childrenList.filter(
@@ -169,14 +177,24 @@ export const SponsorOnboardingPanel: React.FC<SponsorOnboardingPanelProps> = ({ 
     }
 
     if (nr === 2) {
+      const merknad =
+        utenKoordinator > 0 ? (
+          <p className="text-[11px] text-amber-800">
+            {`${utenKoordinator} barn uten fadder mangler koordinator og kan ikke kobles ennå. Gi dem koordinator under Barn.`}
+          </p>
+        ) : null;
       if (venterPaaFadder.length === 0) {
         return (
-          <p className="text-xs text-stone-600">
-            Ingen barn venter på fadder akkurat nå. Legg inn eller frigjør barn under Barn, og kom tilbake hit.
-          </p>
+          <div className="space-y-2">
+            <p className="text-xs text-stone-600">
+              Ingen barn venter på fadder akkurat nå. Legg inn eller frigjør barn under Barn, og kom tilbake hit.
+            </p>
+            {merknad}
+          </div>
         );
       }
       return (
+        <div className="space-y-2">
         <ul className="space-y-2" aria-label="Barn som venter på fadder">
           {venterPaaFadder.map((c) => {
             const alder = c.fodselsaar ? new Date().getFullYear() - c.fodselsaar : null;
@@ -205,6 +223,8 @@ export const SponsorOnboardingPanel: React.FC<SponsorOnboardingPanelProps> = ({ 
             );
           })}
         </ul>
+        {merknad}
+        </div>
       );
     }
 

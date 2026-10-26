@@ -214,7 +214,7 @@ describe('KJENT AVVIK: tildeling uten kontroll (F-15, F-23)', () => {
     expect(m.app.sponsors.find((s) => s.id === 's1')?.tildeltBarnIds).toEqual(['ukjent-barn']);
   });
   it('F-23: avsluttet barn kan faa ny fadder uten at status gjenopprettes', () => {
-    const m = mountApp(base({ children: [makeChild({ id: 'c1', status: 'avsluttet' })] }));
+    const m = mountApp(base({ children: [makeChild({ id: 'c1', status: 'avsluttet', koordinatorId: 'k1' })] }));
     m.run((a) => a.assignSponsorToChild('c1', 's1'));
     expect(m.app.childrenList[0]).toMatchObject({ status: 'avsluttet', tildeltFadderId: 's1' });
   });

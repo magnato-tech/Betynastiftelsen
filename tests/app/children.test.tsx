@@ -5,6 +5,13 @@ import { mountApp, stored, useAppTestLifecycle } from './harness';
 
 useAppTestLifecycle();
 
+/** App med to aktive koordinatorer og coord-a som innlogget koordinator (fallback for addChild). */
+const medKoordinatorer = (extra: Record<string, unknown> = {}) => {
+  const m = mountApp({ coordinators: [makeCoordinator({ id: 'coord-a' }), makeCoordinator({ id: 'coord-b' })], ...extra });
+  m.run((a) => a.setCurrentCoordinatorId('coord-a'));
+  return m;
+};
+
 describe('Registrering av barn (koordinator/admin)', () => {
   it('appen starter helt tom uten innebygde data', () => {
     const m = mountApp();
@@ -21,7 +28,7 @@ describe('Registrering av barn (koordinator/admin)', () => {
   });
 
   it('nytt barn faar id, intern kode, aktiv status og dagens dato', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'Ange', skoleNavn: 'Skole X', klassetrinn: '5' }));
     const [c] = m.app.childrenList;
     expect(c.id).toBe('child-01');
@@ -34,7 +41,7 @@ describe('Registrering av barn (koordinator/admin)', () => {
   });
 
   it('flere barn faar fortlopende id og kode', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'A' }));
     m.run((a) => a.addChild({ fornavn: 'B' }));
     m.run((a) => a.addChild({ fornavn: 'C' }));
@@ -43,14 +50,14 @@ describe('Registrering av barn (koordinator/admin)', () => {
   });
 
   it('nytt barn havner i koordinatorens koe for "skriv historien" (fakta med status sendt)', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'Ange' }));
     expect(m.app.fieldFacts).toHaveLength(1);
     expect(m.app.fieldFacts[0]).toMatchObject({ barnId: 'child-01', status: 'sendt', fornavn: 'Ange' });
   });
 
   it('registrering skrives til revisjonsloggen', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.setRole('admin'));
     m.run((a) => a.addChild({ fornavn: 'Ange' }));
     expect(m.app.auditLogs[0]).toMatchObject({ handling: 'Registrerte nytt barn', brukerRolle: 'Administrator (Norge)' });
@@ -58,29 +65,39 @@ describe('Registrering av barn (koordinator/admin)', () => {
   });
 
   it('barnet knyttes til innlogget koordinator naar koordinatorId ikke oppgis', () => {
-    const m = mountApp({ children: [] });
+    const m = medKoordinatorer({ children: [] });
     m.run((a) => a.setCurrentCoordinatorId('coord-a'));
     m.run((a) => a.addChild({ fornavn: 'Ange' }));
     expect(m.app.childrenList[0].koordinatorId).toBe('coord-a');
   });
 
   it('oppgitt koordinatorId har forrang', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.setCurrentCoordinatorId('coord-a'));
     m.run((a) => a.addChild({ fornavn: 'Ange', koordinatorId: 'coord-b' }));
     expect(m.app.childrenList[0].koordinatorId).toBe('coord-b');
   });
 
-  it('barn registrert uten koordinator faar tom koordinatorId (foreldreloest barn)', () => {
-    const m = mountApp();
-    m.run((a) => a.addChild({ fornavn: 'Ange' }));
-    expect(m.app.childrenList[0].koordinatorId).toBe('');
+  it('barn uten gyldig koordinator avvises (ingen innlogget koordinator og ingen oppgitt)', () => {
+    const m = mountApp({ coordinators: [makeCoordinator({ id: 'coord-a' })] });
+    expect(() => m.run((a) => a.addChild({ fornavn: 'Ange' }))).toThrow('Eleven må knyttes til en aktiv koordinator.');
+    expect(m.app.childrenList).toEqual([]);
   });
 
-  it('nytt barn lagres lokalt (localStorage) naar Firestore er av', () => {
+  it('barn kan ikke knyttes til en arkivert koordinator', () => {
+    const m = mountApp({ coordinators: [makeCoordinator({ id: 'coord-x', aktiv: false })] });
+    expect(() => m.run((a) => a.addChild({ fornavn: 'Ange', koordinatorId: 'coord-x' }))).toThrow(
+      'Eleven må knyttes til en aktiv koordinator.'
+    );
+    expect(m.app.childrenList).toEqual([]);
+  });
+
+  it('registrering uten koordinator avvises ogsaa i localStorage-modus (koordinatorer lastes ikke derfra)', () => {
     const m = mountApp({}, undefined, { local: true });
-    m.run((a) => a.addChild({ fornavn: 'Ange' }));
-    expect(stored<unknown[]>('children')).toHaveLength(1);
+    expect(() => m.run((a) => a.addChild({ fornavn: 'Ange', koordinatorId: 'coord-a' }))).toThrow(
+      'Eleven må knyttes til en aktiv koordinator.'
+    );
+    expect(stored<unknown[]>('children') ?? []).toEqual([]);
   });
 
   it('barn i koordinatorens liste er kun egne aktive barn', () => {
@@ -99,19 +116,19 @@ describe('Registrering av barn (koordinator/admin)', () => {
 
 describe('KJENT AVVIK: registrering av barn skaper data som ikke er oppgitt (F-18, F-22)', () => {
   it('F-22: samtykke til foto og historie settes til JA som standard naar det ikke er oppgitt', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'Ange' }));
     expect(m.app.childrenList[0].samtykkeFoto).toBe(true);
     expect(m.app.childrenList[0].samtykkeHistorie).toBe(true);
   });
   it('F-22: eksplisitt nei til samtykke respekteres', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'Ange', samtykkeFoto: false, samtykkeHistorie: false }));
     expect(m.app.childrenList[0].samtykkeFoto).toBe(false);
     expect(m.app.childrenList[0].samtykkeHistorie).toBe(false);
   });
   it('F-18: manglende skole, klassetrinn, interesser og bakgrunn fylles med oppdiktede standardverdier', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({ fornavn: 'Ange' }));
     const c = m.app.childrenList[0];
     expect(c.skoleNavn).toContain('Sainte-Thérèse');
@@ -121,12 +138,12 @@ describe('KJENT AVVIK: registrering av barn skaper data som ikke er oppgitt (F-1
     expect(c.fodselsaar).toBe(2017);
   });
   it('F-18: tomt fornavn blir "Elev" i stedet for aa avvise registreringen', () => {
-    const m = mountApp();
+    const m = medKoordinatorer();
     m.run((a) => a.addChild({}));
     expect(m.app.childrenList[0].fornavn).toBe('Elev');
   });
   it('F-17: ny id kan kollidere med eksisterende barn naar rekken har hull (to barn med samme id)', () => {
-    const m = mountApp({
+    const m = medKoordinatorer({
       children: [makeChild({ id: 'child-02', fornavn: 'Eksisterende 2' }), makeChild({ id: 'child-03', fornavn: 'Eksisterende 3' })],
     });
     m.run((a) => a.addChild({ fornavn: 'Nytt barn' }));

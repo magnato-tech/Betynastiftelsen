@@ -54,9 +54,9 @@ describe('Innlasting fra databasen (hydration)', () => {
 
 describe('Automatisk lagring: alt som gjoeres sendes til lagringsmotoren', () => {
   it('nytt barn havner i neste lagrede snapshot', () => {
-    const m = mountApp();
+    const m = mountApp({ coordinators: [makeCoordinator({ id: 'k1' })] });
     const before = fakeSync.persisted.length;
-    m.run((a) => a.addChild({ fornavn: 'Ange' }));
+    m.run((a) => a.addChild({ fornavn: 'Ange', koordinatorId: 'k1' }));
     expect(fakeSync.persisted.length).toBeGreaterThan(before);
     expect(lastPersisted().children.map((c: any) => c.fornavn)).toEqual(['Ange']);
   });
@@ -79,7 +79,11 @@ describe('Automatisk lagring: alt som gjoeres sendes til lagringsmotoren', () =>
     expect(lastPersisted()[key].length).toBeGreaterThan(0);
   });
   it('varsler lagres i snapshot', () => {
-    const m = mountApp({ children: [makeChild({ id: 'c1' })], sponsors: [makeSponsor({ id: 's1' })] });
+    const m = mountApp({
+      coordinators: [makeCoordinator({ id: 'coord-a' })],
+      children: [makeChild({ id: 'c1' })],
+      sponsors: [makeSponsor({ id: 's1' })],
+    });
     m.run((a) => a.assignSponsorToChild('c1', 's1'));
     expect(lastPersisted().notifications).toHaveLength(1);
   });

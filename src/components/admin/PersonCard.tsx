@@ -9,8 +9,9 @@ import { onboardingDirectoryStatus } from '../../utils/peopleDirectory';
 import { coordinatorSubject, logForPerson, sponsorSubject } from '../../utils/personLog';
 import { linksToCoordinator, linksToSponsor } from '../../utils/dataIntegrity';
 import { isOpenAdminTask, onboardingStepOf } from '../../utils/sponsorOnboarding';
+import { activeChildrenOfCoordinator } from '../../utils/coordinatorAssignment';
 import { SponsorOnboardingPanel } from './SponsorOnboardingPanel';
-import type { Coordinator, PersonLogSubject, Sponsor } from '../../types';
+import type { Child, Coordinator, PersonLogSubject, Sponsor } from '../../types';
 
 export const ROLE_LABEL: Record<PersonRole, string> = {
   admin: 'Administrator',
@@ -39,7 +40,7 @@ const SAMLING_LABEL: Record<string, string> = {
   campaigns: 'kampanjer',
 };
 
-type Fane = 'ny' | 'opplysninger' | 'logg' | 'avslutt';
+type Fane = 'ny' | 'opplysninger' | 'elever' | 'logg' | 'avslutt';
 
 /** Fanen «Ny fadder» finnes bare for faddere i onboarding, og står først. */
 const NY_FANE: { id: Fane; label: string } = { id: 'ny', label: 'Ny fadder' };
@@ -49,6 +50,8 @@ const FANER: { id: Fane; label: string }[] = [
   { id: 'logg', label: 'Logg' },
   { id: 'avslutt', label: 'Arkiver / slett' },
 ];
+
+const navnPaa = (c: Coordinator): string => `${c.fornavn} ${c.etternavn}`;
 
 interface Felt {
   key: string;
@@ -116,6 +119,9 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     deactivatePerson,
     reactivatePerson,
     deletePerson,
+    reassignChildCoordinator,
+    reassignAllChildren,
+    archiveCoordinatorAndMoveChildren,
     reports,
     fieldFacts,
     milestones,
@@ -140,7 +146,19 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     ? onboardingStepOf(sponsor, childrenList, onboardingDirectoryStatus(row))
     : null;
   const harNyFane = onboardingStep !== null;
-  const alleFaner: { id: Fane; label: string }[] = harNyFane ? [NY_FANE, ...FANER] : FANER;
+  // Elever-fanen finnes bare for koordinatorer, rett etter Opplysninger.
+  const aktiveBarn: Child[] = coordinator ? activeChildrenOfCoordinator(childrenList, coordinator.id) : [];
+  const elevFane: { id: Fane; label: string }[] = coordinator
+    ? [{ id: 'elever', label: `Elever (${aktiveBarn.length})` }]
+    : [];
+  const grunnFaner: { id: Fane; label: string }[] = [FANER[0], ...elevFane, ...FANER.slice(1)];
+  const alleFaner: { id: Fane; label: string }[] = harNyFane ? [NY_FANE, ...grunnFaner] : grunnFaner;
+  // Andre aktive koordinatorer, som elever kan flyttes til.
+  const andreAktive = coordinators.filter((c) => c.aktiv !== false && c.id !== coordinator?.id);
+  const [elevValg, setElevValg] = useState<Record<string, string>>({});
+  const [alleValg, setAlleValg] = useState('');
+  const [arkivValg, setArkivValg] = useState('');
+  const [elevMelding, setElevMelding] = useState<{ tekst: string; feil: boolean } | null>(null);
 
   // Åpner på «Ny fadder» når det finnes en åpen oppgave, eller når kortet er åpnet fra et varsel.
   const [fane, setFane] = useState<Fane>(
@@ -279,6 +297,59 @@ export const PersonCard: React.FC<PersonCardProps> = ({
 
   const [avsluttBusy, setAvsluttBusy] = useState(false);
   const [avsluttFeil, setAvsluttFeil] = useState<string | null>(null);
+
+  // Flytter én elev til valgt koordinator. Feil vises inline.
+  const flyttBarn = (ch: Child) => {
+    if (!coordinator) return;
+    const ny = andreAktive.find((c) => c.id === elevValg[ch.id]);
+    if (!ny) return;
+    const spoersmaal = `Flytte ${ch.fornavn} til ${navnPaa(ny)}? Rapporter, fakta, bilder og spørsmål om barnet følger med, og ${navnPaa(coordinator)} mister tilgangen.`;
+    if (!window.confirm(spoersmaal)) return;
+    setElevMelding(null);
+    try {
+      reassignChildCoordinator(ch.id, ny.id);
+      setElevValg((v) => {
+        const neste = { ...v };
+        delete neste[ch.id];
+        return neste;
+      });
+      setElevMelding({ tekst: `${ch.fornavn} er flyttet til ${navnPaa(ny)}.`, feil: false });
+    } catch (err) {
+      setElevMelding({ tekst: err instanceof Error ? err.message : 'Kunne ikke flytte eleven.', feil: true });
+    }
+  };
+
+  // Flytter alle aktive elever til valgt koordinator.
+  const flyttAlle = () => {
+    if (!coordinator) return;
+    const ny = andreAktive.find((c) => c.id === alleValg);
+    if (!ny) return;
+    const spoersmaal = `Flytte alle ${aktiveBarn.length} elever fra ${navnPaa(coordinator)} til ${navnPaa(ny)}?`;
+    if (!window.confirm(spoersmaal)) return;
+    setElevMelding(null);
+    try {
+      const antall = reassignAllChildren(coordinator.id, ny.id);
+      setAlleValg('');
+      setElevMelding({ tekst: `${antall} elever flyttet.`, feil: false });
+    } catch (err) {
+      setElevMelding({ tekst: err instanceof Error ? err.message : 'Kunne ikke flytte elevene.', feil: true });
+    }
+  };
+
+  // Arkiverer koordinatoren og flytter elevene til valgt koordinator først.
+  const arkiverMedFlytting = async () => {
+    if (!coordinator || !arkivValg) return;
+    setAvsluttBusy(true);
+    setAvsluttFeil(null);
+    try {
+      await archiveCoordinatorAndMoveChildren(coordinator.id, arkivValg);
+    } catch (err) {
+      setAvsluttFeil(err instanceof Error ? err.message : 'Kunne ikke arkivere koordinatoren.');
+    } finally {
+      setAvsluttBusy(false);
+    }
+  };
+
   const [slettBekreft, setSlettBekreft] = useState('');
   const [slettBusy, setSlettBusy] = useState(false);
   const [slettFeil, setSlettFeil] = useState<string | null>(null);
@@ -555,6 +626,112 @@ export const PersonCard: React.FC<PersonCardProps> = ({
           </div>
           )}
 
+          {/* 1b. Elever (kun koordinatorer) */}
+          {aktivFane === 'elever' && coordinator && (
+            <div role="tabpanel" id="panel-elever" aria-labelledby="fane-elever" className="space-y-4 text-xs">
+              {aktiveBarn.length === 0 ? (
+                <p className="text-stone-500">Ingen aktive elever.</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-end gap-2 rounded-lg border border-stone-200 bg-stone-50/60 p-3">
+                    <label className="block space-y-1 flex-1 min-w-[12rem] text-stone-700">
+                      <span className="font-medium">Flytt alle til</span>
+                      <select
+                        value={alleValg}
+                        onChange={(e) => setAlleValg(e.target.value)}
+                        aria-label="Flytt alle til"
+                        className={INPUT_KLASSE}
+                      >
+                        <option value="">Velg koordinator…</option>
+                        {andreAktive.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {navnPaa(c)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={flyttAlle}
+                      disabled={!alleValg}
+                      className="px-3 py-2 rounded-lg bg-[#4D6B3E] text-white hover:bg-[#3B522F] font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Flytt alle
+                    </button>
+                  </div>
+
+                  {elevMelding && (
+                    <p
+                      role={elevMelding.feil ? 'alert' : 'status'}
+                      className={`rounded-lg px-3 py-2 border ${
+                        elevMelding.feil
+                          ? 'text-red-900 bg-red-50 border-red-200'
+                          : 'text-green-900 bg-green-50 border-green-200'
+                      }`}
+                    >
+                      {elevMelding.tekst}
+                    </p>
+                  )}
+
+                  <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white">
+                    {aktiveBarn.map((ch) => {
+                      const fadder = sponsors.find((s) => s.id === ch.tildeltFadderId);
+                      const alder = new Date().getFullYear() - ch.fodselsaar;
+                      return (
+                        <li key={ch.id} className="p-3 flex flex-wrap items-center justify-between gap-3">
+                          <div className="min-w-0 space-y-0.5">
+                            <p className="font-medium text-stone-900">
+                              <span className="font-mono text-stone-600 mr-2">{ch.internKode}</span>
+                              {onOpenChild ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onClose();
+                                    onOpenChild(ch.id);
+                                  }}
+                                  className="text-[#4D6B3E] hover:underline cursor-pointer"
+                                >
+                                  {ch.fornavn}
+                                </button>
+                              ) : (
+                                <span>{ch.fornavn}</span>
+                              )}
+                            </p>
+                            <p className="text-stone-600">{`${alder} år · ${ch.klassetrinn} · ${ch.skoleNavn}`}</p>
+                            <p className="text-stone-600">{fadder ? `Fadder: ${fadder.navn}` : 'Venter på fadder'}</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <select
+                              value={elevValg[ch.id] ?? ''}
+                              onChange={(e) => setElevValg((v) => ({ ...v, [ch.id]: e.target.value }))}
+                              aria-label={`Flytt ${ch.fornavn} til`}
+                              className="px-2 py-1.5 rounded-md border border-stone-300 bg-white text-stone-800"
+                            >
+                              <option value="">Flytt til…</option>
+                              {andreAktive.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {navnPaa(c)}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => flyttBarn(ch)}
+                              disabled={!elevValg[ch.id]}
+                              className="px-3 py-1.5 rounded-md border border-[#4D6B3E] text-[#4D6B3E] hover:bg-[#4D6B3E]/10 font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              Flytt
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+
           {/* 2. Logg */}
           {aktivFane === 'logg' && (
             <div role="tabpanel" id="panel-logg" aria-labelledby="fane-logg" className="space-y-4">
@@ -640,14 +817,45 @@ export const PersonCard: React.FC<PersonCardProps> = ({
                       Arkivering sperrer innlogging og skjuler personen fra listen. All historikk og alle koblinger
                       beholdes.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => void kjorAvsluttning()}
-                      disabled={avsluttBusy}
-                      className="px-3 py-1.5 rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {avsluttBusy ? 'Lagrer…' : arkivert ? 'Gjenopprett' : `Arkiver ${subject.navn}`}
-                    </button>
+                    {coordinator && !arkivert && aktiveBarn.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-stone-700">
+                          {`${navnPaa(coordinator)} følger ${aktiveBarn.length} aktive elever. Velg hvem som skal ta over før arkivering.`}
+                        </p>
+                        <label className="block space-y-1">
+                          <span className="font-medium text-stone-800">Ny koordinator for elevene</span>
+                          <select
+                            value={arkivValg}
+                            onChange={(e) => setArkivValg(e.target.value)}
+                            className={INPUT_KLASSE}
+                          >
+                            <option value="">Velg koordinator…</option>
+                            {andreAktive.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {navnPaa(c)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => void arkiverMedFlytting()}
+                          disabled={avsluttBusy || !arkivValg}
+                          className="px-3 py-1.5 rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {avsluttBusy ? 'Lagrer…' : 'Flytt elevene og arkiver'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void kjorAvsluttning()}
+                        disabled={avsluttBusy}
+                        className="px-3 py-1.5 rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {avsluttBusy ? 'Lagrer…' : arkivert ? 'Gjenopprett' : `Arkiver ${subject.navn}`}
+                      </button>
+                    )}
                     {avsluttFeil && <p role="alert" className="text-red-900">{avsluttFeil}</p>}
                   </section>
 

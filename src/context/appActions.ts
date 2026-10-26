@@ -27,6 +27,7 @@ import { storage as firebaseStorage } from '../config/firebase';
 import type { SystemTemplateId } from '../email/templates';
 import type { PaymentAllocation, PersonLogSubject, RecurringCharge } from '../types';
 import { coordinatorSubject, sponsorSubject } from '../utils/personLog';
+import { activeChildrenOfCoordinator, canAssignSponsor, planChildMove } from '../utils/coordinatorAssignment';
 import { assertNotAdmin, describeChanges, validateDeletePerson } from '../utils/personActions';
 import { linksToCoordinator, linksToSponsor } from '../utils/dataIntegrity';
 import { plainTextToHtml } from '../utils/sponsorOnboarding';
@@ -67,6 +68,7 @@ export type AppActionsDeps = {
   setCoordinators: React.Dispatch<React.SetStateAction<Coordinator[]>>;
   recurringCharges: RecurringCharge[];
   paymentAllocations: PaymentAllocation[];
+  setPaymentAllocations: React.Dispatch<React.SetStateAction<PaymentAllocation[]>>;
   currentCoordinatorId: string;
   currentSponsor: Sponsor | undefined;
   currentCoordinator: Coordinator | undefined;
@@ -127,6 +129,7 @@ export function createAppActions(deps: AppActionsDeps) {
     setCoordinators,
     recurringCharges,
     paymentAllocations,
+    setPaymentAllocations,
     currentCoordinatorId,
     currentSponsor,
     currentCoordinator,
@@ -142,6 +145,12 @@ export function createAppActions(deps: AppActionsDeps) {
   } = deps;
 
   const addChild = (childData: Partial<Child>) => {
+    // Eleven må følges av en aktiv koordinator (angitt, eller innlogget koordinator som fallback).
+    const koordinatorId = childData.koordinatorId || currentCoordinatorId || '';
+    const koordinator = coordinators.find((c) => c.id === koordinatorId);
+    if (!koordinator || koordinator.aktiv === false) {
+      throw new Error('Eleven må knyttes til en aktiv koordinator.');
+    }
     const newId = 'child-' + (childrenList.length + 1).toString().padStart(2, '0');
     const newCode = `BET-CD-${(childrenList.length + 1).toString().padStart(2, '0')}`;
     const newChild: Child = {
@@ -161,7 +170,7 @@ export function createAppActions(deps: AppActionsDeps) {
       behovSammendrag: childData.behovSammendrag || 'Skolegang, skolesaker og skolelunsj.',
       opprettetDato: new Date().toISOString().slice(0, 10),
       sistOppdatert: new Date().toISOString().slice(0, 10),
-      koordinatorId: childData.koordinatorId || currentCoordinatorId || '',
+      koordinatorId,
     };
     setChildrenList((prev) => [...prev, newChild]);
     const fact = buildFieldFact({
@@ -247,6 +256,13 @@ export function createAppActions(deps: AppActionsDeps) {
   };
 
   const assignSponsorToChild = (childId: string, sponsorId: string) => {
+    // Fadder kan bare kobles til et barn med gyldig, aktiv koordinator.
+    const barn = childrenList.find((c) => c.id === childId);
+    if (barn && !canAssignSponsor(barn, coordinators)) {
+      throw new Error(
+        `Kan ikke koble ${barn.fornavn} til fadder: barnet har ingen aktiv koordinator i Kongo. Velg koordinator for barnet først.`
+      );
+    }
     setChildrenList((prev) =>
       prev.map((c) => (c.id === childId ? { ...c, tildeltFadderId: sponsorId, sistOppdatert: new Date().toISOString().slice(0, 10) } : c))
     );
@@ -1190,8 +1206,17 @@ export function createAppActions(deps: AppActionsDeps) {
    * Innlogging sperres ved avslutning. Ved gjenåpning settes bare rader som er sperret tilbake til aktiv.
    * Fadderens avslutning lagres som `avsluttet` (dato). Betalingsstatus 'pause' brukes ikke til dette.
    */
-  const setPersonAktiv = async (subject: PersonLogSubject, aktiv: boolean) => {
+  const setPersonAktiv = async (subject: PersonLogSubject, aktiv: boolean, hoppOverElevsjekk = false) => {
     assertNotAdmin(subject);
+    // Koordinator med aktive elever kan ikke arkiveres før elevene er flyttet.
+    if (subject.type === 'coordinator' && !aktiv && !hoppOverElevsjekk) {
+      const antall = activeChildrenOfCoordinator(childrenList, subject.id).length;
+      if (antall > 0) {
+        throw new Error(
+          `Kan ikke arkivere: ${subject.navn} følger ${antall} aktive elev(er). Flytt elevene til en annen koordinator først.`
+        );
+      }
+    }
     const epost = epostTilPerson(subject);
     const rows = await directoryRowsForPerson(subject, epost);
     const berørte = aktiv ? rows.filter((r) => r.status === 'sperret') : rows.filter((r) => r.status !== 'sperret');
@@ -1226,6 +1251,88 @@ export function createAppActions(deps: AppActionsDeps) {
 
   const deactivatePerson = (subject: PersonLogSubject) => setPersonAktiv(subject, false);
   const reactivatePerson = (subject: PersonLogSubject) => setPersonAktiv(subject, true);
+
+  /** Flytter én elev til en aktiv koordinator, med alle poster som følger eleven (se planChildMove). */
+  const flyttElev = (childId: string, mal: Coordinator) => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) throw new Error('Fant ikke eleven.');
+    const fra = coordinators.find((c) => c.id === child.koordinatorId);
+    const plan = planChildMove(
+      {
+        children: childrenList,
+        reports,
+        facts: fieldFacts,
+        catalogPhotos,
+        inquiries,
+        sponsorAssignments,
+        paymentAllocations,
+      },
+      childId,
+      mal.id
+    );
+    const idag = new Date().toISOString().slice(0, 10);
+    const malNavn = `${mal.fornavn} ${mal.etternavn}`;
+    const reportIds = new Set(plan.reportIds);
+    const factIds = new Set(plan.factIds);
+    const photoIds = new Set(plan.catalogPhotoIds);
+    const inquiryIds = new Set(plan.inquiryIds);
+    const assignmentIds = new Set(plan.sponsorAssignmentIds);
+    const allocationIds = new Set(plan.paymentAllocationIds);
+
+    setChildrenList((prev) =>
+      prev.map((c) => (c.id === childId ? { ...c, koordinatorId: mal.id, sistOppdatert: idag } : c))
+    );
+    setReports((prev) =>
+      prev.map((r) => (reportIds.has(r.id) ? { ...r, koordinatorId: mal.id, koordinatorNavn: malNavn } : r))
+    );
+    setFieldFacts((prev) => prev.map((f) => (factIds.has(f.id) ? { ...f, koordinatorId: mal.id } : f)));
+    setCatalogPhotos((prev) => prev.map((p) => (photoIds.has(p.id) ? { ...p, koordinatorId: mal.id } : p)));
+    setInquiries((prev) => prev.map((i) => (inquiryIds.has(i.id) ? { ...i, koordinatorId: mal.id } : i)));
+    setSponsorAssignments((prev) =>
+      prev.map((a) => (assignmentIds.has(a.id) ? { ...a, koordinatorId: mal.id } : a))
+    );
+    setPaymentAllocations((prev) =>
+      prev.map((a) => (allocationIds.has(a.id) ? { ...a, koordinatorId: mal.id } : a))
+    );
+
+    const fraNavn = fra ? `${fra.fornavn} ${fra.etternavn}` : 'ingen koordinator';
+    const detaljer = `${child.fornavn} (${child.internKode}) – fra ${fraNavn} til ${malNavn}`;
+    if (fra) {
+      addAuditLog('Elev flyttet fra koordinator', detaljer, adminActor(), coordinatorSubject(fra));
+    }
+    addAuditLog('Elev flyttet til koordinator', detaljer, adminActor(), coordinatorSubject(mal));
+  };
+
+  /** Flytter eleven til en annen aktiv koordinator. Kaster Error hvis målet mangler, er arkivert eller er den samme. */
+  const reassignChildCoordinator = (childId: string, toCoordinatorId: string): void => {
+    const child = childrenList.find((c) => c.id === childId);
+    if (!child) throw new Error('Fant ikke eleven.');
+    const mal = coordinators.find((c) => c.id === toCoordinatorId);
+    if (!mal) throw new Error('Fant ikke koordinatoren.');
+    if (mal.aktiv === false) throw new Error(`${mal.fornavn} ${mal.etternavn} er arkivert og kan ikke få elever.`);
+    if (child.koordinatorId === toCoordinatorId) throw new Error('Eleven følges allerede av denne koordinatoren.');
+    flyttElev(childId, mal);
+  };
+
+  /** Flytter alle aktive elever fra én koordinator til en annen. Returnerer antall flyttet. */
+  const reassignAllChildren = (fromCoordinatorId: string, toCoordinatorId: string): number => {
+    const mal = coordinators.find((c) => c.id === toCoordinatorId);
+    if (!mal) throw new Error('Fant ikke koordinatoren.');
+    if (mal.aktiv === false) throw new Error(`${mal.fornavn} ${mal.etternavn} er arkivert og kan ikke få elever.`);
+    if (fromCoordinatorId === toCoordinatorId) throw new Error('Velg en annen koordinator å flytte elevene til.');
+    const elever = activeChildrenOfCoordinator(childrenList, fromCoordinatorId);
+    for (const elev of elever) flyttElev(elev.id, mal);
+    return elever.length;
+  };
+
+  /** Flytter alle aktive elever først, og arkiverer deretter koordinatoren. */
+  const archiveCoordinatorAndMoveChildren = async (coordinatorId: string, toCoordinatorId: string): Promise<void> => {
+    const c = coordinators.find((x) => x.id === coordinatorId);
+    if (!c) throw new Error('Fant ikke koordinatoren.');
+    reassignAllChildren(coordinatorId, toCoordinatorId);
+    // Elevsjekken hoppes over: listen i denne funksjonen er fortsatt den gamle, og elevene er allerede flyttet.
+    await setPersonAktiv(coordinatorSubject(c), false, true);
+  };
 
   /**
    * Sletter en koordinator eller fadder. Krever at confirmName er fullt navn, og at personen
@@ -1289,6 +1396,9 @@ export function createAppActions(deps: AppActionsDeps) {
     deactivatePerson,
     reactivatePerson,
     deletePerson,
+    reassignChildCoordinator,
+    reassignAllChildren,
+    archiveCoordinatorAndMoveChildren,
     addChild,
     updateChild,
     assignSponsorToChild,

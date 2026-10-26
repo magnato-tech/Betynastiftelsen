@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeChild, makeSponsor } from '../../src/test/testData';
+import { makeChild, makeCoordinator, makeSponsor } from '../../src/test/testData';
 import { saveUserDirectoryEntry, listUserDirectoryEntries } from '../../src/db/firestoreData';
 import { mountApp, useAppTestLifecycle } from './harness';
 
@@ -75,6 +75,7 @@ describe('onboarding: godkjenning og tildeling', () => {
     const m = mountApp(
       {
         sponsors: [makeSponsor({ ...nyFadder(), onboarding: { steg: 'godkjent', godkjentDato: '2026-10-16' } })],
+        coordinators: [makeCoordinator({ id: 'coord-a' })],
         children: [makeChild({ id: 'c1', fornavn: 'Amara', tildeltFadderId: undefined })],
       },
       undefined,
@@ -90,6 +91,7 @@ describe('onboarding: godkjenning og tildeling', () => {
     const m = mountApp(
       {
         sponsors: [makeSponsor({ ...nyFadder(), onboarding: { steg: 'godkjent' } })],
+        coordinators: [makeCoordinator({ id: 'coord-a' })],
         children: [makeChild({ id: 'c1', tildeltFadderId: undefined })],
       },
       undefined,
@@ -120,7 +122,7 @@ describe('sendSponsorWelcome', () => {
   it('200: sender e-post, gir innlogging og setter steg "invitert"', async () => {
     email.post.mockResolvedValueOnce({ status: 200, json: { ok: true, id: 're_1' } });
     const m = mountApp(
-      { sponsors: [sponsorKlarForUtsending()], children: [makeChild({ id: 'c1', fornavn: 'Amara', tildeltFadderId: 's-ny' })] },
+      { sponsors: [sponsorKlarForUtsending()], coordinators: [makeCoordinator({ id: 'coord-a' })], children: [makeChild({ id: 'c1', fornavn: 'Amara', tildeltFadderId: 's-ny' })] },
       undefined,
       { profile: admin },
     );

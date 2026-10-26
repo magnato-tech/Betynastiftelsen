@@ -120,6 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCoordinators: content.setCoordinators,
         recurringCharges: content.recurringCharges,
         paymentAllocations: content.paymentAllocations,
+        setPaymentAllocations: content.setPaymentAllocations,
         adminActor: session.adminActor,
         directoryRowsForPerson: session.directoryRowsForPerson,
         setDirectoryStatusForEmail: session.setDirectoryStatusForEmail,

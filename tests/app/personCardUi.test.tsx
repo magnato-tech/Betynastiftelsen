@@ -252,10 +252,10 @@ describe('personkort: opplysninger', () => {
 });
 
 describe('personkort: innlogging (i fanen Opplysninger)', () => {
-  it('har tre faner, og Opplysninger er standardfane med statusvalg/Inviter synlig', () => {
+  it('har faner for koordinator (med Elever), og Opplysninger er standardfane med statusvalg/Inviter synlig', () => {
     renderCard(kariRow);
     const faner = screen.getAllByRole('tab');
-    expect(faner.map((f) => f.textContent)).toEqual(['Opplysninger', 'Logg', 'Arkiver / slett']);
+    expect(faner.map((f) => f.textContent)).toEqual(['Opplysninger', 'Elever (0)', 'Logg', 'Arkiver / slett']);
     expect(screen.getByRole('tab', { name: 'Opplysninger' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('button', { name: 'Inviter' })).toBeTruthy();
   });
