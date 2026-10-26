@@ -34,6 +34,7 @@ import { isFrontPageTestimonial, resolvePublicImageUrl, withTestimonialsSectionD
 import { withTransparencyDefaults } from '../../utils/transparency';
 import { withSupportCardsDefaults } from '../../utils/supportCards';
 import { aboutUsHasText, withAboutUsDefaults } from '../../utils/aboutUs';
+import { aboutCardsColumns, aboutCardsGridClass, publishedAboutCards } from '../../utils/aboutCards';
 import { TestimonialStoryCard } from './TestimonialStoryCard';
 import { HeroAnniversaryBadge } from './HeroAnniversaryBadge';
 import { WaitingSponsorsSection } from './WaitingSponsorsSection';
@@ -691,12 +692,13 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               </div>
             </div>
 
+            {publishedAboutCards(cmsContent.aboutCards).length > 0 && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wider">
                 {t('profile.valuesHeading', 'Verdier vi bygger på')}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cmsContent.aboutCards.map((card) => {
+              <div className={`grid ${aboutCardsGridClass(aboutCardsColumns(cmsContent))} gap-6`}>
+            {publishedAboutCards(cmsContent.aboutCards).map((card) => {
               const IconComp =
                 card.iconName === 'Scale'
                   ? Scale
@@ -738,6 +740,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             })}
               </div>
             </div>
+            )}
           </HomeColumn>
         </div>
       </section>

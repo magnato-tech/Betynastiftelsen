@@ -10,6 +10,7 @@ import {
   withTransparencyDefaults,
 } from '../../utils/transparency';
 import { withAboutUsDefaults } from '../../utils/aboutUs';
+import { aboutCardsColumns, type AboutCardsColumns } from '../../utils/aboutCards';
 import {
   SUPPORT_CARDS_MAX_CARDS,
   SUPPORT_CARDS_MIN_CARDS,
@@ -186,6 +187,15 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
     newCards[index] = {
       ...newCards[index],
       iconName,
+    };
+    updateCmsSection('aboutCards', newCards);
+  };
+
+  const handlePrinciplePublishedChange = (index: number, published: boolean) => {
+    const newCards = [...cmsContent.aboutCards];
+    newCards[index] = {
+      ...newCards[index],
+      published,
     };
     updateCmsSection('aboutCards', newCards);
   };
@@ -1109,8 +1119,25 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                 Stiftelsens kjernerammer og etiske prinsipper
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
-                Rediger de fire grunnleggende rammene under «Om stiftelsen», inkludert tittel, forklaring, ikon og valgfritt bilde.
+                Rediger rammene under «Profil & verdier»: tittel, forklaring, ikon og valgfritt bilde. Velg hvilke som vises, og hvor mange som står på rekke.
               </p>
+            </div>
+            <div className="shrink-0">
+              <label htmlFor="about-cards-columns" className="block text-xs font-semibold text-stone-700 mb-1">
+                Kort per rad
+              </label>
+              <select
+                id="about-cards-columns"
+                value={aboutCardsColumns(cmsContent)}
+                onChange={(e) =>
+                  updateCmsSection('aboutCardsColumns', Number(e.target.value) as AboutCardsColumns)
+                }
+                className="px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-800"
+              >
+                <option value={2}>2 per rad (store kort)</option>
+                <option value={3}>3 per rad (standard)</option>
+                <option value={4}>4 per rad</option>
+              </select>
             </div>
           </div>
 
@@ -1118,13 +1145,26 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
             {cmsContent.aboutCards.map((card, idx) => (
               <div
                 key={card.id}
-                className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4 flex flex-col justify-between"
+                className={`bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4 flex flex-col justify-between ${
+                  card.published === false ? 'opacity-60' : ''
+                }`}
               >
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#4D6B3E] uppercase tracking-wider">
-                      Ramme #{idx + 1}
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-[#4D6B3E] uppercase tracking-wider">
+                        Ramme #{idx + 1}
+                      </span>
+                      <label className="flex items-center gap-1.5 text-xs text-stone-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={card.published !== false}
+                          onChange={(e) => handlePrinciplePublishedChange(idx, e.target.checked)}
+                          className="accent-[#4D6B3E]"
+                        />
+                        {card.published === false ? 'Skjult' : 'Vises på nettsiden'}
+                      </label>
+                    </div>
                     <div className="flex items-center gap-1">
                       <span className="text-[11px] text-stone-500 font-mono">Ikon :</span>
                       <select

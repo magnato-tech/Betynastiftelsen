@@ -479,6 +479,8 @@ export interface CmsPrincipleCard {
   description: string;
   iconName: 'Scale' | 'FileCheck' | 'ShieldCheck' | 'Users';
   imageUrl?: string;
+  /** false = skjult på nettsiden (mangler = publisert). */
+  published?: boolean;
 }
 
 export interface CmsKpiStat {
@@ -601,6 +603,8 @@ export interface CmsContent {
   hero: CmsHero;
   steps: CmsStep[];
   aboutCards: CmsPrincipleCard[];
+  /** Kjernerammer: kort per rad på store skjermer (standard 3). */
+  aboutCardsColumns?: 2 | 3 | 4;
   kpiStats: CmsKpiStat[];
   ctaBanner?: CmsCtaBanner;
   testimonialsSection?: CmsTestimonialsSection;
