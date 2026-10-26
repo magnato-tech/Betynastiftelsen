@@ -348,8 +348,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           TAB 1: HOVEDBANNER (HERO BANNER)
          ========================================================================= */}
       {activeSubTab === 'hero' && (
-        <div className={`grid grid-cols-1 gap-6 ${previewOpen ? '' : 'lg:grid-cols-12 lg:gap-8'}`}>
-          <div className={`${previewOpen ? '' : 'lg:col-span-7'} bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5`}>
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5">
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (Kicker)</label>
@@ -925,70 +925,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               </div>
             </div>
           </div>
-
-          {/* Mini-forhåndsvisning av banneret når live-vinduet er lukket */}
-          {!previewOpen && (
-          <div className="lg:col-span-5 space-y-4">
-            <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Sanntids forhåndsvisning</p>
-
-            <div
-              className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white shadow-md"
-              style={{ height: `${Math.min(320, (getHeroHeightVh(cmsContent.hero) / 100) * 280)}px` }}
-            >
-              {cmsContent.hero.backgroundImageUrl || cmsContent.hero.backgroundPreset ? (
-                <img
-                  src={heroImageSrcFromUrl(
-                    cmsContent.hero.backgroundImageUrl,
-                    cmsContent.hero.backgroundPreset
-                  )}
-                  alt="Bakgrunn forhåndsvisning"
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ objectPosition: getHeroObjectPosition(cmsContent.hero) }}
-                />
-              ) : (
-                <div className="absolute inset-0 opacity-25">
-                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <pattern id="preview-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M0 20 L20 0 L40 20 L20 40 Z" fill="none" stroke="#A3B18A" strokeWidth="0.75" />
-                        <circle cx="20" cy="20" r="1.5" fill="#E5E7EB" />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#preview-pattern)" />
-                  </svg>
-                </div>
-              )}
-
-              {/* Scrim Overlay */}
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/50 to-transparent pointer-events-none"
-                style={{ opacity: (cmsContent.hero.scrimOpacity || 75) / 100 }}
-              />
-
-              {withHeroLayoutDefaults(cmsContent.hero).showAnniversaryBadge && (
-                <div className="absolute top-2 right-2 z-20">
-                  <HeroAnniversaryBadge className="!min-w-0 px-2 py-1 scale-75 origin-top-right" />
-                </div>
-              )}
-
-              {withHeroLayoutDefaults(cmsContent.hero).showCtaCard && (
-                <div
-                  className="absolute z-10 rounded-lg border border-white/20 bg-white/95 text-stone-900 px-3 py-2 text-[10px] font-semibold shadow-lg max-w-[40%]"
-                  style={{
-                    left: `${withHeroLayoutDefaults(cmsContent.hero).ctaPosXPercent ?? 0}%`,
-                    bottom: getHeroCtaBottomCss(cmsContent.hero),
-                  }}
-                >
-                  Fadder-CTA (forhåndsvisning)
-                </div>
-              )}
-            </div>
-            <p className="text-[11px] text-stone-500">
-              Tekst og knapper under hero styres separat på forsiden. Juster fokus for ansikter og føtter.
-            </p>
-          </div>
-          )}
         </div>
       )}
 
@@ -1232,8 +1168,8 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           TAB 6: FADDEROPPFORDRING / CTA-BANNER
          ========================================================================= */}
       {activeSubTab === 'cta' && (
-        <div className={`grid grid-cols-1 gap-6 ${previewOpen ? '' : 'lg:grid-cols-12 lg:gap-8'}`}>
-          <div className={`${previewOpen ? '' : 'lg:col-span-7'} bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5`}>
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div>
                 <h3 className="text-base font-serif font-bold text-stone-900">Fadderoppfordring (CTA-banner)</h3>
@@ -1286,60 +1222,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
               </div>
             </div>
           </div>
-
-          {!previewOpen && (
-          <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                Sanntids forhåndsvisning av CTA
-              </span>
-              <span className="text-[11px] text-emerald-700 font-medium">Oppdateres i sanntid</span>
-            </div>
-
-            <div className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white p-6 shadow-md flex flex-col justify-between min-h-[200px]">
-              {currentCtaBanner.backgroundImageUrl ? (
-                <img
-                  src={currentCtaBanner.backgroundImageUrl}
-                  alt="CTA bakgrunn"
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 opacity-15">
-                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <pattern id="cta-pattern" width="30" height="30" patternUnits="userSpaceOnUse">
-                        <circle cx="15" cy="15" r="1.5" fill="#A3B18A" />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#cta-pattern)" />
-                  </svg>
-                </div>
-              )}
-
-              {/* Scrim */}
-              <div
-                className="absolute inset-0 bg-stone-950/70"
-                style={{ opacity: (currentCtaBanner.scrimOpacity || 75) / 100 }}
-              />
-
-              <div className="relative space-y-2">
-                <h4 className="text-base font-serif font-bold text-white">
-                  {currentCtaBanner.title}
-                </h4>
-                <p className="text-xs text-stone-300 leading-relaxed">
-                  {currentCtaBanner.subtitle}
-                </p>
-              </div>
-
-              <div className="relative pt-4">
-                <span className="inline-block px-4 py-2 bg-[#4D6B3E] text-white font-medium text-xs rounded-lg shadow-xs">
-                  {currentCtaBanner.buttonText}
-                </span>
-              </div>
-            </div>
-          </div>
-          )}
         </div>
       )}
 
