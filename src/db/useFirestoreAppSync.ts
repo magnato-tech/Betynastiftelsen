@@ -10,6 +10,9 @@ export type { SaveState, SaveStatus } from './useFirestoreSyncPersist';
 export function useFirestoreAppSync() {
   const authSync = useFirestoreSyncAuth();
   const persistResetRef = useRef<() => void>(() => {});
+  // Må være stabil: den står i avhengighetene til innlastingen, og en ny funksjon per
+  // tegning lastet alle data på nytt og overskrev endringer som ikke var lagret ennå.
+  const onFullLoadReset = useCallback(() => persistResetRef.current(), []);
 
   const hydrationSync = useFirestoreSyncHydration({
     authReady: authSync.authReady,
@@ -17,7 +20,7 @@ export function useFirestoreAppSync() {
     firestoreUserProfile: authSync.firestoreUserProfile,
     firestoreProfileLoading: authSync.firestoreProfileLoading,
     setFirestoreAccessMessage: authSync.setFirestoreAccessMessage,
-    onFullLoadReset: () => persistResetRef.current(),
+    onFullLoadReset,
   });
 
   const persistSync = useFirestoreSyncPersist({
