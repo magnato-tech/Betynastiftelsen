@@ -461,17 +461,26 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
         data-cms-label="Disse venter på fadder"
         style={{
           ...homeBlockStyle('waiting'),
-          display: onHome('waiting') && waitingCards.length > 0 ? undefined : 'none',
+          display: onHome('waiting') && (waitingCards.length > 0 || cmsPreviewEmbedded) ? undefined : 'none',
         }}
         className={`relative z-10 scroll-mt-24 rounded-lg transition-shadow ${previewMark('waiting')}`}
       >
         <HomeColumn cms={cmsContent}>
-          <WaitingSponsorsSection
-            section={waitingSection}
-            cards={waitingCards.slice(0, 4)}
-            onBliFadder={scrollToBliFadder}
-            onSeeAll={scrollToBliFadder}
-          />
+          {waitingCards.length > 0 ? (
+            <WaitingSponsorsSection
+              section={waitingSection}
+              cards={waitingCards.slice(0, 4)}
+              onBliFadder={scrollToBliFadder}
+              onSeeAll={scrollToBliFadder}
+            />
+          ) : (
+            <div className="rounded-xl border border-dashed border-stone-300 p-6 text-center">
+              <p className="text-base font-serif font-bold text-stone-700">{waitingSection.title}</p>
+              <p className="mt-1 text-sm text-stone-400 italic">
+                Ingen publiserte kort ennå. Klikk her for å legge til eller publisere kort. (Vises ikke på nettsiden før minst ett kort er publisert.)
+              </p>
+            </div>
+          )}
         </HomeColumn>
       </section>
 
