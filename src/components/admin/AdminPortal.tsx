@@ -186,7 +186,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     <div
       className={
         cmsDesk
-          ? 'w-full max-w-none px-2 lg:px-3 py-3 space-y-3'
+          ? 'w-full max-w-none px-2 lg:px-3 pt-2 pb-3 space-y-3'
           : 'max-w-7xl mx-auto px-6 py-8 space-y-10'
       }
     >

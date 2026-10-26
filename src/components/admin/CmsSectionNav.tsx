@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { CmsContent, CmsHomeModuleId } from '../../types';
 import { normalizeCmsHomeLayout, reorderHomeModule, setHomeModuleVisible } from '../../utils/cmsHomeLayout';
+import { CMS_PAGE_WIDTH_OPTIONS, type CmsPageWidth } from '../../utils/cmsPageWidth';
 
 type CmsSubTab = CmsHomeModuleId | 'media';
 
@@ -42,6 +43,9 @@ interface CmsSectionNavProps {
   waitingCardsCount: number;
   campaignsCount: number;
   previewOpen: boolean;
+  onTogglePreview: () => void;
+  pageWidth: number;
+  onChangePageWidth: (width: CmsPageWidth) => void;
 }
 
 export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
@@ -53,6 +57,9 @@ export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
   waitingCardsCount,
   campaignsCount,
   previewOpen,
+  onTogglePreview,
+  pageWidth,
+  onChangePageWidth,
 }) => {
   const layout = normalizeCmsHomeLayout(cmsContent);
   const [dragOverId, setDragOverId] = useState<CmsHomeModuleId | null>(null);
@@ -83,6 +90,20 @@ export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
         previewOpen ? 'lg:w-56' : 'lg:w-60'
       }`}
     >
+      <button
+        type="button"
+        onClick={onTogglePreview}
+        aria-pressed={previewOpen}
+        className={`w-full mb-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center justify-center gap-1.5 border ${
+          previewOpen
+            ? 'bg-[#4D6B3E] border-[#4D6B3E] text-white hover:bg-[#3B522F]'
+            : 'bg-white border-stone-300 text-stone-700 hover:bg-stone-50'
+        }`}
+      >
+        <Eye className="w-3.5 h-3.5" />
+        <span>{previewOpen ? 'Skjul forhåndsvisning' : 'Vis forhåndsvisning'}</span>
+      </button>
+
       <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-stone-400">
         Seksjoner
       </p>
@@ -208,6 +229,25 @@ export const CmsSectionNav: React.FC<CmsSectionNavProps> = ({
             </span>
           </span>
         </button>
+      </div>
+      <div className="mt-2 pt-2 border-t border-stone-100 px-1 pb-1 space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">Sideoppsett</p>
+        <label htmlFor="cms-sidebredde" className="block text-[10px] text-stone-600">
+          Sidebredde
+        </label>
+        <select
+          id="cms-sidebredde"
+          value={pageWidth}
+          onChange={(e) => onChangePageWidth(Number(e.target.value) as CmsPageWidth)}
+          className="w-full px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
+        >
+          {CMS_PAGE_WIDTH_OPTIONS.map((w) => (
+            <option key={w} value={w}>
+              {w} px
+            </option>
+          ))}
+        </select>
+        <p className="text-[10px] text-stone-500 leading-snug">Gjelder forside, footer og Åpenhet.</p>
       </div>
     </nav>
   );

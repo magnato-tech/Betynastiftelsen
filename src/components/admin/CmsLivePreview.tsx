@@ -136,11 +136,10 @@ export const CmsLivePreview: React.FC<CmsLivePreviewProps> = ({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#F6F4ED] xl:static xl:inset-auto xl:z-auto xl:h-[calc(100vh-5.5rem)] xl:sticky xl:top-[4.5rem]">
-      <div className="px-3 py-2 bg-white border-b border-stone-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-3 py-1 bg-white border-b border-stone-200 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-semibold text-stone-800">Live forhåndsvisning</span>
-          <span className="text-stone-500 hidden lg:inline">Viser utkast fra editoren (norsk)</span>
         </div>
 
         <div className="flex items-center gap-1 bg-stone-50 p-0.5 rounded-lg border border-stone-200">

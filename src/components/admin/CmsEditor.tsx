@@ -22,10 +22,8 @@ import {
   getHeroObjectPosition,
   withHeroLayoutDefaults,
 } from '../../utils/heroLayout';
-import { CMS_PAGE_WIDTH_OPTIONS, type CmsPageWidth } from '../../utils/cmsPageWidth';
 import { HeroAnniversaryBadge } from '../public/HeroAnniversaryBadge';
 import {
-  Layout,
   Layers,
   MessageSquare,
   ShieldCheck,
@@ -33,10 +31,8 @@ import {
   Plus,
   Trash2,
   Edit2,
-  Eye,
   Save,
   CheckCircle2,
-  Sparkles,
   Link2,
   Upload,
   Image as ImageIcon,
@@ -122,7 +118,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       ...cmsContent.hero,
       [field]: value,
     });
-    showNotification('Hovedbanner oppdatert umiddelbart!');
   };
 
   const handleHeroBackgroundChange = (updates: {
@@ -134,7 +129,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       ...cmsContent.hero,
       ...updates,
     });
-    showNotification('Bakgrunn oppdatert!');
   };
 
   // 2. STEPS 1-2-3 UPDATE HANDLERS
@@ -145,7 +139,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       [field]: value,
     };
     updateCmsSection('steps', newSteps);
-    showNotification(`Ramme ${index + 1} tekst oppdatert!`);
   };
 
   const handleStepImageChange = (index: number, updates: { backgroundImageUrl?: string; backgroundPreset?: any }) => {
@@ -156,7 +149,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       imagePreset: updates.backgroundPreset,
     };
     updateCmsSection('steps', newSteps);
-    showNotification(`Bilde for Ramme ${index + 1} oppdatert!`);
   };
 
   // 3. ABOUT / PRINCIPLES UPDATE HANDLERS
@@ -167,7 +159,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       [field]: value,
     };
     updateCmsSection('aboutCards', newCards);
-    showNotification('Kjerneramme oppdatert!');
   };
 
   const handlePrincipleImageChange = (index: number, updates: { backgroundImageUrl?: string }) => {
@@ -177,7 +168,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       imageUrl: updates.backgroundImageUrl,
     };
     updateCmsSection('aboutCards', newCards);
-    showNotification('Rammebilde oppdatert!');
   };
 
   const handlePrincipleIconChange = (index: number, iconName: CmsPrincipleCard['iconName']) => {
@@ -187,7 +177,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       iconName,
     };
     updateCmsSection('aboutCards', newCards);
-    showNotification('Ikon oppdatert!');
   };
 
   // 4. KPIS UPDATE HANDLERS
@@ -198,7 +187,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       [field]: value,
     };
     updateCmsSection('kpiStats', newKpis);
-    showNotification('Nøkkeltall oppdatert!');
   };
 
   // 5. CTA BANNER UPDATE HANDLERS
@@ -217,7 +205,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       [field]: value,
     };
     updateCmsSection('ctaBanner', updated);
-    showNotification('Oppfordringsbanner oppdatert!');
   };
 
   const handleCtaImageChange = (updates: { backgroundImageUrl?: string; backgroundPreset?: any; scrimOpacity?: number }) => {
@@ -226,7 +213,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       ...updates,
     };
     updateCmsSection('ctaBanner', updated);
-    showNotification('Bannerbilde oppdatert!');
   };
 
   // 6. STORY HANDLERS
@@ -292,7 +278,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
   };
 
   return (
-    <div className="space-y-8 font-sans">
+    <div className="space-y-3 font-sans">
       {/* Fast lagrelinje nederst til høyre: synlig uansett hvor langt ned man har rullet */}
       <div
         role="region"
@@ -328,80 +314,16 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </button>
       </div>
 
-      {/* 1. Header with Breadcrumb and Global CMS Actions */}
-      <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#4D6B3E] uppercase tracking-widest">
-            <Layout className="w-3.5 h-3.5" />
-            <span>Seksjonsbasert CMS · Betyna Stiftelsen</span>
-          </div>
-          <h2 className="text-xl font-serif font-bold text-stone-900 mt-1">
-            Offentlig innhold: nettside, aksjoner og vitnesbyrd
-          </h2>
-          <p className="text-xs text-stone-600 mt-0.5">
-            Én arbeidsflate for det besøkende ser. Tekst, bilder, ekstraordinære aksjoner og godkjente vitnesbyrd. Endringer vises med én gang.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-start gap-2.5">
-          <button
-            type="button"
-            onClick={() => setPreviewOpen((open) => !open)}
-            aria-pressed={previewOpen}
-            className={`px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs ${
-              previewOpen
-                ? 'bg-[#4D6B3E] text-white hover:bg-[#3B522F]'
-                : 'bg-stone-900 hover:bg-stone-800 text-white'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Forhåndsvis</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Save Notification Toast */}
+      {/* Kortvarig melding nederst til venstre. Skyver ikke layouten. */}
       {saveToast && (
-        <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-            <span className="font-medium">{saveToast}</span>
-          </div>
-          <span className="text-[11px] text-emerald-700 font-mono">Lagret i nettleseren</span>
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 left-4 z-40 max-w-[min(20rem,calc(100vw-2rem))] px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center gap-2 shadow-md"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+          <span className="font-medium">{saveToast}</span>
         </div>
-      )}
-
-      {/* Active Brand Palette Bar — skjules når live-vinduet er åpent, for å gi plass */}
-      {!previewOpen && (
-      <div className="bg-[#F6F4ED] border border-[#DFD9CB] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#4D6B3E] shrink-0" />
-          <span className="font-semibold text-[#3C3C3C]">Aktiv fargeprofil:</span>
-          <span className="text-stone-600">Integrert på tvers av hele løsningen</span>
-        </div>
-        <div className="flex items-center gap-3 overflow-x-auto text-[11px] font-mono">
-          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-stone-200 shadow-2xs">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#4D6B3E] border border-stone-300 shrink-0" />
-            <span className="font-bold text-[#4D6B3E]">#4D6B3E</span>
-            <span className="text-stone-400 font-sans text-[10px]">Primær</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-stone-200 shadow-2xs">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#A3B18A] border border-stone-300 shrink-0" />
-            <span className="font-bold text-stone-700">#A3B18A</span>
-            <span className="text-stone-400 font-sans text-[10px]">Aksent</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-stone-200 shadow-2xs">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#F6F4ED] border border-stone-300 shrink-0" />
-            <span className="font-bold text-stone-700">#F6F4ED</span>
-            <span className="text-stone-400 font-sans text-[10px]">Bakgrunn</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-stone-200 shadow-2xs">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#3C3C3C] border border-stone-300 shrink-0" />
-            <span className="font-bold text-stone-700">#3C3C3C</span>
-            <span className="text-stone-400 font-sans text-[10px]">Koksgrå</span>
-          </div>
-        </div>
-      </div>
       )}
 
       <div
@@ -416,6 +338,9 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           waitingCardsCount={getPublishedWaitingSponsorCards(cmsContent).length}
           campaignsCount={campaigns.length}
           previewOpen={previewOpen}
+          onTogglePreview={() => setPreviewOpen((open) => !open)}
+          pageWidth={cmsContent.pageWidth ?? 1120}
+          onChangePageWidth={(width) => updateCmsSection('pageWidth', width)}
         />
 
         <div ref={formContainerRef} className="min-w-0 flex-1 w-full space-y-6">
@@ -425,34 +350,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
       {activeSubTab === 'hero' && (
         <div className={`grid grid-cols-1 gap-6 ${previewOpen ? '' : 'lg:grid-cols-12 lg:gap-8'}`}>
           <div className={`${previewOpen ? '' : 'lg:col-span-7'} bg-white p-6 sm:p-7 rounded-xl border border-stone-200 shadow-xs space-y-5`}>
-            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <div>
-                <h3 className="text-base font-serif font-bold text-stone-900">Tekster og handlinger for hovedbanner</h3>
-                <p className="text-xs text-stone-500 mt-0.5">Første inntrykk for besøkende på landingssiden.</p>
-              </div>
-            </div>
-
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Innholdsbredde på forsiden</label>
-                <select
-                  value={cmsContent.pageWidth ?? 1120}
-                  onChange={(e) =>
-                    updateCmsSection('pageWidth', Number(e.target.value) as CmsPageWidth)
-                  }
-                  className="w-full max-w-xs px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-hidden focus:border-[#4D6B3E]"
-                >
-                  {CMS_PAGE_WIDTH_OPTIONS.map((w) => (
-                    <option key={w} value={w}>
-                      {w} px
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-stone-500 mt-1">
-                  Samme bredde i footer, åpenhet og live forhåndsvisning.
-                </p>
-              </div>
-
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">Toppmerking (Kicker)</label>
                 <input
@@ -510,7 +408,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
                   const hangPx = layout.ctaHangBelowPx ?? layout.ctaOverlapPx ?? 176;
                   const setLayout = (patch: Partial<CmsContent['hero']>) => {
                     updateCmsSection('hero', { ...cmsContent.hero, ...patch });
-                    showNotification('Hero-utforming oppdatert!');
                   };
                   const heightOptions: { value: CmsHeroHeight; label: string }[] = [
                     { value: 'compact', label: 'Lav (ca. 42 vh)' },
@@ -1032,12 +929,7 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
           {/* Mini-forhåndsvisning av banneret når live-vinduet er lukket */}
           {!previewOpen && (
           <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                Sanntids forhåndsvisning
-              </span>
-              <span className="text-[11px] text-emerald-700 font-medium">Oppdateres direkte</span>
-            </div>
+            <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Sanntids forhåndsvisning</p>
 
             <div
               className="relative overflow-hidden rounded-2xl border border-stone-300 bg-stone-900 text-white shadow-md"
