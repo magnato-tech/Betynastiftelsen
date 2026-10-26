@@ -27,6 +27,9 @@ import { consumePortalIntent, markPortalIntent } from './utils/portalIntent';
 import { defaultPortalSectionForProfile } from './utils/portalSession';
 import { getHeroCtaCardConfig } from './utils/heroLayout';
 
+/** Seksjoner der admin-portalen viser CMS-redigeringen (jf. AdminPortal). */
+const CMS_SECTIONS = new Set(['cms', 'historier', 'testimonials']);
+
 const MainLayout: React.FC = () => {
   const {
     role,
@@ -120,7 +123,8 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F4ED] text-[#3C3C3C] selection:bg-[#A3B18A]/30 selection:text-[#3C3C3C]">
-      <SaveStatusPill />
+      {/* I CMS-et viser lagrelinjen samme status, med Lagre-knapp. */}
+      {!(role === 'admin' && CMS_SECTIONS.has(activeSection)) && <SaveStatusPill />}
       {/* Prototypelinjen (svart) er av i produksjon. Lokalt er den på; i produksjon slås den på med VITE_PROTOTYPE_ROLE_SWITCHER=true. */}
       {prototypeRoleSwitcherEnabled && !previewFlags.preview && <RoleSwitcherBanner />}
       {/* Admin som ser siden som en annen rolle: gul linje med «Tilbake til admin». */}

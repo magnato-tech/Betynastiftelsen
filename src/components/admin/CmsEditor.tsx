@@ -293,6 +293,41 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
 
   return (
     <div className="space-y-8 font-sans">
+      {/* Fast lagrelinje nederst til høyre: synlig uansett hvor langt ned man har rullet */}
+      <div
+        role="region"
+        aria-label="Lagring"
+        className="fixed bottom-4 right-4 z-40 flex items-center gap-3 max-w-[calc(100vw-2rem)] pl-3 pr-1.5 py-1.5 rounded-xl border border-stone-200 bg-white/95 backdrop-blur-sm shadow-md"
+      >
+        <span className="text-[11px] min-w-0 truncate" role="status" aria-live="polite">
+          {!firestoreBackendActive ? (
+            <span className="text-stone-500">Lagring er ikke aktiv</span>
+          ) : firestoreSave.state === 'error' ? (
+            <span className="text-red-700">{firestoreSave.error || 'Kunne ikke lagre'}</span>
+          ) : firestoreSave.state === 'saving' ? (
+            <span className="text-amber-800">Lagrer …</span>
+          ) : firestoreSave.state === 'saved' && firestoreSave.lastSavedAt ? (
+            <span className="text-emerald-700">Lagret kl. {formatSavedTime(firestoreSave.lastSavedAt)}</span>
+          ) : (
+            <span className="text-stone-600">Alt er lagret</span>
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={() => void firestoreSaveNow()}
+          disabled={!firestoreBackendActive || firestoreSave.state === 'saving'}
+          title={
+            firestoreBackendActive
+              ? 'Lagre endringer til databasen nå'
+              : 'Lagring er ikke slått på. Logg inn som administrator, eller se meldingen øverst.'
+          }
+          className="shrink-0 px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 bg-[#4D6B3E] hover:bg-[#3B522F] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Save className="w-3.5 h-3.5" />
+          <span>Lagre</span>
+        </button>
+      </div>
+
       {/* 1. Header with Breadcrumb and Global CMS Actions */}
       <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div>
@@ -309,31 +344,6 @@ export const CmsEditor: React.FC<CmsEditorProps> = ({ initialSubTab }) => {
         </div>
 
         <div className="flex flex-wrap items-start gap-2.5">
-          <div className="flex flex-col items-end gap-1">
-            <button
-              type="button"
-              onClick={() => void firestoreSaveNow()}
-              disabled={!firestoreBackendActive || firestoreSave.state === 'saving'}
-              title={
-                firestoreBackendActive
-                  ? 'Lagre endringer til databasen nå'
-                  : 'Lagring er ikke slått på. Logg inn som administrator, eller se meldingen øverst.'
-              }
-              className="px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs bg-[#4D6B3E] hover:bg-[#3B522F] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>{firestoreSave.state === 'saving' ? 'Lagrer …' : 'Lagre'}</span>
-            </button>
-            <span className="text-[11px] min-h-[1rem] text-right">
-              {!firestoreBackendActive ? (
-                <span className="text-stone-500">Lagring er ikke aktiv</span>
-              ) : firestoreSave.state === 'error' ? (
-                <span className="text-red-700">{firestoreSave.error || 'Kunne ikke lagre'}</span>
-              ) : firestoreSave.state === 'saved' && firestoreSave.lastSavedAt ? (
-                <span className="text-emerald-700">Lagret kl. {formatSavedTime(firestoreSave.lastSavedAt)}</span>
-              ) : null}
-            </span>
-          </div>
           <button
             type="button"
             onClick={() => setPreviewOpen((open) => !open)}
